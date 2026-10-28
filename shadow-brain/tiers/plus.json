@@ -1,0 +1,7 @@
+{
+  "label": "Plus",
+  "description": "Better quality, slower. Needs a stronger computer.",
+  "base_model": "qwen3.5:9b",
+  "min_ram_gb": 16,
+  "vision": true
+}

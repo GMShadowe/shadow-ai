@@ -1,0 +1,8 @@
+{
+  "label": "Primal",
+  "description": "Strongest tier. Needs a stronger computer, and reads images.",
+  "base_model": "gemma4:12b",
+  "min_ram_gb": 16,
+  "vision": true,
+  "adapters": false
+}

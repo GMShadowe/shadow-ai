@@ -1,0 +1,8 @@
+ollama
+ddgs
+psutil
+
+# Voice mode (speech to text). Both run locally; the whisper weights are
+# downloaded once, like an Ollama model pull.
+faster-whisper
+silero-vad

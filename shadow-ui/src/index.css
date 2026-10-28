@@ -1,0 +1,283 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #13151a;
+  --color-panel: #1b1e24;
+  --color-panel-alt: #20242b;
+  --color-line: #2b2f37;
+  --color-ink: #e7e5e0;
+  --color-ink-muted: #8a8f99;
+  --color-phosphor: #8fbf99;
+  --color-phosphor-dim: #5e8f6b;
+  --color-signal: #6fa3c7;
+  --color-danger: #d9837a;
+
+  --font-sans: "Instrument Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+
+  --ease-smooth: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --animate-rise: rise 280ms var(--ease-smooth) both;
+  --animate-fade: fade 200ms var(--ease-smooth) both;
+  --animate-pop: pop 200ms var(--ease-smooth) both;
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes pop {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  @keyframes pop-out {
+    from { opacity: 1; transform: none; }
+    to { opacity: 0; transform: scale(0.96); }
+  }
+}
+
+/* A popover that closes instantly reads as a glitch next to one that opens
+   over 200ms, so closing is the same gesture reversed and a little quicker. */
+.animate-pop-out { animation: pop-out 150ms var(--ease-smooth) both; }
+.animate-fade-out { animation: fade-out 150ms var(--ease-smooth) both; }
+
+/* Waiting states that shouldn't flash. Anything that usually resolves in
+   under a quarter second (a chat opening, a search, a preview) says nothing
+   at all until it's slow enough to be worth a word. */
+.wait-to-show { animation: fade 200ms var(--ease-smooth) 250ms both; }
+
+/* The prompt bar never moves itself and is never remounted: what changes is
+   how much room is kept under it, so the first message of a chat slides it
+   down from the middle instead of cutting to the bottom. */
+.dock { transition: padding-bottom 280ms var(--ease-smooth); }
+
+/* Syntax colors, adjusted for light themes below */
+:root {
+  --code-keyword: #c79bf2;
+  --code-string: #9fcf8a;
+  --code-number: #e6b673;
+  --code-title: #7fb6e8;
+  --code-attr: #f0a58a;
+}
+[data-theme="light"] {
+  --code-keyword: #8a4fc7;
+  --code-string: #3f7f2f;
+  --code-number: #a86a14;
+  --code-title: #2f6fae;
+  --code-attr: #b0541f;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-phosphor) 25%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-signal) 70%, transparent);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-ink-muted) 25%, transparent);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--color-ink-muted) 45%, transparent);
+  background-clip: content-box;
+}
+
+/* "Thinking" shimmer */
+.shimmer {
+  background: linear-gradient(90deg, var(--color-ink-muted) 0%, var(--color-ink) 50%, var(--color-ink-muted) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer-move 1.6s linear infinite;
+}
+@keyframes shimmer-move {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+/* Small spinner for running tools */
+.spinner {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--color-signal) 25%, transparent);
+  border-top-color: var(--color-signal);
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Smooth expand/collapse */
+.expander {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 220ms var(--ease-smooth);
+}
+.expander[data-open="true"] { grid-template-rows: 1fr; }
+.expander > * {
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 150ms var(--ease-smooth);
+}
+/* The content fades in just behind the height, so a row opening reads as one
+   movement instead of text appearing in a box that is still growing. */
+.expander[data-open="true"] > * { opacity: 1; transition-delay: 70ms; }
+
+/* Markdown in Shadow's replies */
+.md {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: color-mix(in srgb, var(--color-ink) 92%, transparent);
+}
+.md > * + * { margin-top: 0.75em; }
+.md > :first-child { margin-top: 0; }
+.md h1, .md h2, .md h3, .md h4 {
+  color: var(--color-ink);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  margin-top: 1.4em;
+}
+.md h1 { font-size: 1.35em; }
+.md h2 { font-size: 1.2em; }
+.md h3, .md h4 { font-size: 1.05em; }
+.md ul { list-style: disc; padding-left: 1.4em; }
+.md ol { list-style: decimal; padding-left: 1.4em; }
+.md li + li, .md li > ul, .md li > ol { margin-top: 0.3em; }
+.md li::marker { color: var(--color-ink-muted); }
+.md strong { color: var(--color-ink); font-weight: 600; }
+.md a {
+  color: var(--color-signal);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-signal) 40%, transparent);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 150ms;
+}
+.md a:hover { text-decoration-color: var(--color-signal); }
+.md blockquote {
+  border-left: 2px solid var(--color-line);
+  padding-left: 1em;
+  color: var(--color-ink-muted);
+}
+.md hr { border: 0; border-top: 1px solid var(--color-line); margin: 1.5em 0; }
+.md :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--color-panel-alt);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: 0.1em 0.35em;
+}
+
+/* Tables */
+.md .md-table {
+  overflow-x: auto;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+}
+.md table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.md th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-ink);
+  background: var(--color-panel);
+}
+.md th, .md td {
+  padding: 0.55em 0.9em;
+  border-bottom: 1px solid var(--color-line);
+  vertical-align: top;
+}
+.md tr:last-child td { border-bottom: 0; }
+.md tbody tr { transition: background-color 150ms; }
+.md tbody tr:hover { background: color-mix(in srgb, var(--color-panel-alt) 60%, transparent); }
+
+/* Code blocks */
+.code-block pre {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  tab-size: 2;
+}
+.hljs-comment, .hljs-quote { color: var(--color-ink-muted); font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-built_in, .hljs-type, .hljs-doctag { color: var(--code-keyword); }
+.hljs-string, .hljs-regexp, .hljs-addition, .hljs-template-tag { color: var(--code-string); }
+.hljs-number, .hljs-literal, .hljs-symbol, .hljs-bullet { color: var(--code-number); }
+.hljs-title, .hljs-section, .hljs-name, .hljs-tag { color: var(--code-title); }
+.hljs-attr, .hljs-attribute, .hljs-property, .hljs-selector-class, .hljs-selector-id, .hljs-variable, .hljs-params { color: var(--code-attr); }
+.hljs-meta { color: var(--color-ink-muted); }
+.hljs-deletion { color: var(--color-danger); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* Voice mode: the only motion in the state indicator. Three bars that
+   breathe while the mic is open or Shadow is talking. The global
+   prefers-reduced-motion rule above flattens these to a still frame. */
+.voice-bars span {
+  animation: voice-bar 1.1s var(--ease-smooth) infinite;
+}
+.voice-bars span:nth-child(2) { animation-delay: 0.14s; }
+.voice-bars span:nth-child(3) { animation-delay: 0.28s; }
+@keyframes voice-bar {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+
+/* The history panel slides in from the right. */
+.voice-panel {
+  transition: transform 280ms var(--ease-smooth), opacity 200ms var(--ease-smooth);
+}
+
+/* Rich tables: the header stays while the body scrolls, and a table wider
+   than the message column scrolls on its own instead of stretching it. */
+.md-table-rich {
+  max-height: 24rem;
+  overflow: auto;
+}
+
+.md-table-rich table {
+  margin: 0;
+}
+
+.md-table-rich thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-panel-alt);
+  /* A sticky cell loses its border, so it is drawn as a shadow instead. */
+  box-shadow: inset 0 -1px 0 var(--color-line);
+}

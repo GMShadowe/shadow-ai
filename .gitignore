@@ -1,0 +1,28 @@
+# Dependencies and builds
+shadow-brain/.venv/
+shadow-ui/node_modules/
+shadow-ui/dist/
+__pycache__/
+*.pyc
+
+# Everything under data/ is personal and/or secret, never code:
+# chats, memory embeddings, images, the API key, the auth token,
+# the training log. None of it belongs in version control.
+shadow-brain/data/
+
+# Editor/OS noise
+.DS_Store
+*.log
+
+# Not part of this open-source push yet:
+# shadow-web is a separate frontend with its own nested git repo, coming later.
+# laya-fine-tune is experimental training scratch space (datasets, a venv,
+# generated/labeled data) — not ready to publish.
+shadow-web/
+laya-fine-tune/
+
+# AI-tooling artifacts, not Shadow's product code:
+CLAUDE.md
+AGENT.md
+shadow-brain/.claude/
+shadow-brain/.agents/

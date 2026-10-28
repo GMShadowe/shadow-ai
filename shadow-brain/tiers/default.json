@@ -1,0 +1,7 @@
+{
+  "label": "Default",
+  "description": "Balanced speed and quality. The floor Shadow is tuned for.",
+  "base_model": "qwen3.5:4b",
+  "min_ram_gb": 8,
+  "vision": true
+}
