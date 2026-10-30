@@ -26,8 +26,8 @@ export default function StatusBar({ title, connected, authFailed, model, spend }
   const today = tokens(spend?.today);
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line/70 px-6">
-      <h1 className="min-w-0 truncate text-sm font-medium text-ink">{title}</h1>
+    <header className="relative z-10 flex h-14 shrink-0 items-center gap-3 border-b border-line/60 bg-panel/80 px-6 backdrop-blur-md">
+      <h1 className="min-w-0 truncate text-[14px] font-medium tracking-[-0.01em] text-ink">{title}</h1>
 
       <div className="ml-auto flex shrink-0 items-center gap-2">
         {sending && today !== null && (

@@ -26,7 +26,7 @@ export default function ToolCall({ call }) {
 
   return (
     <div
-      className={`animate-rise overflow-hidden rounded-lg border bg-panel/60 transition-colors duration-150 ${
+      className={`animate-rise overflow-hidden rounded-xl border bg-panel-alt/50 transition-colors duration-150 ${
         open ? "border-line/90 bg-panel" : "border-line"
       }`}
     >

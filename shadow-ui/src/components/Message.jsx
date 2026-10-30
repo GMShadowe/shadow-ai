@@ -84,7 +84,7 @@ function UserEditor({ message, onSave, onCancel }) {
           }
           if (e.key === "Escape") onCancel();
         }}
-        className="block w-full resize-none rounded-2xl rounded-br-md border border-signal bg-panel-alt px-4 py-2.5 text-[0.9375rem] leading-relaxed text-ink focus:outline-none"
+        className="block w-full resize-none rounded-[20px] rounded-br-md border border-signal bg-panel-alt px-4 py-2.5 text-[0.9375rem] leading-relaxed text-ink focus:outline-none"
       />
       <div className="flex items-center justify-end gap-2 text-[11px]">
         <span className="mr-auto text-ink-muted">The reply below will be replaced.</span>
@@ -163,7 +163,7 @@ export default function Message({
         )}
         {zoomed && <Lightbox src={zoomed} onClose={() => setZoomed(null)} />}
         {message.content && (
-          <div className="max-w-[80%] whitespace-pre-wrap rounded-2xl rounded-br-md border border-line bg-panel-alt px-4 py-2.5 text-[0.9375rem] leading-relaxed text-ink">
+          <div className="max-w-[80%] whitespace-pre-wrap rounded-[20px] rounded-br-md bg-panel-alt px-4 py-2.5 text-[0.9375rem] leading-relaxed text-ink">
             {message.content}
           </div>
         )}
@@ -186,7 +186,7 @@ export default function Message({
 
   if (message.role === "error") {
     return (
-      <div className="animate-rise rounded-lg border border-danger/40 bg-danger/5 px-4 py-3">
+      <div className="animate-rise rounded-2xl border border-danger/30 bg-danger/5 px-4 py-3">
         <div className="flex items-start gap-2.5 text-sm text-danger">
           <CloseIcon width={14} height={14} className="mt-0.5 shrink-0" />
           <span>{message.content}</span>

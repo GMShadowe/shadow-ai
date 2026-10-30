@@ -9,7 +9,7 @@ export default function SkillMenu({ skills, index, query, onPick, onHover }) {
     <div
       role="listbox"
       aria-label="Skills"
-      className="animate-pop absolute bottom-full left-0 z-20 mb-2 w-full max-w-md overflow-hidden rounded-lg border border-line bg-panel shadow-[0_16px_48px_-20px_rgba(0,0,0,0.8)]"
+      className="animate-pop absolute bottom-full left-0 z-20 mb-2 w-full max-w-md overflow-hidden rounded-2xl border border-line bg-panel shadow-[0_16px_48px_-20px_var(--shadow-color)]"
     >
       <div className="flex items-center justify-between border-b border-line px-3 py-1.5">
         <span className="font-mono text-[11px] uppercase tracking-wider text-ink-muted">skills</span>
