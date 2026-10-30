@@ -21,15 +21,14 @@ dependency to read six meta tags is a bad trade.
 """
 
 import asyncio
-import ipaddress
 import json
 import re
-import socket
 import time
 from urllib.parse import urljoin, urlparse
 
 import httpx
 
+import netguard
 from tools.state import offline
 
 TIMEOUT = httpx.Timeout(connect=4.0, read=6.0, write=4.0, pool=4.0)
@@ -51,32 +50,6 @@ stats = {"fetched": 0, "blocked": 0, "failed": 0, "images": 0}
 
 class PreviewError(Exception):
     pass
-
-
-def _public_host(url: str) -> str:
-    """Refuse anything that isn't a public internet address.
-
-    Link text comes out of a model, which may be repeating a URL from a web
-    page it read. Without this, a reply could make the brain fetch
-    http://127.0.0.1:8765 or a cloud metadata address from inside the
-    user's own network.
-    """
-    parsed = urlparse(url)
-    if parsed.scheme not in ("http", "https"):
-        raise PreviewError("only http and https links can be previewed")
-    host = parsed.hostname
-    if not host:
-        raise PreviewError("that link has no host in it")
-    try:
-        infos = socket.getaddrinfo(host, None)
-    except socket.gaierror:
-        raise PreviewError("that host doesn't resolve") from None
-    for info in infos:
-        ip = ipaddress.ip_address(info[4][0])
-        if (ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved
-                or ip.is_multicast or ip.is_unspecified):
-            raise PreviewError("that address is on this machine or this network, so it isn't fetched")
-    return host
 
 
 def _meta(html: str) -> dict[str, str]:
@@ -210,36 +183,21 @@ def _parse(url: str, final_url: str, html: str) -> dict:
 
 
 async def _fetch_one(client: httpx.AsyncClient, url: str) -> dict:
+    """One link's card. The fetch goes through netguard, which is the whole
+    defence here: link text comes out of a model that may be repeating a URL
+    from a page it read, and checking only the first URL (as this did) let a
+    public page redirect the brain to http://127.0.0.1:8765, or a rebinding
+    DNS server answer differently the second time it was asked."""
     try:
-        _public_host(url)
-    except PreviewError as e:
+        response = await netguard.arequest("GET", url, client=client, max_bytes=MAX_HTML_BYTES,
+                                           stop_at=b"</head>", headers={
+                                               "User-Agent": UA,
+                                               "Accept": "text/html,application/xhtml+xml",
+                                               "Accept-Language": "en",
+                                           })
+    except netguard.Blocked as e:
         stats["blocked"] += 1
         return {"ok": False, "url": url, "reason": str(e)}
-
-    try:
-        async with client.stream("GET", url, headers={
-            "User-Agent": UA,
-            "Accept": "text/html,application/xhtml+xml",
-            "Accept-Language": "en",
-        }) as response:
-            if response.status_code >= 400:
-                stats["failed"] += 1
-                return {"ok": False, "url": url,
-                        "reason": f"the site answered {response.status_code}"}
-            if "html" not in response.headers.get("content-type", ""):
-                stats["failed"] += 1
-                return {"ok": False, "url": url, "reason": "that link isn't a web page"}
-
-            chunks, size = [], 0
-            async for chunk in response.aiter_bytes():
-                chunks.append(chunk)
-                size += len(chunk)
-                # The <head> is at the top, so there is no reason to read a
-                # whole page to find six tags.
-                if size >= MAX_HTML_BYTES or b"</head>" in chunks[-1]:
-                    break
-            html = b"".join(chunks).decode(response.encoding or "utf-8", "replace")
-            final_url = str(response.url)
     except httpx.HTTPError as e:
         stats["failed"] += 1
         return {"ok": False, "url": url, "reason": f"couldn't reach it ({type(e).__name__})"}
@@ -248,8 +206,15 @@ async def _fetch_one(client: httpx.AsyncClient, url: str) -> dict:
         print(f"[preview] {url}: {e}")
         return {"ok": False, "url": url, "reason": "that page couldn't be read"}
 
+    if response.status >= 400:
+        stats["failed"] += 1
+        return {"ok": False, "url": url, "reason": f"the site answered {response.status}"}
+    if "html" not in response.content_type:
+        stats["failed"] += 1
+        return {"ok": False, "url": url, "reason": "that link isn't a web page"}
+
     stats["fetched"] += 1
-    return _parse(url, final_url, html)
+    return _parse(url, response.url, response.text())
 
 
 def _remember(url: str, card: dict) -> None:
@@ -279,7 +244,10 @@ async def previews(urls: list[str]) -> dict:
 
     if todo:
         limits = httpx.Limits(max_connections=6)
-        async with httpx.AsyncClient(timeout=TIMEOUT, follow_redirects=True, limits=limits) as client:
+        # Redirects off and proxies ignored: netguard follows each hop itself,
+        # checking it, and connects to the address it checked.
+        async with httpx.AsyncClient(timeout=TIMEOUT, follow_redirects=False, trust_env=False,
+                                     limits=limits) as client:
             results = await asyncio.gather(*(_fetch_one(client, u) for u in todo))
         for url, card in zip(todo, results):
             _remember(url, card)
@@ -298,15 +266,20 @@ async def image(url: str) -> tuple[bytes, str]:
     if hit and hit[0] > time.time():
         return hit[1], hit[2]
 
-    _public_host(url)
-    async with httpx.AsyncClient(timeout=TIMEOUT, follow_redirects=True) as client:
-        response = await client.get(url, headers={"User-Agent": UA, "Accept": "image/*"})
-    if response.status_code >= 400:
-        raise PreviewError(f"the image answered {response.status_code}")
-    content_type = response.headers.get("content-type", "").split(";")[0].strip()
+    try:
+        response = await netguard.arequest("GET", url, timeout=TIMEOUT, max_bytes=MAX_IMAGE_BYTES + 1,
+                                           headers={"User-Agent": UA, "Accept": "image/*"})
+    except netguard.Blocked as e:
+        stats["blocked"] += 1
+        raise PreviewError(str(e)) from e
+    if response.status >= 400:
+        raise PreviewError(f"the image answered {response.status}")
+    content_type = response.content_type
     if not content_type.startswith("image/"):
         raise PreviewError("that isn't an image")
-    data = response.content
+    data = response.body
+    # Read one byte past the cap and no further, so a huge image is refused
+    # without ever being held in memory whole.
     if len(data) > MAX_IMAGE_BYTES:
         raise PreviewError("that image is too big to pass through")
 
