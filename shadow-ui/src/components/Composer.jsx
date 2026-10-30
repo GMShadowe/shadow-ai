@@ -137,10 +137,10 @@ export default function Composer({
     ? "border-phosphor ring-2 ring-phosphor/25"
     : flash
       ? "border-phosphor/70 ring-2 ring-phosphor/15"
-      : "border-line ring-0 ring-transparent focus-within:border-signal/60 focus-within:ring-1 focus-within:ring-signal/20";
+      : "border-line ring-0 ring-transparent focus-within:border-signal/40 focus-within:ring-4 focus-within:ring-signal/10";
 
   return (
-    <div className="px-4 pb-3 pt-2">
+    <div className="px-4 pb-4 pt-2">
       <div className="mx-auto max-w-3xl">
         <div
           onDragOver={(e) => {
@@ -157,7 +157,7 @@ export default function Composer({
             setDragging(false);
             addFiles(e.dataTransfer.files);
           }}
-          className={`relative rounded-xl border bg-panel-alt shadow-[0_12px_40px_-18px_rgba(0,0,0,0.7)] transition-[border-color,box-shadow,opacity] duration-200 ease-smooth ${edge} ${
+          className={`relative rounded-[22px] border bg-panel shadow-[0_1px_2px_var(--shadow-color),0_24px_60px_-28px_var(--shadow-color)] transition-[border-color,box-shadow,opacity] duration-200 ease-smooth ${edge} ${
             disabled ? "opacity-60" : ""
           }`}
         >
@@ -172,7 +172,7 @@ export default function Composer({
           )}
 
           {dragging && (
-            <div className="animate-rise pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-phosphor/60 bg-panel-alt/95 text-sm font-medium text-phosphor">
+            <div className="animate-rise pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-[22px] border-2 border-dashed border-phosphor/60 bg-panel-alt/95 text-sm font-medium text-phosphor">
               Drop images to attach
             </div>
           )}
@@ -205,7 +205,7 @@ export default function Composer({
 
           {skill && (
             <div className="flex flex-wrap items-center gap-2 px-3 pt-3">
-              <span className="animate-pop flex items-center gap-1.5 rounded-md border border-phosphor-dim/50 bg-phosphor/10 px-2 py-1 font-mono text-[11px] text-ink">
+              <span className="animate-pop flex items-center gap-1.5 rounded-full border border-phosphor/30 bg-phosphor/10 px-2.5 py-1 font-mono text-[11px] text-phosphor">
                 /{skill.name}
                 <button
                   type="button"
@@ -271,10 +271,10 @@ export default function Composer({
             }
             /* The height is set in script as lines are added; the transition
                is what keeps that from being a jump on every newline. */
-            className="block w-full resize-none bg-transparent px-4 pb-1 pt-3.5 text-[0.9375rem] leading-relaxed text-ink transition-[height] duration-150 ease-smooth placeholder:text-ink-muted focus:outline-none disabled:cursor-not-allowed"
+            className="block w-full resize-none bg-transparent px-5 pb-1 pt-4 text-[0.9375rem] leading-relaxed text-ink transition-[height] duration-150 ease-smooth placeholder:text-ink-muted focus:outline-none disabled:cursor-not-allowed"
           />
 
-          <div className="flex items-center gap-1 px-2 pb-2 pt-1">
+          <div className="flex items-center gap-1 px-2.5 pb-2.5 pt-1">
             <input
               ref={fileRef}
               type="file"
@@ -292,7 +292,7 @@ export default function Composer({
               disabled={!canAttach || disabled}
               title={canAttach ? "Attach images (or paste / drop them)" : "This model can't see images"}
               aria-label="Attach images"
-              className="rounded-md p-1.5 text-ink-muted transition-[background-color,color,transform] duration-150 ease-smooth hover:bg-panel hover:text-ink active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-muted disabled:active:scale-100"
+              className="rounded-full p-2 text-ink-muted transition-[background-color,color,transform] duration-150 ease-smooth hover:bg-panel-alt hover:text-ink active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-muted disabled:active:scale-100"
             >
               <PaperclipIcon />
             </button>
@@ -315,7 +315,7 @@ export default function Composer({
                   onClick={onStop}
                   title="Stop"
                   aria-label="Stop"
-                  className="animate-pop flex h-8 w-8 items-center justify-center rounded-full bg-ink text-bg transition-[background-color,transform] duration-150 ease-smooth hover:scale-105 active:scale-95"
+                  className="animate-pop flex h-9 w-9 items-center justify-center rounded-full bg-ink text-bg transition-[background-color,transform] duration-150 ease-smooth hover:scale-105 active:scale-95"
                 >
                   <StopIcon width={14} height={14} />
                 </button>
@@ -327,7 +327,7 @@ export default function Composer({
                   disabled={!canSend}
                   title="Send"
                   aria-label="Send"
-                  className="animate-pop flex h-8 w-8 items-center justify-center rounded-full bg-phosphor-dim text-bg transition-[background-color,color,transform] duration-150 ease-smooth hover:bg-phosphor hover:scale-105 active:scale-95 disabled:bg-line disabled:text-ink-muted disabled:hover:bg-line disabled:hover:scale-100 disabled:active:scale-100"
+                  className="animate-pop flex h-9 w-9 items-center justify-center rounded-full bg-ink text-bg transition-[background-color,color,transform] duration-150 ease-smooth hover:scale-105 active:scale-95 disabled:bg-panel-alt disabled:text-ink-muted disabled:hover:scale-100 disabled:active:scale-100"
                 >
                   <ArrowUpIcon width={16} height={16} />
                 </button>
