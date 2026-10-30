@@ -105,7 +105,8 @@ def _record(provider: dict, reported: dict | None) -> int:
 def stream_model(messages: list[dict], tool_names: list[str] | None = None,
                  max_steps: int = 6, temperature: float | None = None,
                  model_name: str | None = None, ask_tools: list[str] | None = None,
-                 provider: dict | None = None, aid: str | None = None):
+                 provider: dict | None = None, aid: str | None = None,
+                 question: dict | None = None):
     model = model_name or MODEL_NAME
     allowed = set(tool_names or [])
     ask = set(ask_tools or [])
@@ -113,7 +114,9 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
     nudged = False
     # The user's question for this turn. Pinned so the compressor can never
     # drop it, however many tool results pile up behind it.
-    question = messages[-1] if messages else None
+    # Passed in when the turn already carries messages after it (the
+    # orchestrator's auto-search adds a tool call and its result).
+    question = question if question is not None else (messages[-1] if messages else None)
 
     # A BYOK turn is billed to the user, one call per step. Counted as it goes
     # so a cap can stop it part-way instead of reporting the damage after.
