@@ -20,8 +20,20 @@ EXPLICIT = {
                  "this year", "recent", "what version"],
 }
 FILE_WORDS = ["file", "folder", "directory"]
-# "remember ..." is always a memory save, never a tool route.
-REMEMBER_RE = re.compile(r"\b(remember|keep in mind|don't forget|note this)\b", re.I)
+# "remember ..." is always a memory save, never a tool route. Only when the
+# message *starts* with the request: matched anywhere, "I don't remember the
+# filename, find it" lost its tools and was saved to memory word for word.
+REMEMBER_RE = re.compile(
+    r"^\s*(?:(?:hey|ok|okay|so|and|also|please|pls)[\s,]+)*"
+    r"(?:remember|keep in mind|don'?t forget|do not forget|note this|note that)\b",
+    re.I,
+)
+
+
+def is_remember(text: str) -> bool:
+    """Whether a message is asking Shadow to remember something. The one
+    test both the router and the memory save use, so they can't disagree."""
+    return bool(REMEMBER_RE.match(text or ""))
 
 
 def _decide(probs: dict) -> list[str]:
@@ -61,7 +73,7 @@ def _explicit_routes(text: str) -> list[str]:
 
 def classify_detailed(text: str, previous: str | None = None, has_images: bool = False) -> dict:
     # A "remember ..." message is a memory save — never route it to a tool adapter.
-    if REMEMBER_RE.search(text):
+    if is_remember(text):
         return {"adapters": [], "method": "remember", "probabilities": None, "ms": 0}
 
     result = None

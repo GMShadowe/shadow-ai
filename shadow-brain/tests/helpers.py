@@ -24,3 +24,18 @@ def scripted(*steps):
 
     fake.seen = seen
     return fake
+
+
+def quiet_turn(monkeypatch, *steps, facts=None):
+    """Run orchestrator turns with the model, embeddings and fact extraction
+    faked out. Returns (model fake, list of memories saved)."""
+    import model
+    from memory import extract, long_term
+
+    fake = scripted(*steps)
+    saved = []
+    monkeypatch.setattr(model, "_chat_stream", fake)
+    monkeypatch.setattr(long_term, "search", lambda q, k=5: [])
+    monkeypatch.setattr(long_term, "add", lambda text, source="user": saved.append((text, source)) or True)
+    monkeypatch.setattr(extract, "extract_facts", lambda text: list(facts or []))
+    return fake, saved

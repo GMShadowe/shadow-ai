@@ -7,7 +7,7 @@ import re
 from datetime import datetime
 
 from model import stream_model
-from router.classifier import classify_detailed
+from router.classifier import classify_detailed, is_remember
 from adapters.registry import get_adapter
 from memory.short_term import ShortTermMemory
 from memory import long_term, extract
@@ -51,8 +51,6 @@ LENGTHS = {
 }
 
 LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "turns.jsonl")
-
-REMEMBER_RE = re.compile(r"\b(remember|note this|keep in mind|don't forget)\b", re.I)
 
 FILLER = [
     "can you", "could you", "would you", "please", "tell me about", "tell me",
@@ -315,10 +313,16 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
 
     # Save to long-term memory.
     try:
-        if REMEMBER_RE.search(user_input):
+        if is_remember(user_input):
+            # Only what extraction pulled out is stored. The raw message used
+            # to be saved when it found nothing, which put whole sentences -
+            # questions, file requests - into long-term memory.
             facts = extract.extract_facts(user_input)
-            saved = any(long_term.add(f, source="asked") for f in facts) if facts else long_term.add(user_input, source="asked")
-            print(f"[memory] remember matched, saved={saved}")
+            if facts:
+                saved = [long_term.add(f, source="asked") for f in facts]
+                print(f"[memory] remember matched, saved {sum(saved)} of {len(facts)} facts")
+            else:
+                print("[memory] remember matched, but no fact could be extracted, so nothing was saved")
         elif get_profile().get("auto_memory"):
             for fact in extract.extract_facts(user_input):
                 long_term.add(fact, source="auto")
