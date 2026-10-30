@@ -645,7 +645,7 @@ export default function App() {
 
   return (
     <PreviewProvider>
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-bg p-2 pl-0">
       <Sidebar
         conversations={conversations}
         activeId={active.id}
@@ -664,7 +664,7 @@ export default function App() {
         onToggleCollapse={toggleSidebar}
         model={models.find((m) => m.id === model)}
       />
-      <main className="flex min-w-0 flex-1 flex-col">
+      <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-line bg-panel shadow-[0_1px_3px_var(--shadow-color),0_20px_50px_-30px_var(--shadow-color)]">
         {assistantsOpen ? (
           <Dashboard
             onClose={() => setAssistantsOpen(false)}
