@@ -31,14 +31,14 @@ const LENGTHS = [
 
 /* What a tool is set to when this assistant has no opinion about it yet.
 
-   Mirrors tools/state.py: anything dangerous asks first. run_command is the
-   exception the brain makes for a new assistant - it is not in that module's
-   dangerous set, but it can run anything, so a fresh assistant starts it on
-   Ask. Deliberately not read from the tool's reported `state`: that belongs
-   to whichever assistant is active, not the one being edited here.
+   The brain sends it as `default` (tools/state.py decides), so this can't
+   drift from what the brain will actually do. The fallback is only for an
+   older brain. Deliberately not read from the tool's reported `state`: that
+   belongs to whichever assistant is active, not the one being edited here.
 */
 function defaultState(tool) {
-  if (tool.name === "run_command") return "ask";
+  if (tool.default) return tool.default;
+  if (tool.name === "run_command" || tool.name === "open_app") return "ask";
   return tool.danger === "dangerous" ? "ask" : "on";
 }
 

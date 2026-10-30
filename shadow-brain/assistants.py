@@ -30,8 +30,8 @@ PROFILE_DEFAULTS = {
     "tools": {},  # tool name -> "on" / "ask" / "off"
 }
 
-# A new assistant starts with the one tool that can do real damage set to
-# Ask, rather than inheriting whatever the global default happens to be.
+# A new assistant has run_command written down as Ask. tools.state defaults
+# it to Ask as well, so a profile without the entry is just as safe.
 NEW_ASSISTANT_TOOLS = {"run_command": "ask"}
 
 
@@ -106,9 +106,9 @@ def active_id() -> str:
     if existing:
         set_active(existing[0])
         return existing[0]
-    # The very first assistant gets the same cautious default as any other:
-    # run_command is not in tools.state's dangerous set, so without this it
-    # would start as "on" for the one assistant nobody chose the settings for.
+    # The very first assistant gets the same explicit Ask on run_command as
+    # any other (tools.state also defaults it to Ask; this keeps it written
+    # down in the profile, where Settings shows it).
     ensure("default", {"name": "Shadow", "tools": dict(NEW_ASSISTANT_TOOLS)})
     set_active("default")
     return "default"

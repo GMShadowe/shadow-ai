@@ -7,7 +7,50 @@ import shutil
 import subprocess
 
 
+def _check_app_name(name) -> str | None:
+    """An error if `name` isn't a plain application name.
+
+    The name comes from the model, which may be repeating a web page. A path
+    would let it launch any file - a script it just wrote included - and a
+    leading dash would be read as an option by `open`.
+    """
+    name = str(name or "").strip()
+    if not name:
+        return "Error: say which app to open, by its name, like 'Safari' or 'Notes'."
+    if "/" in name or "\\" in name or name.startswith(("-", ".")):
+        return (f"Error: '{name}' isn't an app name. open_app takes the name of an installed app, "
+                "not a path or a file. To open a file, ask the user to open it themselves.")
+    if any(ord(c) < 32 for c in name):
+        return f"Error: '{name}' isn't an app name."
+    return None
+
+
+def _start_menu_dirs() -> list[str]:
+    dirs = [os.path.join(os.environ.get(var, ""), "Microsoft", "Windows", "Start Menu", "Programs")
+            for var in ("APPDATA", "PROGRAMDATA")]
+    return [d for d in dirs if os.path.isdir(d)]
+
+
+def _windows_shortcut(name: str) -> str | None:
+    """The Start Menu shortcut for an installed app, matched by its name.
+
+    Only shortcuts, never `cmd /c start <name>`: cmd interprets & | > in the
+    name, and `start` runs scripts and executables as readily as apps.
+    """
+    wanted = name.lower().removesuffix(".lnk")
+    for root in _start_menu_dirs():
+        for dirpath, _dirs, files in os.walk(root):
+            for f in files:
+                if f.lower().endswith(".lnk") and f[:-4].lower() == wanted:
+                    return os.path.join(dirpath, f)
+    return None
+
+
 def open_app(name: str) -> str:
+    error = _check_app_name(name)
+    if error:
+        return error
+    name = str(name).strip()
     system = platform.system()
     try:
         if system == "Darwin":
@@ -15,11 +58,16 @@ def open_app(name: str) -> str:
             if result.returncode != 0:
                 return f"Error: couldn't open '{name}'. {result.stderr.strip()}"
         elif system == "Windows":
-            subprocess.Popen(["cmd", "/c", "start", "", name])
+            shortcut = _windows_shortcut(name)
+            if not shortcut:
+                return (f"Error: no installed app called '{name}' was found in the Start menu. "
+                        "Use the app's name exactly as the Start menu shows it.")
+            os.startfile(shortcut)
         else:
             if not shutil.which(name):
                 return f"Error: no app called '{name}' found."
-            subprocess.Popen([name], start_new_session=True)
+            subprocess.Popen([name], start_new_session=True,
+                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception as e:
         return f"Error opening '{name}': {e}"
     return f"Opened {name}."

@@ -56,7 +56,8 @@ TOOLS = {
         _schema("kill_process", "Stop a running process by its exact name or its process id.",
                 {"target": S}, ["target"]), "dangerous", preview=desktop.describe_kill),
     "open_app": _tool(desktop.open_app,
-        _schema("open_app", "Open an application on the user's computer by name, e.g. 'Safari'.", {"name": S}, ["name"])),
+        _schema("open_app", "Open an installed application on the user's computer by its name, e.g. 'Safari'. "
+                "Not for files or paths.", {"name": S}, ["name"]), "caution"),
     "system_info": _tool(desktop.system_info,
         _schema("system_info", "Get OS, CPU, RAM and disk information about this computer.", {}, [])),
     "web_search": _tool(web.web_search,

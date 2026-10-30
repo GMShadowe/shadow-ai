@@ -10,12 +10,20 @@ WEB_TOOLS = ["web_search", "fetch_url", "http_request"]
 # otherwise. run_command is here because a shell can do anything the other
 # tools can and more; it used to be added per assistant instead, so any
 # profile without the entry - an old one, a hand-written one - had it on.
-DANGEROUS_DEFAULT_ASK = {"delete_file", "delete_dir", "http_request", "kill_process", "run_command"}
+# open_app launches programs, so it asks too.
+DANGEROUS_DEFAULT_ASK = {"delete_file", "delete_dir", "http_request", "kill_process", "run_command",
+                         "open_app"}
+
+
+def default_state(name: str) -> str:
+    """What a tool is set to when an assistant's profile doesn't say. Served
+    to the UI with the tool list, so the wizard can't drift from this."""
+    return "ask" if name in DANGEROUS_DEFAULT_ASK else "on"
 
 
 def tool_state(name: str, profile: dict | None = None) -> str:
     profile = profile if profile is not None else get_profile()
-    default = "ask" if name in DANGEROUS_DEFAULT_ASK else "on"
+    default = default_state(name)
     state = profile.get("tools", {}).get(name, default)
     return state if state in TOOL_STATES else default
 

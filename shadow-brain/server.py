@@ -33,7 +33,7 @@ from memory.short_term import ShortTermMemory
 from config import (TIER_ORDER, EFFORT_STEPS, all_tiers, get_workspace, is_placeholder,
                     load_tier_config, normalize_tier)
 from settings import SettingsError, get_settings, update_settings
-from tools.state import offline, tool_state
+from tools.state import default_state, offline, tool_state
 from hardware import get_hardware, recommend_tier
 from adapters.registry import list_adapters
 from tools.registry import TOOLS
@@ -331,6 +331,7 @@ def _tool_list() -> list[dict]:
                     "danger": TOOLS[name].get("danger", "safe"),
                     "description": TOOLS[name]["schema"]["function"]["description"],
                     "state": tool_state(name, profile),
+                    "default": default_state(name),
                 })
     return out
 
