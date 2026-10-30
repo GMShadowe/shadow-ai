@@ -1,8 +1,8 @@
 """Web tools: search the web, and read a page as plain text."""
 
 import re
-import urllib.request
 
+import netguard
 from tools.state import offline
 
 OFFLINE = ("Blocked: offline mode is on, so nothing may leave this computer. "
@@ -29,44 +29,52 @@ def web_search(query: str) -> str:
     return "\n".join(lines)
 
 
+# Caps on what is read from a response. A page is cut to a few thousand
+# characters before the model sees it anyway; these stop a link to a huge
+# file from being read into memory first.
+MAX_PAGE_BYTES = 2_000_000
+MAX_RESPONSE_BYTES = 1_000_000
+
+
 def fetch_url(url: str) -> str:
     if offline():
         return OFFLINE
-    if not url.startswith(("http://", "https://")):
+    if not isinstance(url, str) or not url.startswith(("http://", "https://")):
         return "Error: URL must start with http:// or https://"
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Shadow/0.1"})
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            html = resp.read().decode("utf-8", errors="replace")
+        resp = netguard.request("GET", url, headers={"User-Agent": "Shadow/0.1"},
+                                max_bytes=MAX_PAGE_BYTES, timeout=15)
+    except netguard.Blocked as e:
+        return f"Blocked: {e}. fetch_url only reads public web pages."
     except Exception as e:
         return f"Error fetching {url}: {e}"
+    if resp.status >= 400:
+        return f"Error fetching {url}: the site answered HTTP {resp.status}."
 
+    html = resp.text()
     html = re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", html, flags=re.S | re.I)
     text = re.sub(r"<[^>]+>", " ", html)
     text = re.sub(r"\s+", " ", text).strip()
     return text[:3000] if text else "(page had no readable text)"
 
+
 def http_request(url: str, method: str = "GET", body: str = "") -> str:
     if offline():
         return OFFLINE
-    method = method.upper()
+    method = str(method or "GET").upper()
     if method not in ("GET", "POST", "PUT", "DELETE", "PATCH"):
         return f"Error: unsupported method '{method}'."
-    if not url.startswith(("http://", "https://")):
+    if not isinstance(url, str) or not url.startswith(("http://", "https://")):
         return "Error: URL must start with http:// or https://"
 
-    data = body.encode("utf-8") if body else None
-    req = urllib.request.Request(url, data=data, method=method,
-                                 headers={"User-Agent": "Shadow/0.1",
-                                          "Content-Type": "application/json"})
+    data = str(body).encode("utf-8") if body else None
     try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            text = resp.read().decode("utf-8", errors="replace")
-            status = resp.status
-    except urllib.error.HTTPError as e:
-        text = e.read().decode("utf-8", errors="replace")[:2000]
-        return f"HTTP {e.code} {e.reason}\n{text}"
+        resp = netguard.request(method, url, body=data, max_bytes=MAX_RESPONSE_BYTES, timeout=20,
+                                headers={"User-Agent": "Shadow/0.1",
+                                         "Content-Type": "application/json"})
+    except netguard.Blocked as e:
+        return f"Blocked: {e}. http_request only reaches public internet addresses."
     except Exception as e:
         return f"Error making request: {e}"
-
-    return f"HTTP {status}\n{text[:4000]}"
+    limit = 2000 if resp.status >= 400 else 4000
+    return f"HTTP {resp.status}\n{resp.text()[:limit]}"
