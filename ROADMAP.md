@@ -1,6 +1,6 @@
 # Shadow roadmap
 
-Status as of 25 October 2026. Ordered roughly by priority.
+Status as of 31 October 2026. Ordered roughly by priority.
 Don't reorder without asking Ayaan.
 
 ## Done
@@ -41,6 +41,15 @@ Don't reorder without asking Ayaan.
 - BYOK token counting, per-endpoint totals and per-turn/per-day caps that stop
 - Plain-words error recovery for the failures people hit, with the missing
   model offering to download itself
+- Security and correctness pass over the open issues (Tier 1): Host check
+  against DNS rebinding, SSRF-safe fetching for web tools and previews
+  (`netguard.py`), approvals that show what Allow does, web turns gated to
+  Ask, shell sandbox and minimal environment, file backups, Laya pinned and
+  hash-checked, assistant pinned per turn, one turn per chat at a time
+- Regression tests in `shadow-brain/tests/`, one file per fixed issue
+- Light theme as the default (near-white, one blue, Plus Jakarta Sans), with
+  the app restyled to match; the dark themes remain choices
+- Adding skills from a file, a link, or a pasted `npx skills add` command
 
 **A tool tree was built, measured and removed.** Branches instead of one
 flat list measured worse on the 2B it was for, and gave small models two new
@@ -113,7 +122,8 @@ global, and decide what the compressor does with the extra room.
   (it can't currently verify its own HTML the way it verifies Python)
 - Save partial replies when the user hits Stop
 - Summarise what the compressor dropped instead of just noting that it did
-- Creating and editing skills in the app; they are read-only there now
+- Writing and editing skills in the app; adding one from a file or a link
+  works, but there's no editor
 - Regenerate or edit further back than the last exchange
 - FTS for chat search, when these databases are big enough to need it
 
