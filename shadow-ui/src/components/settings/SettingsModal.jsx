@@ -32,6 +32,9 @@ import {
   getPrivacy,
   getSkills,
   getSkill,
+  addSkill,
+  deleteSkill,
+  SKILLS_CHANGED,
   getInstalledModels,
   getCustomModels,
   addCustomModel,
@@ -335,17 +338,201 @@ function MemorySection({ data, save }) {
   );
 }
 
-function SkillsSection() {
+function AddSkill({ offline, onAdded }) {
+  const [mode, setMode] = useState("file");
+  const [link, setLink] = useState("");
+  const [name, setName] = useState("");
+  const [file, setFile] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState(null);
+  const [taken, setTaken] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const input = useRef(null);
+
+  async function pick(f) {
+    setProblem(null);
+    setTaken(false);
+    if (!f) return;
+    if (f.size > 64 * 1024) {
+      setProblem(`${f.name} is ${formatBytes(f.size)}. A skill is a short markdown file, 16,000 characters at most.`);
+      return;
+    }
+    try {
+      setFile({ filename: f.name, content: await f.text() });
+    } catch (e) {
+      setProblem(`Couldn't read ${f.name}: ${e.message}`);
+    }
+  }
+
+  async function submit(replace = false) {
+    setBusy(true);
+    setProblem(null);
+    try {
+      const body = mode === "link" ? { url: link.trim() } : { content: file.content, filename: file.filename };
+      if (name.trim()) body.name = name.trim();
+      const { skill } = await addSkill({ ...body, replace });
+      setLink("");
+      setName("");
+      setFile(null);
+      setTaken(false);
+      onAdded(skill);
+    } catch (e) {
+      setProblem(e.message);
+      setTaken(e.status === 409);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const ready = mode === "link" ? link.trim().length > 2 && !offline : !!file;
+
+  return (
+    <div className="mb-5 overflow-hidden rounded-xl border border-line bg-panel">
+      <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
+        <div className="text-sm font-medium text-ink">Add a skill</div>
+        <Segmented
+          options={[
+            { id: "file", label: "From a file" },
+            { id: "link", label: "From a link or command" },
+          ]}
+          value={mode}
+          onChange={(v) => {
+            setMode(v);
+            setProblem(null);
+            setTaken(false);
+          }}
+        />
+      </div>
+
+      <div className="space-y-3 p-4">
+        {mode === "file" ? (
+          <button
+            type="button"
+            onClick={() => input.current?.click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              pick(e.dataTransfer.files?.[0]);
+            }}
+            className={`flex w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed px-4 py-6 text-center transition-colors duration-150 ease-smooth ${
+              dragging ? "border-phosphor bg-phosphor/5" : "border-line hover:border-ink-muted/50 hover:bg-panel-alt/60"
+            }`}
+          >
+            <SkillsIcon className="mb-1 h-5 w-5 text-ink-muted" />
+            {file ? (
+              <>
+                <span className="font-mono text-[13px] text-ink">{file.filename}</span>
+                <span className="text-xs text-ink-muted">{file.content.length.toLocaleString()} characters · click to pick another</span>
+              </>
+            ) : (
+              <>
+                <span className="text-sm text-ink">Drop a SKILL.md here, or click to choose</span>
+                <span className="text-xs text-ink-muted">A markdown file of instructions. Nothing in it is ever run.</span>
+              </>
+            )}
+            <input
+              ref={input}
+              type="file"
+              accept=".md,.markdown,.txt,text/markdown,text/plain"
+              className="hidden"
+              onChange={(e) => {
+                pick(e.target.files?.[0]);
+                e.target.value = "";
+              }}
+            />
+          </button>
+        ) : (
+          <div>
+            <input
+              value={link}
+              onChange={(e) => {
+                setLink(e.target.value);
+                setTaken(false);
+              }}
+              onKeyDown={(e) => e.key === "Enter" && ready && !busy && submit()}
+              placeholder="npx skills add owner/repo   ·   a GitHub link   ·   owner/repo"
+              spellCheck={false}
+              disabled={offline}
+              className="w-full rounded-md border border-line bg-panel-alt px-3 py-2 font-mono text-xs text-ink placeholder:text-ink-muted transition-colors focus:border-signal focus:outline-none disabled:opacity-50"
+            />
+            <div className="mt-1.5 text-[11px] leading-relaxed text-ink-muted">
+              {offline
+                ? "Offline mode is on, so Shadow can't download anything. Add it from a file instead."
+                : "Paste an install command, a GitHub folder or file, or owner/repo. Shadow reads the command rather than running it, and downloads that one file. Use --skill <name> for a repo that holds several."}
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center gap-2">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Name (optional, taken from the skill if empty)"
+            spellCheck={false}
+            className="min-w-0 flex-1 rounded-md border border-line bg-panel-alt px-3 py-1.5 text-sm text-ink placeholder:text-ink-muted transition-colors focus:border-signal focus:outline-none"
+          />
+          <button
+            type="button"
+            disabled={!ready || busy}
+            onClick={() => submit(false)}
+            className="rounded-md bg-phosphor px-3.5 py-1.5 text-xs font-medium text-bg transition-[opacity,transform] duration-150 ease-smooth active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-35"
+          >
+            {busy ? (mode === "link" ? "Downloading…" : "Adding…") : "Add skill"}
+          </button>
+        </div>
+
+        {problem && (
+          <div className="animate-rise flex items-start justify-between gap-3 rounded-md border border-danger/30 bg-danger/5 px-3 py-2 text-xs leading-relaxed text-danger">
+            <span>{problem}</span>
+            {taken && (
+              <SmallButton danger disabled={busy} onClick={() => submit(true)}>
+                Replace it
+              </SmallButton>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SkillsSection({ offline }) {
   const [list, setList] = useState(null);
   const [error, setError] = useState(null);
   const [open, setOpen] = useState(null); // the skill whose text is showing
   const [body, setBody] = useState(null);
+  const [confirming, setConfirming] = useState(null);
+  const [fresh, setFresh] = useState(null);
 
-  useEffect(() => {
+  const reload = () =>
     getSkills()
       .then((r) => setList(r.skills))
       .catch((e) => setError(e.message));
+
+  useEffect(() => {
+    reload();
   }, []);
+
+  function changed() {
+    reload();
+    window.dispatchEvent(new Event(SKILLS_CHANGED));
+  }
+
+  async function remove(name) {
+    try {
+      await deleteSkill(name);
+      setConfirming(null);
+      if (open === name) setOpen(null);
+      changed();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
 
   async function show(name) {
     if (open === name) {
@@ -364,6 +551,14 @@ function SkillsSection() {
 
   return (
     <div>
+      <AddSkill
+        offline={offline}
+        onAdded={(skill) => {
+          setFresh(skill.name);
+          changed();
+        }}
+      />
+
       <Note>
         A skill is a markdown document of careful instructions for one task. Invoke one by typing{" "}
         <span className="font-mono text-ink">/</span> in the composer and picking it — Shadow is never told which
@@ -371,38 +566,61 @@ function SkillsSection() {
         message, and only the skill's name is kept with the turn.
       </Note>
 
-      {error && <div className="mb-2 text-xs text-danger">{error}</div>}
-      {list === null && !error && <div className="shimmer text-sm">Loading</div>}
+      {error && <div className="mt-2 text-xs text-danger">{error}</div>}
+      {list === null && !error && <div className="shimmer mt-3 text-sm">Loading</div>}
 
       {list && list.length === 0 && (
-        <Note>
-          No skills installed. Add one as{" "}
-          <span className="font-mono text-ink">shadow-brain/skills/&lt;name&gt;/SKILL.md</span> and it appears here.
-        </Note>
+        <div className="mt-3">
+          <Note>No skills yet. Add one above, from a file or a link.</Note>
+        </div>
       )}
 
       {list && list.length > 0 && (
-        <div className="space-y-1.5">
+        <div className="mt-3 space-y-1.5">
           {list.map((s) => (
-            <div key={s.name} className="rounded-lg border border-line bg-panel">
+            <div
+              key={s.name}
+              className={`rounded-lg border bg-panel transition-colors duration-700 ${
+                fresh === s.name ? "animate-rise border-phosphor/50" : "border-line"
+              }`}
+            >
               <div className="flex items-start gap-3 px-3 py-2.5">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className={`font-mono text-[13px] ${s.broken ? "text-danger" : "text-ink"}`}>
                       /{s.name}
                     </span>
                     {s.broken ? <Pill tone="danger">needs fixing</Pill> : <Pill>{s.chars} chars</Pill>}
+                    {s.added ? <Pill>added</Pill> : <Pill>built in</Pill>}
                   </div>
                   <div className="mt-0.5 text-xs leading-relaxed text-ink-muted">{s.description}</div>
                   {s.tools?.length > 0 && (
-                    <div className="mt-1 font-mono text-[11px] text-ink-muted">
-                      needs: {s.tools.join(", ")}
+                    <div className="mt-1 font-mono text-[11px] text-ink-muted">needs: {s.tools.join(", ")}</div>
+                  )}
+                  {s.added && s.source && (
+                    <div className="mt-1 truncate font-mono text-[11px] text-ink-muted" title={s.source}>
+                      from {s.source}
                     </div>
                   )}
                 </div>
-                {!s.broken && (
-                  <SmallButton onClick={() => show(s.name)}>{open === s.name ? "Hide" : "Read"}</SmallButton>
-                )}
+                <div className="flex shrink-0 gap-1.5">
+                  {!s.broken && (
+                    <SmallButton onClick={() => show(s.name)}>{open === s.name ? "Hide" : "Read"}</SmallButton>
+                  )}
+                  {s.added &&
+                    (confirming === s.name ? (
+                      <>
+                        <SmallButton danger onClick={() => remove(s.name)}>
+                          Remove
+                        </SmallButton>
+                        <SmallButton onClick={() => setConfirming(null)}>Keep</SmallButton>
+                      </>
+                    ) : (
+                      <SmallButton onClick={() => setConfirming(s.name)} aria-label={`Remove /${s.name}`}>
+                        <TrashIcon className="h-3.5 w-3.5" />
+                      </SmallButton>
+                    ))}
+                </div>
               </div>
 
               {open === s.name && (
@@ -1282,7 +1500,7 @@ export default function SettingsModal({ open, onClose, onSaved, appearance, onAp
       case "tools":
         return <ToolsSection data={data} save={save} />;
       case "skills":
-        return <SkillsSection />;
+        return <SkillsSection offline={!!data?.settings?.offline} />;
       case "privacy":
         return (
           <PrivacySection

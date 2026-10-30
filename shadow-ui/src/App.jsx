@@ -20,6 +20,7 @@ import {
   answerPermission,
   getGreetings,
   getSkills,
+  SKILLS_CHANGED,
   regenerateReply,
   editMessage,
   rateReply,
@@ -179,9 +180,13 @@ export default function App() {
   // so the user can pick one.
   useEffect(() => {
     if (!connected) return;
-    getSkills()
-      .then((r) => setSkills(r.skills ?? []))
-      .catch((e) => console.warn("[skills] couldn't load the list:", e.message));
+    const load = () =>
+      getSkills()
+        .then((r) => setSkills(r.skills ?? []))
+        .catch((e) => console.warn("[skills] couldn't load the list:", e.message));
+    load();
+    window.addEventListener(SKILLS_CHANGED, load);
+    return () => window.removeEventListener(SKILLS_CHANGED, load);
   }, [connected]);
 
   const greetingLoaded = useRef(false);

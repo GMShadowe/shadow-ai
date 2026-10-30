@@ -186,6 +186,31 @@ export async function getSkill(name) {
   return readJson(await fetch(`${BASE}/skills/${encodeURIComponent(name)}`), "Couldn't load that skill");
 }
 
+export async function addSkill(body) {
+  const res = await fetch(`${BASE}/skills`, jsonRequest("POST", body));
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    // 405: the running brain predates this endpoint.
+    const detail =
+      res.status === 405
+        ? "The brain that's running is older than this screen and can't add skills yet. Restart it (stop uvicorn and start it again), then try again."
+        : data.detail;
+    const err = new Error(detail || "Couldn't add that skill");
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
+
+export async function deleteSkill(name) {
+  return readJson(
+    await fetch(`${BASE}/skills/${encodeURIComponent(name)}`, { method: "DELETE" }),
+    "Couldn't remove that skill"
+  );
+}
+
+export const SKILLS_CHANGED = "shadow:skills-changed";
+
 export async function getSettings() {
   return readJson(await fetch(`${BASE}/settings`), "Couldn't load settings");
 }
