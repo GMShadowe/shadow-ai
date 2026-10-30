@@ -40,6 +40,8 @@ def data_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(files, "DATA_DIR", str(data))
     from tools import shell
     monkeypatch.setattr(shell, "DATA_DIR", str(data))
+    import skills
+    monkeypatch.setattr(skills, "ADDED_DIR", str(data / "skills"))
     settings.update_settings({"router": "keywords"})
     return data
 

@@ -99,6 +99,14 @@ def outbound(log_path: str) -> list[dict]:
     })
 
     rows.append({
+        "id": "skill_download", "label": "skill downloads", "host": "the link you paste",
+        "what": "Downloads one skill file when you add a skill from a link. Sends no conversation.",
+        "active": not off,
+        "reason": "Offline mode is on" if off else "Only when you add a skill from a link",
+        "state": None,
+    })
+
+    rows.append({
         "id": "weather", "label": "weather", "host": "wttr.in",
         "what": "Looks up the weather for the location in your profile.",
         "active": weather_active, "reason": weather_reason, "state": None,
@@ -200,6 +208,8 @@ def storage(log_path: str) -> list[dict]:
 
     images_bytes, images_count = _dir_size(images_dir())
     backups_bytes, backups_count = _dir_size(files.BACKUP_DIR)
+    import skills
+    skills_bytes, _ = _dir_size(skills.ADDED_DIR)
     aid = active_id()
     rows = [
         {"id": "chats", "label": "Chats", "path": chats_db_path(),
@@ -224,6 +234,10 @@ def storage(log_path: str) -> list[dict]:
          "bytes": backups_bytes,
          "detail": f"{backups_count} earlier version(s) of workspace files Shadow overwrote or edited. "
                    f"The newest {files.MAX_BACKUPS} are kept."},
+        {"id": "skills", "label": "Skills you added", "path": skills.ADDED_DIR,
+         "bytes": skills_bytes,
+         "detail": f"{sum(1 for s in skills.list_skills() if s['added'])} skill(s), each a markdown file. "
+                   "Read only when you invoke one with a slash command."},
         {"id": "settings", "label": "Global settings", "path": SETTINGS_PATH,
          "bytes": _size(SETTINGS_PATH), "detail": "Workspace folder, router, privacy switches."},
     ]

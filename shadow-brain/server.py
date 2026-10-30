@@ -880,6 +880,45 @@ def get_skill(name: str):
         raise HTTPException(status_code=404, detail=str(e)) from e
 
 
+class SkillAdd(BaseModel):
+    content: str | None = None
+    url: str | None = None
+    filename: str | None = None
+    name: str | None = None
+    replace: bool = False
+
+
+@app.post("/skills")
+def add_skill(req: SkillAdd):
+    if bool(req.content) == bool(req.url):
+        raise HTTPException(status_code=400, detail="Send either the skill file or a link to one.")
+    try:
+        if req.url:
+            text, source = skills.fetch(req.url)
+            filename = source.rsplit("/", 1)[-1]
+            req.name = req.name or skills.parse_source(req.url)[1]
+        else:
+            if len(req.content) > skills.MAX_CHARS * 4:
+                raise skills.SkillError(f"That file is bigger than a skill can be ({skills.MAX_CHARS} characters at most).")
+            text, filename = req.content, req.filename
+            source = f"file: {os.path.basename(req.filename or 'pasted text')}"
+        skill = skills.install(text, name=req.name, filename=filename, source=source, replace=req.replace)
+    except skills.SkillExists as e:
+        raise HTTPException(status_code=409, detail=str(e)) from e
+    except skills.SkillError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return {"skill": skill}
+
+
+@app.delete("/skills/{name}")
+def delete_skill(name: str):
+    try:
+        skills.remove(name)
+    except skills.SkillError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return {"removed": name}
+
+
 @app.get("/privacy")
 def privacy_report():
     """What can leave this computer, and what is stored on it."""
