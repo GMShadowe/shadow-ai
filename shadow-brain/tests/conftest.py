@@ -16,6 +16,15 @@ if BRAIN not in sys.path:
     sys.path.insert(0, BRAIN)
 
 
+def pytest_collection_finish(session):
+    # server.py initialises databases, migrates profiles and may load Laya
+    # the moment it is imported (#33). Imported at a test module's top level,
+    # that runs against the user's real data folder, before any redirect.
+    if "server" in sys.modules:
+        raise pytest.UsageError("A test module imports server at the top level. Import it inside "
+                                "the test, or use the client fixture, so it sees the test data folder.")
+
+
 @pytest.fixture(autouse=True)
 def data_dir(tmp_path, monkeypatch):
     import assistants

@@ -7,6 +7,8 @@ import binascii
 import json
 import os
 import platform
+import threading
+import weakref
 
 import ollama
 from fastapi import Body, FastAPI, HTTPException, Request
@@ -89,7 +91,47 @@ auth.token()
 storage.init()
 long_term.init()
 assistants.migrate_tiers()
+# Short-term memory per conversation. Sync endpoints run on a threadpool, so
+# this is touched from several threads at once: every read and write of the
+# dict goes through _sessions_lock. The memory objects themselves are safe
+# because only one turn per conversation can run at a time (_claim below).
 sessions: dict[str, ShortTermMemory] = {}
+_sessions_lock = threading.Lock()
+# Conversations with a turn in progress. Two turns on one conversation would
+# interleave their messages in its history - neither sees the other's
+# question, and both replies land after both questions.
+# Each claim has its own token, so a late release (the finalizer below runs
+# whenever the old stream is collected) can't free a newer turn's claim.
+_busy: dict[str, object] = {}
+
+
+def _clear_sessions() -> None:
+    with _sessions_lock:
+        sessions.clear()
+
+
+def _drop_session(cid: str) -> None:
+    with _sessions_lock:
+        sessions.pop(cid, None)
+
+
+def _claim(cid: str) -> object:
+    """Mark a conversation busy, or refuse with 409 if a turn is running.
+    Returns the claim, which is what _release needs to let it go."""
+    with _sessions_lock:
+        if cid in _busy:
+            raise HTTPException(
+                status_code=409,
+                detail="Shadow is still answering in this chat. Wait for that reply, or stop it, then send again.")
+        claim = object()
+        _busy[cid] = claim
+        return claim
+
+
+def _release(cid: str, claim: object) -> None:
+    with _sessions_lock:
+        if _busy.get(cid) is claim:
+            del _busy[cid]
 
 
 def _migrate_onboarded() -> None:
@@ -317,12 +359,13 @@ def _settings_payload() -> dict:
 
 
 def _memory_for(cid: str) -> ShortTermMemory:
-    if cid not in sessions:
-        memory = ShortTermMemory()
-        for m in storage.recent_history(cid, memory.max_turns * 2):
-            memory.add(m["role"], m["content"])
-        sessions[cid] = memory
-    return sessions[cid]
+    with _sessions_lock:
+        if cid not in sessions:
+            memory = ShortTermMemory()
+            for m in storage.recent_history(cid, memory.max_turns * 2):
+                memory.add(m["role"], m["content"])
+            sessions[cid] = memory
+        return sessions[cid]
 
 
 def _decode_images(raw: list[str]) -> list[str]:
@@ -734,7 +777,7 @@ def activate_assistant(aid: str):
     assistants.set_active(aid)
     # Short-term memory is keyed by conversation id alone, so anything left
     # in it belongs to the assistant we just switched away from.
-    sessions.clear()
+    _clear_sessions()
     # Create this assistant's tables if it has never been chatted to. Both
     # resolve their path through assistants.* on every call, so they pick up
     # the new active assistant with no further plumbing.
@@ -792,7 +835,7 @@ def delete_assistant(aid: str):
     except OSError as e:
         raise HTTPException(status_code=500,
                             detail=f"Couldn't delete that assistant's folder: {e}") from e
-    sessions.clear()
+    _clear_sessions()
     storage.init()
     long_term.init()
     print(f"[assistants] deleted {aid} ({removed['name']}): "
@@ -825,7 +868,7 @@ def privacy_report():
 @app.delete("/data/chats")
 def clear_chats():
     removed = storage.delete_all_conversations()
-    sessions.clear()
+    _clear_sessions()
     return {"ok": True, "removed": removed}
 
 
@@ -879,7 +922,7 @@ def rename_conversation(cid: str, body: RenameRequest):
 @app.delete("/conversations/{cid}")
 def delete_conversation(cid: str):
     storage.delete_conversation(cid)
-    sessions.pop(cid, None)
+    _drop_session(cid)
     return {"ok": True}
 
 
@@ -892,7 +935,7 @@ def answer_permission(pid: str, body: PermissionAnswer):
     return {"ok": True}
 
 
-def _rerun_setup(req: RerunRequest, new_text: str | None) -> tuple[str, list[str], str | None]:
+def _rerun_setup(req: RerunRequest, new_text: str | None) -> tuple[str, list[str], str | None, ShortTermMemory]:
     """Prepare a conversation for running its last turn again.
 
     Everything after the user's message goes - the old reply is replaced,
@@ -945,9 +988,10 @@ def _rerun_setup(req: RerunRequest, new_text: str | None) -> tuple[str, list[str
     memory = ShortTermMemory()
     for m in storage.history_before(cid, user["seq"], memory.max_turns * 2):
         memory.add(m["role"], m["content"])
-    sessions[cid] = memory
+    with _sessions_lock:
+        sessions[cid] = memory
 
-    return text, images, skill
+    return text, images, skill, memory
 
 
 def _turn_error(cid: str, exc: Exception, model: str | None, aid: str) -> dict:
@@ -971,10 +1015,16 @@ def _turn_error(cid: str, exc: Exception, model: str | None, aid: str) -> dict:
 
 
 def _stream_turn_response(cid: str, text: str, memory: ShortTermMemory, model, effort,
-                          images: list[str], skill: str | None, aid: str):
+                          images: list[str], skill: str | None, aid: str, claim: object):
     """Stream one turn, pinned to the assistant that was active when it was
     asked. Switching mid-turn must not move the reply - or its memories, or
-    its error - into the assistant the user switched to."""
+    its error - into the assistant the user switched to.
+
+    The caller has already claimed the conversation; this releases it when
+    the stream ends, or when the generator is thrown away unstarted - a client
+    that disconnects before the first byte never runs its `finally`, and the
+    chat would otherwise stay busy until the brain restarts.
+    """
     def events():
         try:
             for event in stream_turn(text, memory, model, effort, images, skill, aid):
@@ -983,9 +1033,25 @@ def _stream_turn_response(cid: str, text: str, memory: ShortTermMemory, model, e
                 yield _sse(event)
         except Exception as e:
             yield _sse(_turn_error(cid, e, model, aid))
+        finally:
+            _release(cid, claim)
 
-    return StreamingResponse(events(), media_type="text/event-stream",
+    stream = events()
+    weakref.finalize(stream, _release, cid, claim)
+    return StreamingResponse(stream, media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache"})
+
+
+def _claimed(cid: str, setup):
+    """Run a turn's setup with the conversation claimed, letting it go again
+    if the setup refuses the request - otherwise a 400 would leave the chat
+    marked busy."""
+    claim = _claim(cid)
+    try:
+        return setup(claim)
+    except BaseException:
+        _release(cid, claim)
+        raise
 
 
 @app.post("/chat/regenerate")
@@ -993,9 +1059,14 @@ def chat_regenerate(req: RerunRequest):
     """Answer the same question again, fresh. Uses whatever model and effort
     the pickers are on now, not the ones the first reply used."""
     aid = assistants.active_id()
-    text, images, skill = _rerun_setup(req, None)
-    return _stream_turn_response(req.conversation_id, text, sessions[req.conversation_id],
-                                 req.model, req.effort, images, skill, aid)
+    cid = req.conversation_id
+
+    def setup(claim):
+        text, images, skill, memory = _rerun_setup(req, None)
+        return _stream_turn_response(cid, text, memory, req.model, req.effort, images, skill,
+                                     aid, claim)
+
+    return _claimed(cid, setup)
 
 
 @app.post("/chat/edit")
@@ -1004,9 +1075,14 @@ def chat_edit(req: RerunRequest):
     if req.message is None:
         raise HTTPException(status_code=400, detail="Send the new text of the message.")
     aid = assistants.active_id()
-    text, images, skill = _rerun_setup(req, req.message)
-    return _stream_turn_response(req.conversation_id, text, sessions[req.conversation_id],
-                                 req.model, req.effort, images, skill, aid)
+    cid = req.conversation_id
+
+    def setup(claim):
+        text, images, skill, memory = _rerun_setup(req, req.message)
+        return _stream_turn_response(cid, text, memory, req.model, req.effort, images, skill,
+                                     aid, claim)
+
+    return _claimed(cid, setup)
 
 
 @app.post("/feedback")
@@ -1073,30 +1149,39 @@ def export_conversation(cid: str, format: str = "md"):
 @app.post("/chat")
 def chat(req: ChatRequest):
     aid = assistants.active_id()
-    text, images, memory = _validate(req)
     cid = req.conversation_id
-    _save_user_message(cid, text, images, aid)
+    claim = _claim(cid)
     try:
-        result = handle_turn(text, memory, req.model, req.effort, images, req.skill, aid)
-    except Exception as e:
-        event = _turn_error(cid, e, req.model, aid)
-        raise HTTPException(status_code=500, detail=event["message"])
-    _save_reply(cid, result, aid)
-    return result
+        text, images, memory = _validate(req)
+        _save_user_message(cid, text, images, aid)
+        try:
+            result = handle_turn(text, memory, req.model, req.effort, images, req.skill, aid)
+        except Exception as e:
+            event = _turn_error(cid, e, req.model, aid)
+            raise HTTPException(status_code=500, detail=event["message"])
+        _save_reply(cid, result, aid)
+        return result
+    finally:
+        _release(cid, claim)
 
 
 @app.post("/chat/stream")
 def chat_stream(req: ChatRequest):
     aid = assistants.active_id()
-    text, images, memory = _validate(req)
-    _save_user_message(req.conversation_id, text, images, aid)
-    return _stream_turn_response(req.conversation_id, text, memory, req.model, req.effort,
-                                 images, req.skill, aid)
+    cid = req.conversation_id
+
+    def setup(claim):
+        text, images, memory = _validate(req)
+        _save_user_message(cid, text, images, aid)
+        return _stream_turn_response(cid, text, memory, req.model, req.effort,
+                                     images, req.skill, aid, claim)
+
+    return _claimed(cid, setup)
 
 
 @app.post("/reset/{conversation_id}")
 def reset(conversation_id: str):
-    sessions.pop(conversation_id, None)
+    _drop_session(conversation_id)
     return {"ok": True}
 
 @app.get("/memory")
