@@ -138,19 +138,58 @@ def add_byom(model: str, label: str = "", vision: bool | None = None,
     return _put(entry)
 
 
+LOOPBACK_HOSTS = {"localhost", "127.0.0.1", "::1"}
+
+
+def is_loopback(host: str | None) -> bool:
+    host = (host or "").lower().strip("[]")
+    return host in LOOPBACK_HOSTS or host.startswith("127.") or host.endswith(".localhost")
+
+
+def check_base_url(base_url: str) -> str:
+    """A base URL the key may be sent to, or a CustomError saying why not.
+
+    https only, because the key travels in a header on every request and
+    plain http hands it to anyone on the path. The one exception is a server
+    on this computer (localhost), where there is no path to listen on.
+    """
+    base_url = (base_url or "").strip().rstrip("/")
+    try:
+        parsed = urlparse(base_url)
+        parsed.port  # raises on a port that isn't a number
+    except ValueError:
+        parsed = None
+    if parsed is None or parsed.scheme not in ("http", "https") or not parsed.hostname:
+        raise CustomError(
+            "The base URL needs to start with https:// and include a host, "
+            "like https://api.openai.com/v1."
+        )
+    if parsed.scheme == "http" and not is_loopback(parsed.hostname):
+        raise CustomError(
+            f"{parsed.hostname} would get your API key over plain http, unencrypted. "
+            "Use its https:// address. Plain http is only allowed for a server on this computer (localhost)."
+        )
+    return base_url
+
+
+def _origin(base_url: str) -> tuple:
+    """Where a key actually goes: scheme, host and port. The path can change
+    freely without it going anywhere new."""
+    parsed = urlparse(base_url or "")
+    try:
+        port = parsed.port
+    except ValueError:
+        port = None
+    return (parsed.scheme, (parsed.hostname or "").lower(), port)
+
+
 def add_byok(base_url: str, model: str, key: str, label: str = "",
              vision: bool = False, tools: bool = True) -> dict:
     """An OpenAI-compatible endpoint: base URL, key, model name."""
-    base_url = (base_url or "").strip().rstrip("/")
+    base_url = check_base_url(base_url)
     model = (model or "").strip()
     key = (key or "").strip()
 
-    parsed = urlparse(base_url)
-    if parsed.scheme not in ("http", "https") or not parsed.hostname:
-        raise CustomError(
-            "The base URL needs to start with http:// or https:// and include a host, "
-            "like https://api.openai.com/v1."
-        )
     if not model:
         raise CustomError("Give the model name the provider expects, like gpt-4o-mini.")
     if not key:
@@ -192,6 +231,20 @@ def update(mid: str, patch: dict) -> dict:
         raise CustomError("That model isn't in your list any more.")
     allowed = {"label", "vision", "tools", "base_url", "model", "key",
                "cap_turn", "cap_day"}
+    # A key was given to one host. Pointing the endpoint somewhere else must
+    # not quietly send that key along, so a new host needs a new key in the
+    # same request - asked for, rather than cleared, so the endpoint never
+    # sits half-configured.
+    new_url = patch.get("base_url")
+    if entry.get("kind") == "byok" and new_url is not None:
+        new_url = check_base_url(new_url)
+        patch = {**patch, "base_url": new_url}
+        new_key = str(patch.get("key") or "").strip()
+        if _origin(new_url) != _origin(entry.get("base_url", "")) and not new_key:
+            raise CustomError(
+                f"The stored API key was for {host_of(entry.get('base_url', ''))}, so it isn't sent to "
+                f"{host_of(new_url)}. Enter the key for the new address along with it."
+            )
     for field, value in patch.items():
         if field not in allowed or value is None:
             continue

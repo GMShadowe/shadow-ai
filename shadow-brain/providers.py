@@ -233,6 +233,16 @@ def _stream_attempt(client, url, payload, headers, cfg, sink):
         yield Chunk(Msg(tool_calls=calls))
 
 
+def _require_safe_url(cfg: dict) -> None:
+    """custom.py refuses plain http when an endpoint is saved; this catches
+    one saved before that rule existed, right before the key would go out."""
+    import custom
+    try:
+        custom.check_base_url(cfg.get("base_url", ""))
+    except custom.CustomError as e:
+        raise ProviderError(f"Not sent: {e} Change it in Settings - Models & brain.") from e
+
+
 def openai_stream(cfg: dict, messages: list[dict], schemas, temperature):
     """Streams an OpenAI-compatible chat completion, yielding Chunks.
 
@@ -253,6 +263,7 @@ def openai_stream(cfg: dict, messages: list[dict], schemas, temperature):
             "Turn offline mode off in Settings - Privacy, or pick a local model."
         )
 
+    _require_safe_url(cfg)
     url = f"{cfg['base_url'].rstrip('/')}/chat/completions"
     payload = {
         "model": cfg["base_model"],
@@ -297,6 +308,10 @@ def openai_stream(cfg: dict, messages: list[dict], schemas, temperature):
 def probe(cfg: dict) -> dict:
     """One tiny request, to say whether the endpoint works before the user
     relies on it mid-conversation. Reports what came back, never the key."""
+    try:
+        _require_safe_url(cfg)
+    except ProviderError as e:
+        return {"ok": False, "detail": str(e)}
     url = f"{cfg['base_url'].rstrip('/')}/chat/completions"
     payload = {"model": cfg["base_model"], "max_tokens": 1,
                "messages": [{"role": "user", "content": "ping"}]}
