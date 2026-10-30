@@ -42,7 +42,7 @@ function ReasonPanel({ reasons, value, onSave, onClose }) {
   }, []);
 
   return (
-    <div className="animate-rise mt-2 max-w-md rounded-lg border border-line bg-panel p-3 shadow-[0_16px_48px_-20px_rgba(0,0,0,0.8)]">
+    <div className="animate-rise mt-2 max-w-md rounded-lg border border-line bg-panel p-3 shadow-[0_16px_48px_-20px_var(--shadow-color)]">
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs text-ink">What was wrong with it? Optional — the dislike is already saved.</p>
         <button

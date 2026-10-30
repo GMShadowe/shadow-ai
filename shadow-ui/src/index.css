@@ -1,18 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #13151a;
-  --color-panel: #1b1e24;
-  --color-panel-alt: #20242b;
-  --color-line: #2b2f37;
-  --color-ink: #e7e5e0;
-  --color-ink-muted: #8a8f99;
-  --color-phosphor: #8fbf99;
-  --color-phosphor-dim: #5e8f6b;
-  --color-signal: #6fa3c7;
-  --color-danger: #d9837a;
+  --color-bg: #fafafa;
+  --color-panel: #ffffff;
+  --color-panel-alt: #f3f4f7;
+  --color-line: #e6e7eb;
+  --color-ink: #111318;
+  --color-ink-muted: #6b7080;
+  --color-phosphor: #0f43e7;
+  --color-phosphor-dim: #0f43e7;
+  --color-signal: #0f43e7;
+  --color-danger: #d03b2f;
+  --color-glow: #58a6ff;
+  --color-glow-deep: #191970;
 
-  --font-sans: "Instrument Sans", system-ui, -apple-system, sans-serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
 
   --ease-smooth: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -57,6 +59,23 @@
    how much room is kept under it, so the first message of a chat slides it
    down from the middle instead of cutting to the bottom. */
 .dock { transition: padding-bottom 280ms var(--ease-smooth); }
+
+:root { --shadow-color: rgba(17, 24, 39, 0.16); }
+
+.glow {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 9999px;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--color-glow) 55%, transparent),
+    color-mix(in srgb, var(--color-glow-deep) 18%, transparent) 60%,
+    transparent
+  );
+  filter: blur(64px);
+  opacity: 0.55;
+}
+[data-theme="dark"] .glow { opacity: 0.22; }
 
 /* Syntax colors, adjusted for light themes below */
 :root {
