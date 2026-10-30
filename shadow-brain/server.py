@@ -558,9 +558,42 @@ async def preview_image(u: str):
                     headers={"Cache-Control": "private, max-age=86400"})
 
 
+# What a click on a file chip may open with the computer's default handler.
+# Everything else is shown in the file manager instead: the model can write
+# a .command, .bat, .desktop, .app or plain script, and "open" on those runs
+# them - so one click on a file name in a reply would execute code the model
+# wrote. Only document, text, data and media types are on this list.
+OPENABLE = {
+    ".txt", ".md", ".markdown", ".rtf", ".log", ".csv", ".tsv", ".json", ".yaml", ".yml",
+    ".toml", ".xml", ".ini", ".pdf", ".html", ".htm", ".css",
+    ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".ico",
+    ".mp3", ".wav", ".m4a", ".ogg", ".flac", ".mp4", ".mov", ".webm",
+    ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".odt", ".ods", ".odp",
+}
+
+
+def _open_command(full: str) -> tuple[list[str] | None, bool]:
+    """(command, revealed). command is None on Windows, where os.startfile
+    is used instead - never cmd /c start, which interprets & and | in the
+    file name."""
+    system = platform.system()
+    ext = os.path.splitext(full)[1].lower()
+    # A folder opens in the file manager, unless it is a bundle (Notes.app),
+    # which "open" would launch.
+    plain_dir = os.path.isdir(full) and not ext
+    openable = plain_dir or (os.path.isfile(full) and ext in OPENABLE)
+    if system == "Darwin":
+        return (["open", full] if openable else ["open", "-R", full]), not openable
+    if system == "Windows":
+        return (None if openable else ["explorer", f"/select,{full}"]), not openable
+    return (["xdg-open", full if openable else os.path.dirname(full)]), not openable
+
+
 @app.post("/open-file")
 def open_file(body: OpenFileRequest):
-    """Open a workspace file in whatever the user's computer uses for it.
+    """Open a workspace file in whatever the user's computer uses for it -
+    or, for anything that could run as a program, show it in the file
+    manager instead.
 
     Clicking a file chip in a reply is the only thing that calls this, and
     it is confined to the workspace like every other file operation.
@@ -576,17 +609,21 @@ def open_file(body: OpenFileRequest):
     if not os.path.exists(full):
         raise HTTPException(status_code=404, detail=f"'{body.path}' isn't in the workspace any more.")
 
-    system = platform.system()
-    command = {"Darwin": ["open", full], "Windows": ["cmd", "/c", "start", "", full]}.get(
-        system, ["xdg-open", full])
+    command, revealed = _open_command(full)
     try:
-        result = subprocess.run(command, capture_output=True, text=True, timeout=10)
+        if command is None:
+            os.startfile(full)
+        else:
+            result = subprocess.run(command, capture_output=True, text=True, timeout=10)
+            # explorer /select exits 1 even when it worked.
+            if result.returncode != 0 and command[0] != "explorer":
+                raise HTTPException(status_code=500,
+                                    detail=f"Couldn't open it: {result.stderr.strip() or 'no reason given'}")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Couldn't open it: {e}") from e
-    if result.returncode != 0:
-        raise HTTPException(status_code=500,
-                            detail=f"Couldn't open it: {result.stderr.strip() or 'no reason given'}")
-    return {"ok": True, "path": full}
+    return {"ok": True, "path": full, "revealed": revealed}
 
 
 @app.get("/models/installed")

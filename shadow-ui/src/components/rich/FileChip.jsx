@@ -17,13 +17,19 @@ const KIND = {
 
 export default function FileChip({ path, name }) {
   const [state, setState] = useState(null); // null | "opening" | error text
+  // Set when the brain showed the file in the file manager instead of
+  // opening it, because opening it could have run it as a program.
+  const [note, setNote] = useState(null);
   const ext = (name.split(".").pop() ?? "").toLowerCase();
   const kind = KIND[ext];
 
   async function open() {
     setState("opening");
     try {
-      await openWorkspaceFile(path);
+      const result = await openWorkspaceFile(path);
+      setNote(result?.revealed
+        ? "Shown in your file manager rather than opened, since opening it could run it as a program"
+        : null);
       setState(null);
     } catch (e) {
       setState(e.message);
@@ -34,7 +40,7 @@ export default function FileChip({ path, name }) {
     <button
       type="button"
       onClick={open}
-      title={state && state !== "opening" ? state : `Open ${path}`}
+      title={state && state !== "opening" ? state : note ?? `Open ${path}`}
       className={`inline-flex max-w-full items-baseline gap-1.5 rounded-md border px-1.5 py-px align-baseline font-mono text-[0.85em] transition-colors duration-150 active:scale-[0.98] ${
         state && state !== "opening"
           ? "border-danger/40 bg-danger/5 text-danger"
