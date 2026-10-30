@@ -34,10 +34,21 @@ function token() {
    is sent without a preflight, so CORS alone wouldn't stop one. Refuse to
    attach the token to anything that didn't come from Shadow's own page. */
 function sameOrigin(req, origin) {
+  // Required, not just checked when present. A same-origin GET carries no
+  // Origin header, so with this missing nothing else here would tell Shadow's
+  // page from another one. Every current browser sends it (Safari since 16.4).
   const site = (req.headers["sec-fetch-site"] || "").toLowerCase();
-  if (site && site !== "same-origin" && site !== "none") return false;
+  if (site !== "same-origin" && site !== "none") return false;
   const from = req.headers.origin;
   return !from || from === origin;
+}
+
+/* The names this server may be reached by. A DNS-rebinding page reaches
+   127.0.0.1 under its own name, and its requests are then same-origin in
+   every other respect, so the Host header is what gives it away. */
+function localHost(req, port) {
+  const host = (req.headers.host || "").toLowerCase();
+  return host === `localhost:${port}` || host === `127.0.0.1:${port}`;
 }
 
 export default defineConfig({
@@ -47,10 +58,16 @@ export default defineConfig({
     // Vite otherwise answers with Access-Control-Allow-Origin: *, which would
     // let any other local app's page drive this proxy.
     cors: false,
+    // Spelled out rather than left to Vite's default, so the host check that
+    // stops DNS rebinding can't be loosened by accident (allowedHosts: true
+    // would turn it off).
+    allowedHosts: ["localhost", "127.0.0.1"],
     proxy: {
       "/api": {
         target: "http://127.0.0.1:8765",
-        changeOrigin: false,
+        // Rewrites Host to 127.0.0.1:8765, the only Host the brain accepts.
+        // The original one has already been checked below.
+        changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api/, ""),
         configure: (proxy, options) => {
           proxy.on("proxyReq", (proxyReq, req) => {
@@ -59,7 +76,8 @@ export default defineConfig({
             const alt = `http://127.0.0.1:${port}`;
             const from = req.headers.origin;
             const ok =
-              sameOrigin(req, expected) || (from && from === alt && sameOrigin(req, alt));
+              localHost(req, port) &&
+              (sameOrigin(req, expected) || (from && from === alt && sameOrigin(req, alt)));
 
             if (!ok) {
               // Don't forward it at all, and don't lend it the token.
