@@ -302,7 +302,8 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
                      "endpoint": event["endpoint"], "host": event.get("host", "")}
         if kind == "permission":
             tools_used.append({"kind": "permission", "id": event["id"], "name": event["name"],
-                               "args": event["args"], "decision": None})
+                               "args": event["args"], "preview": event.get("preview"),
+                               "decision": None})
         elif kind == "permission_result":
             for t in tools_used:
                 if t.get("kind") == "permission" and t["id"] == event["id"]:

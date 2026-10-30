@@ -356,7 +356,8 @@ export default function App() {
               content: "",
               tools: [
                 ...m.tools,
-                { kind: "permission", id: event.id, name: event.name, args: event.args, decision: null },
+                { kind: "permission", id: event.id, name: event.name, args: event.args,
+                  preview: event.preview ?? null, decision: null },
               ],
             }));
             break;

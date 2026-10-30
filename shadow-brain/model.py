@@ -9,7 +9,7 @@ import providers
 import usage
 from config import load_tier_config
 import assistants
-from tools.registry import get_schemas, call_tool
+from tools.registry import get_schemas, call_tool, preview
 
 MODEL_NAME = load_tier_config()["base_model"]  # default, used by the terminal chat
 NUM_CTX = 16384  # must match the num_ctx sent to Ollama below
@@ -183,7 +183,11 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
 
             if name in ask:
                 pid = permissions.create()
-                yield {"type": "permission", "id": pid, "name": name, "args": args}
+                event = {"type": "permission", "id": pid, "name": name, "args": args}
+                affects = preview(name, args)
+                if affects:
+                    event["preview"] = affects
+                yield event
                 decision = permissions.wait(pid)
                 yield {"type": "permission_result", "id": pid, "decision": decision}
 

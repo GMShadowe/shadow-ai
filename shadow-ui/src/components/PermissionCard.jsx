@@ -52,6 +52,9 @@ export default function PermissionCard({ request, onAnswer }) {
       <pre className="max-h-40 overflow-y-auto whitespace-pre-wrap break-words rounded-md border border-line bg-panel-alt px-2.5 py-2 font-mono text-xs text-ink-muted">
         {formatArgs(request.args) || "(no details)"}
       </pre>
+      {request.preview && (
+        <p className="text-xs text-ink">{request.preview}</p>
+      )}
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"

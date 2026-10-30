@@ -18,8 +18,10 @@ def _schema(name: str, description: str, props: dict, required: list[str]) -> di
 S = {"type": "string"}
 
 
-def _tool(fn, schema, danger="safe"):
-    return {"fn": fn, "schema": schema, "danger": danger}
+def _tool(fn, schema, danger="safe", preview=None):
+    # preview(args) -> str says, on the approval card, what Allow would
+    # actually do, when the arguments alone don't make that obvious.
+    return {"fn": fn, "schema": schema, "danger": danger, "preview": preview}
 
 
 TOOLS = {
@@ -51,7 +53,8 @@ TOOLS = {
         _schema("run_command", "Run a shell command in the workspace. Returns output and exit code.",
                 {"command": S}, ["command"]), "caution"),
     "kill_process": _tool(desktop.kill_process,
-        _schema("kill_process", "Stop a running process by name or process id.", {"target": S}, ["target"]), "dangerous"),
+        _schema("kill_process", "Stop a running process by its exact name or its process id.",
+                {"target": S}, ["target"]), "dangerous", preview=desktop.describe_kill),
     "open_app": _tool(desktop.open_app,
         _schema("open_app", "Open an application on the user's computer by name, e.g. 'Safari'.", {"name": S}, ["name"])),
     "system_info": _tool(desktop.system_info,
@@ -71,6 +74,19 @@ TOOLS = {
 
 def get_schemas(names: list[str]) -> list[dict]:
     return [TOOLS[n]["schema"] for n in names if n in TOOLS]
+
+
+def preview(name: str, arguments: dict) -> str | None:
+    """What a tool call would affect, for the approval card, or None."""
+    fn = TOOLS.get(name, {}).get("preview")
+    if not fn:
+        return None
+    try:
+        return str(fn(**{k: v for k, v in (arguments or {}).items()
+                         if k in TOOLS[name]["schema"]["function"]["parameters"]["properties"]}))
+    except Exception as e:
+        print(f"[tools] couldn't preview {name}: {e}")
+        return f"Couldn't work out what this would affect: {e}"
 
 
 def call_tool(name: str, arguments: dict) -> str:
