@@ -1,16 +1,21 @@
 # Shadow design rules
 
 ## Personality
-Quiet instrument: calm, precise, local. Terminal heritage shows in small
-mono details (metadata, tools, code), never everywhere.
+Quiet instrument: calm, precise, local. Light by default - near-white
+grounds, white blocks, hairline lines and one blue. Terminal heritage shows
+in small mono details (metadata, tools, code), never everywhere. The dark
+themes (Charcoal, Black, Midnight) remain choices in Settings - Appearance.
+The taste behind this is recorded in `.claude/skills/taste/SKILL.md`.
 
 ## Type
-- Instrument Sans for all reading text. IBM Plex Mono for metadata, tool
+- Plus Jakarta Sans for all reading text. IBM Plex Mono for metadata, tool
   rows and code. Both load from Google Fonts in index.html; the families
   themselves live in the `--font-sans` / `--font-mono` tokens, so nothing
   names a typeface directly.
 - Message body 15px / 1.7. UI text 13-14px. Metadata 11px mono.
 - Headings: weight 600, tight tracking. Never more than 3 sizes on one screen.
+  Plus Jakarta Sans is wider than the face it replaced, so tracking tighter
+  than about -0.035em on large type runs letters into each other.
 
 ## Icons
 One family, all inline in `src/components/Icons.jsx` — no icon library.
@@ -25,16 +30,41 @@ strokeWidth 2, round caps and joins, rendered at 15-16px.
   look borrowed. The settings nav once had both, and did.
 
 ## Color roles
-- bg / panel / panel-alt: surfaces, darkest to lightest.
+Every value comes from the theme in `src/theme.js`; components never name a
+hex or `rgba(0,0,0,…)` directly, or it breaks on whichever theme it wasn't
+tuned for.
+- bg / panel / panel-alt: surfaces. On Light: `#fafafa` ground, `#ffffff`
+  blocks, `#f3f4f7` insets.
 - line: all borders and dividers (1px).
 - ink / ink-muted: primary and secondary text.
-- phosphor (accent): primary actions, active states, live status ONLY.
-- signal (blue): keyboard focus and in-progress states.
+- phosphor (accent): primary actions, active states, live status ONLY. The
+  token keeps its old name; the default accent is now Horizon, `#0f43e7` on
+  Light and `#58a6ff` on the dark themes.
+- signal: links, keyboard focus and in-progress states. Set per theme.
+- glow / glow-deep: Cool Horizon `#58a6ff` and Midnight Blue `#191970`, for
+  the one gradient (see Depth) and nothing else.
+- shadow-color: the colour of floating-layer shadows, set per theme.
 - danger (red): errors and destructive actions ONLY.
+
+## Layout
+The sidebar sits on the page ground with no border; the conversation is a
+white card inset 8px from the window (rounded-2xl, hairline border, soft
+shadow). New chat is the one dark pill in the sidebar. The composer is a
+floating white card (radius 22px) with a dark round send button. Group
+labels are small mono capitals. Chat rows are rounded-lg; the active one is
+a raised white chip.
 
 ## Depth
 Flat surfaces separated by 1px lines. Shadows only on floating layers:
-the prompt bar, menus and popovers, the settings window.
+the prompt bar, menus and popovers, the settings window, always in
+`var(--shadow-color)`.
+
+**One gradient, used with restraint.** `.glow` in `index.css` is a
+Midnight Blue into Cool Horizon radial field, blurred until it has no edge,
+so it reads as colour in the room rather than a shape. At most one per
+screen, behind open space: today the empty chat. Never behind text someone
+has to read, never on cards or buttons, never as a fill. Don't let a
+container clip it, or the blur ends in a hard line.
 
 ## Shape
 Radius comes from the appearance setting (sm / md / lg / xl tokens).
