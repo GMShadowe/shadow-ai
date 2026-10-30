@@ -1,6 +1,3 @@
-"""#25: "remember" anywhere in a message disabled tools for that turn, and
-when no fact could be extracted the whole sentence was saved to memory."""
-
 from memory.short_term import ShortTermMemory
 from orchestrator import handle_turn
 from router.classifier import classify_detailed, is_remember

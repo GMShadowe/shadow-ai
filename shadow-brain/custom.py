@@ -147,12 +147,6 @@ def is_loopback(host: str | None) -> bool:
 
 
 def check_base_url(base_url: str) -> str:
-    """A base URL the key may be sent to, or a CustomError saying why not.
-
-    https only, because the key travels in a header on every request and
-    plain http hands it to anyone on the path. The one exception is a server
-    on this computer (localhost), where there is no path to listen on.
-    """
     base_url = (base_url or "").strip().rstrip("/")
     try:
         parsed = urlparse(base_url)
@@ -173,8 +167,6 @@ def check_base_url(base_url: str) -> str:
 
 
 def _origin(base_url: str) -> tuple:
-    """Where a key actually goes: scheme, host and port. The path can change
-    freely without it going anywhere new."""
     parsed = urlparse(base_url or "")
     try:
         port = parsed.port
@@ -231,10 +223,7 @@ def update(mid: str, patch: dict) -> dict:
         raise CustomError("That model isn't in your list any more.")
     allowed = {"label", "vision", "tools", "base_url", "model", "key",
                "cap_turn", "cap_day"}
-    # A key was given to one host. Pointing the endpoint somewhere else must
-    # not quietly send that key along, so a new host needs a new key in the
-    # same request - asked for, rather than cleared, so the endpoint never
-    # sits half-configured.
+    # A changed host needs a new key, so a stored key never follows the URL elsewhere.
     new_url = patch.get("base_url")
     if entry.get("kind") == "byok" and new_url is not None:
         new_url = check_base_url(new_url)

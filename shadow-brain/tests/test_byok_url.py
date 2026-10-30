@@ -1,6 +1,3 @@
-"""#21: BYOK accepted plain http, which sends the API key unencrypted, and
-changing base_url kept the stored key, which then went to the new host."""
-
 import pytest
 
 import custom

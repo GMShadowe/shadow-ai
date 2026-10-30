@@ -20,10 +20,6 @@ def _now() -> str:
 
 @contextmanager
 def _db(aid: str | None = None):
-    # `aid` pins the assistant. Without it the path is re-read from the active
-    # pointer, which is right for a request that is over in milliseconds but
-    # wrong for a turn that streams for minutes: switching assistants part-way
-    # used to send the reply into the new assistant's chats.
     conn = sqlite3.connect(chats_db_path(aid))
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")

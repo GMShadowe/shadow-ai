@@ -1,6 +1,3 @@
-"""#28: a model that sends tool-call arguments as a JSON string used to end
-the turn with an exception, because model.py did dict(arguments)."""
-
 import model
 from model import parse_arguments, stream_model
 from tests.helpers import call, scripted
@@ -43,6 +40,5 @@ def test_invalid_arguments_are_an_error_for_the_model_not_a_crash(monkeypatch):
     assert ran == []  # never run with guessed arguments
     ends = [e for e in events if e["type"] == "tool_end"]
     assert ends and "valid JSON" in ends[0]["result"]
-    # The model saw the error on its next step.
     assert any(m["role"] == "tool" and "valid JSON" in m["content"] for m in fake.seen[1])
     assert events[-1]["type"] == "final"

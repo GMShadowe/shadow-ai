@@ -1,7 +1,3 @@
-"""#14: write_file and edit_file default to on but can destroy content as
-surely as delete_file, which asks - write_file with empty content is a
-delete. The version they replace is now kept as a backup."""
-
 import os
 
 import pytest

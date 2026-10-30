@@ -10,11 +10,7 @@ from config import get_workspace
 
 SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "__pycache__"}
 
-# write_file and edit_file are on by default, and either can destroy a file's
-# content as surely as delete_file (which asks): write_file with empty
-# content *is* a delete. So the version they replace is copied here first,
-# outside the workspace where the model can't list or touch it, and the
-# tool's result says where. Newest MAX_BACKUPS are kept.
+# write_file with empty content is a delete, so the old version is copied here first.
 BACKUP_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "backups")
 MAX_BACKUPS = 100
 MAX_BACKUP_BYTES = 20 * 1024 * 1024
@@ -24,8 +20,7 @@ DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__
 
 
 class PathRefused(ValueError):
-    """A path the file tools won't touch. A refusal, not a bug in Shadow,
-    so call_tool reports it as the plain error it is."""
+    pass
 
 
 def _inside(full: str, folder: str) -> bool:
@@ -38,9 +33,7 @@ def _safe_path(path: str) -> str:
     full = os.path.realpath(os.path.join(root, path))
     if full != root and not full.startswith(root + os.sep):
         raise PathRefused(f"Path escapes the workspace: {path}")
-    # A workspace that contains the Shadow checkout (~/Coding, say) would
-    # otherwise hand the file tools the API key, the access token, and every
-    # assistant's chats and memory.
+    # Holds the API key and access token; refused even inside the workspace.
     if _inside(full, DATA_DIR):
         raise PathRefused(f"{path} is inside Shadow's own data folder, which the file tools never touch.")
     return full
@@ -54,9 +47,6 @@ def _walk(start: str):
 
 
 def _backup(full: str) -> str:
-    """Copy a file that is about to change, and say so in a sentence for the
-    tool result. Never raises: a failed backup is reported, and the caller
-    decides what to do about it."""
     rel = os.path.relpath(full, get_workspace())
     try:
         size = os.path.getsize(full)
@@ -67,7 +57,6 @@ def _backup(full: str) -> str:
         name = f"{time.strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}-{flat}"
         dest = os.path.join(BACKUP_DIR, name)
         shutil.copyfile(full, dest)
-        # Workspace files can be private; the copy is readable by this user only.
         os.chmod(dest, 0o600)
         _prune_backups()
     except OSError as e:
@@ -102,8 +91,6 @@ def write_file(path: str, content: str) -> str:
         return f"Error: '{path}' is a folder, not a file."
     note = ""
     if os.path.isfile(full):
-        # Only read the old file when it could be identical, so a rewrite of
-        # a large file doesn't load it just to compare.
         unchanged = False
         if os.path.getsize(full) == len(content.encode("utf-8")):
             with open(full, "r", encoding="utf-8", errors="replace") as f:

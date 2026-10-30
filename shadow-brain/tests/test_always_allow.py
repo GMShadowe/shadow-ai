@@ -1,7 +1,3 @@
-"""#2: "Always allow" wrote {"tools": ...} to global settings, which has no
-such key, so update_settings raised and the turn failed - and tool state
-belongs to the assistant anyway."""
-
 import threading
 
 import assistants
@@ -40,5 +36,4 @@ def test_always_allow_runs_the_tool_and_saves_on_for_that_assistant(monkeypatch)
     assert ran == ["delete_file"]
     assert events[-1] == {"type": "final", "text": "Deleted junk.txt."}
     assert assistants.get_profile(aid)["tools"]["delete_file"] == "on"
-    # Only the assistant that was asked.
     assert tool_state("delete_file", assistants.get_profile(other)) == "ask"

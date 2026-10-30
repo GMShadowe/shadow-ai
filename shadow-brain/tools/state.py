@@ -6,18 +6,12 @@ from settings import get_settings
 TOOL_STATES = ["on", "ask", "off"]
 # The only tools that send anything off this computer.
 WEB_TOOLS = ["web_search", "fetch_url", "http_request"]
-# Tools that start as Ask for any assistant whose profile doesn't say
-# otherwise. run_command is here because a shell can do anything the other
-# tools can and more; it used to be added per assistant instead, so any
-# profile without the entry - an old one, a hand-written one - had it on.
-# open_app launches programs, so it asks too.
+# A profile without an entry for these asks.
 DANGEROUS_DEFAULT_ASK = {"delete_file", "delete_dir", "http_request", "kill_process", "run_command",
                          "open_app"}
 
 
 def default_state(name: str) -> str:
-    """What a tool is set to when an assistant's profile doesn't say. Served
-    to the UI with the tool list, so the wizard can't drift from this."""
     return "ask" if name in DANGEROUS_DEFAULT_ASK else "on"
 
 

@@ -30,8 +30,6 @@ PROFILE_DEFAULTS = {
     "tools": {},  # tool name -> "on" / "ask" / "off"
 }
 
-# A new assistant has run_command written down as Ask. tools.state defaults
-# it to Ask as well, so a profile without the entry is just as safe.
 NEW_ASSISTANT_TOOLS = {"run_command": "ask"}
 
 
@@ -40,17 +38,10 @@ class AssistantError(Exception):
 
 
 class ProfileError(AssistantError):
-    """A profile.json that exists but can't be read.
-
-    Raised rather than papered over with defaults: the defaults turn every
-    tool back to its default state, so a damaged file would silently undo
-    the approvals the user set. Nothing runs on a profile we couldn't read.
-    """
+    pass
 
 
 def _write_json(path: str, data: dict) -> None:
-    """Write through a temp file and swap it in, so a crash or a second
-    writer mid-write leaves the old file or the new one, never half of one."""
     tmp = f"{path}.{os.getpid()}.tmp"
     try:
         with open(tmp, "w", encoding="utf-8") as f:
@@ -63,7 +54,6 @@ def _write_json(path: str, data: dict) -> None:
 
 
 def _read_profile(aid: str) -> dict | None:
-    """The saved profile, None if there isn't one yet, ProfileError if it is damaged."""
     path = os.path.join(ASSISTANTS_DIR, aid, "profile.json")
     try:
         with open(path, "r", encoding="utf-8") as f:
@@ -106,9 +96,6 @@ def active_id() -> str:
     if existing:
         set_active(existing[0])
         return existing[0]
-    # The very first assistant gets the same explicit Ask on run_command as
-    # any other (tools.state also defaults it to Ask; this keeps it written
-    # down in the profile, where Settings shows it).
     ensure("default", {"name": "Shadow", "tools": dict(NEW_ASSISTANT_TOOLS)})
     set_active("default")
     return "default"
@@ -345,12 +332,6 @@ def update_profile(patch: dict, aid: str | None = None) -> dict:
 
 
 def set_tool_state(name: str, state: str, aid: str | None = None) -> dict:
-    """Change one tool's on/ask/off state for one assistant, keeping the rest.
-
-    Tool state is per assistant, so this goes into the profile - never into
-    global settings, which have no "tools" key and refused the write, so
-    "Always allow" on a permission prompt used to fail the whole turn.
-    """
     aid = aid or active_id()
     tools = dict(get_profile(aid).get("tools") or {})
     tools[name] = state

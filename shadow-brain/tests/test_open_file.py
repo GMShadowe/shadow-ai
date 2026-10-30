@@ -1,7 +1,3 @@
-"""#4: clicking a file chip ran `open` / `xdg-open` / `cmd /c start` on any
-workspace file, and the model can write .command, .bat or .desktop files,
-which those handlers execute."""
-
 import os
 import subprocess
 

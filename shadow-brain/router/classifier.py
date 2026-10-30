@@ -20,9 +20,7 @@ EXPLICIT = {
                  "this year", "recent", "what version"],
 }
 FILE_WORDS = ["file", "folder", "directory"]
-# "remember ..." is always a memory save, never a tool route. Only when the
-# message *starts* with the request: matched anywhere, "I don't remember the
-# filename, find it" lost its tools and was saved to memory word for word.
+# Anchored to the start: "I don't remember the filename" is not a memory save.
 REMEMBER_RE = re.compile(
     r"^\s*(?:(?:hey|ok|okay|so|and|also|please|pls)[\s,]+)*"
     r"(?:remember|keep in mind|don'?t forget|do not forget|note this|note that)\b",
@@ -31,8 +29,6 @@ REMEMBER_RE = re.compile(
 
 
 def is_remember(text: str) -> bool:
-    """Whether a message is asking Shadow to remember something. The one
-    test both the router and the memory save use, so they can't disagree."""
     return bool(REMEMBER_RE.match(text or ""))
 
 

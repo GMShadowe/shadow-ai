@@ -8,12 +8,6 @@ import subprocess
 
 
 def _check_app_name(name) -> str | None:
-    """An error if `name` isn't a plain application name.
-
-    The name comes from the model, which may be repeating a web page. A path
-    would let it launch any file - a script it just wrote included - and a
-    leading dash would be read as an option by `open`.
-    """
     name = str(name or "").strip()
     if not name:
         return "Error: say which app to open, by its name, like 'Safari' or 'Notes'."
@@ -32,11 +26,6 @@ def _start_menu_dirs() -> list[str]:
 
 
 def _windows_shortcut(name: str) -> str | None:
-    """The Start Menu shortcut for an installed app, matched by its name.
-
-    Only shortcuts, never `cmd /c start <name>`: cmd interprets & | > in the
-    name, and `start` runs scripts and executables as readily as apps.
-    """
     wanted = name.lower().removesuffix(".lnk")
     for root in _start_menu_dirs():
         for dirpath, _dirs, files in os.walk(root):
@@ -94,9 +83,7 @@ def system_info() -> str:
     lines.append(f"Disk total: {disk.total / 1e9:.1f} GB")
     return "\n".join(lines)
 
-# Never stopped, whatever the target says: Shadow itself (and whatever
-# launched it), the system's first processes, and Ollama, without which the
-# turn asking for this can't even finish.
+# Never stopped: Shadow, its parents, the first system processes and Ollama.
 PROTECTED_NAMES = {"ollama", "ollama.exe", "ollama app", "ollama app.exe"}
 
 
@@ -105,19 +92,11 @@ def _protected_pids() -> set[int]:
 
 
 def _same_name(wanted: str, name: str) -> bool:
-    """Exact, ignoring case and a Windows .exe. Substring matching was the
-    bug: a one-letter target matched most processes and an empty one matched
-    every process, the brain and Ollama included."""
     a, b = wanted.lower(), (name or "").lower()
     return a == b or a == b.removesuffix(".exe") or a.removesuffix(".exe") == b
 
 
 def find_targets(target) -> tuple[list[dict], str | None]:
-    """The processes kill_process would stop, or an error saying why none.
-
-    Used for the approval card as well as the kill, so the user sees exactly
-    which processes an Allow covers before they press it.
-    """
     try:
         import psutil
     except ImportError:
@@ -152,7 +131,6 @@ def find_targets(target) -> tuple[list[dict], str | None]:
 
 
 def describe_kill(target) -> str:
-    """For the approval card: what Allow would stop."""
     found, error = find_targets(target)
     if error:
         return error.removeprefix("Error: ")

@@ -1,15 +1,3 @@
-"""Shell tool. Starts in the workspace, with a denylist. This is NOT a real
-sandbox: a command runs with the user's own access to their files. Two
-things are kept from it, because they are Shadow's own secrets:
-
-- **The brain's environment.** Commands get a minimal one (PATH, HOME,
-  locale), not the brain's, which may hold provider API keys or tokens.
-- **Shadow's data folder** - the BYOK API key, the access token, chats and
-  memory. On macOS the command runs under sandbox-exec with that folder
-  denied for reading and writing. Elsewhere there is no comparable
-  built-in tool, and the approval card says so.
-"""
-
 import os
 import platform
 import re
@@ -20,10 +8,8 @@ from config import get_workspace
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
 
-# What a command keeps from the brain's environment. Everything else - API
-# keys, SHADOW_* settings, tokens a launcher exported - stays behind.
+# Provider keys and tokens in the brain's environment must not reach commands.
 KEEP_ENV = {"PATH", "HOME", "USER", "LOGNAME", "SHELL", "LANG", "TERM", "TMPDIR", "TZ",
-            # Windows needs these to start anything at all.
             "SYSTEMROOT", "SYSTEMDRIVE", "COMSPEC", "PATHEXT", "WINDIR", "USERPROFILE",
             "APPDATA", "LOCALAPPDATA", "PROGRAMDATA", "TEMP", "TMP", "NUMBER_OF_PROCESSORS"}
 
@@ -33,8 +19,6 @@ def _env() -> dict:
 
 
 def _sandboxed(command: str) -> list[str] | None:
-    """The command wrapped so it can't read or write Shadow's data folder,
-    or None where that isn't available."""
     if platform.system() != "Darwin" or not shutil.which("sandbox-exec"):
         return None
     data = os.path.realpath(DATA_DIR).replace("\\", "\\\\").replace('"', '\\"')
@@ -43,7 +27,6 @@ def _sandboxed(command: str) -> list[str] | None:
 
 
 def describe(command=None) -> str:
-    """For the approval card: what Allow actually permits."""
     protected = ("Shadow's own data folder is walled off" if _sandboxed("true")
                  else "nothing walls off Shadow's own data folder on this system")
     return ("Runs in a shell with your account's full access: it can read and change any file you "

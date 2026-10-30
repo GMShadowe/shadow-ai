@@ -1,7 +1,3 @@
-"""#27: fact extraction always asked Ollama for the profile's model, which
-for a BYOK model doesn't exist there, and swallowed the error - so
-"remember" and auto-memory did nothing for BYOK users."""
-
 import pytest
 
 import usage
@@ -35,7 +31,6 @@ def test_byok_extraction_goes_to_the_provider(byok, monkeypatch):
 
     assert extract.extract_facts("remember that I use vim", "byok:test") == ["Uses vim"]
     assert sent == ["gpt-test"]
-    # The extra call is billed to the user, so it is counted like any other.
     assert usage.today_total("byok:test") == 45
 
 

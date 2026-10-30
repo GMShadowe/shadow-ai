@@ -1,7 +1,3 @@
-"""#15: storage and memory re-read the active assistant on every call, so a
-turn still streaming when the user switched assistants saved its reply and
-memories into the new assistant."""
-
 import sqlite3
 
 import assistants
@@ -22,7 +18,6 @@ def test_switching_mid_turn_keeps_the_reply_with_the_asking_assistant(client, mo
     fake, saved = quiet_turn(monkeypatch, "The answer.", facts=["Uses vim"])
 
     def switch_then_answer(*args, **kwargs):
-        # The user opens the dashboard and switches while the reply streams.
         client.post(f"/assistants/{other}/activate").raise_for_status()
         return fake(*args, **kwargs)
 

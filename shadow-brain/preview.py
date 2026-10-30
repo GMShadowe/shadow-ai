@@ -183,11 +183,6 @@ def _parse(url: str, final_url: str, html: str) -> dict:
 
 
 async def _fetch_one(client: httpx.AsyncClient, url: str) -> dict:
-    """One link's card. The fetch goes through netguard, which is the whole
-    defence here: link text comes out of a model that may be repeating a URL
-    from a page it read, and checking only the first URL (as this did) let a
-    public page redirect the brain to http://127.0.0.1:8765, or a rebinding
-    DNS server answer differently the second time it was asked."""
     try:
         response = await netguard.arequest("GET", url, client=client, max_bytes=MAX_HTML_BYTES,
                                            stop_at=b"</head>", headers={
@@ -244,8 +239,6 @@ async def previews(urls: list[str]) -> dict:
 
     if todo:
         limits = httpx.Limits(max_connections=6)
-        # Redirects off and proxies ignored: netguard follows each hop itself,
-        # checking it, and connects to the address it checked.
         async with httpx.AsyncClient(timeout=TIMEOUT, follow_redirects=False, trust_env=False,
                                      limits=limits) as client:
             results = await asyncio.gather(*(_fetch_one(client, u) for u in todo))
@@ -278,8 +271,6 @@ async def image(url: str) -> tuple[bytes, str]:
     if not content_type.startswith("image/"):
         raise PreviewError("that isn't an image")
     data = response.body
-    # Read one byte past the cap and no further, so a huge image is refused
-    # without ever being held in memory whole.
     if len(data) > MAX_IMAGE_BYTES:
         raise PreviewError("that image is too big to pass through")
 

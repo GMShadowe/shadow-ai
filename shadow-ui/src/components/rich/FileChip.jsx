@@ -17,8 +17,6 @@ const KIND = {
 
 export default function FileChip({ path, name }) {
   const [state, setState] = useState(null); // null | "opening" | error text
-  // Set when the brain showed the file in the file manager instead of
-  // opening it, because opening it could have run it as a program.
   const [note, setNote] = useState(null);
   const ext = (name.split(".").pop() ?? "").toLowerCase();
   const kind = KIND[ext];

@@ -37,12 +37,7 @@ PUBLIC_PATHS = {"/health"}
 # on this machine, because a different port is the same site.
 SAFE_FETCH_SITES = {"same-origin", "none"}
 
-# The Host a request to the brain may carry. A browser sends the name it
-# resolved, so a DNS-rebinding page (evil.example pointed at 127.0.0.1) still
-# says "Host: evil.example" - and a same-origin request from that page carries
-# no Origin and no cross-site Sec-Fetch-Site, so this is the one check that
-# sees it. Checked here as well as in the dev server, so the brain doesn't
-# depend on Vite's own host check staying strict.
+# The only check that sees a DNS-rebinding page; keep it strict.
 PORT = os.environ.get("SHADOW_PORT", "8765")
 ALLOWED_HOSTS = {f"127.0.0.1:{PORT}", f"localhost:{PORT}", f"[::1]:{PORT}"}
 

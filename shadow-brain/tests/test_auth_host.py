@@ -1,7 +1,3 @@
-"""#22: the brain never checked Host, so a DNS-rebinding page - whose
-requests look same-origin in every other way - relied entirely on Vite's
-host check."""
-
 import auth
 
 
@@ -28,8 +24,6 @@ def test_a_missing_host_is_refused():
 
 
 def test_the_dev_servers_own_host_is_not_accepted():
-    # The proxy rewrites Host to the brain's; one that arrives unrewritten
-    # didn't come through it.
     assert auth.check("GET", "/memory", headers(host="localhost:5173"))[0] == 403
 
 

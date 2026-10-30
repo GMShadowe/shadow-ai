@@ -69,10 +69,6 @@ async def require_token(request: Request, call_next):
     return await call_next(request)
 
 
-# A damaged profile.json or settings.json stops everything rather than
-# falling back to defaults (which would quietly re-enable tools and turn
-# offline mode off). Said in plain words, with the file to fix, instead of
-# FastAPI's bare "Internal Server Error".
 @app.exception_handler(assistants.ProfileError)
 @app.exception_handler(SettingsError)
 async def damaged_file(request: Request, exc: Exception):
@@ -102,17 +98,10 @@ auth.token()
 storage.init()
 long_term.init()
 assistants.migrate_tiers()
-# Short-term memory per conversation. Sync endpoints run on a threadpool, so
-# this is touched from several threads at once: every read and write of the
-# dict goes through _sessions_lock. The memory objects themselves are safe
-# because only one turn per conversation can run at a time (_claim below).
+# Guarded by _sessions_lock; sync endpoints run on a threadpool.
 sessions: dict[str, ShortTermMemory] = {}
 _sessions_lock = threading.Lock()
-# Conversations with a turn in progress. Two turns on one conversation would
-# interleave their messages in its history - neither sees the other's
-# question, and both replies land after both questions.
-# Each claim has its own token, so a late release (the finalizer below runs
-# whenever the old stream is collected) can't free a newer turn's claim.
+# Claim tokens, so a late release from a finished stream can't free a newer turn.
 _busy: dict[str, object] = {}
 
 
@@ -127,8 +116,6 @@ def _drop_session(cid: str) -> None:
 
 
 def _claim(cid: str) -> object:
-    """Mark a conversation busy, or refuse with 409 if a turn is running.
-    Returns the claim, which is what _release needs to let it go."""
     with _sessions_lock:
         if cid in _busy:
             raise HTTPException(
@@ -558,11 +545,7 @@ async def preview_image(u: str):
                     headers={"Cache-Control": "private, max-age=86400"})
 
 
-# What a click on a file chip may open with the computer's default handler.
-# Everything else is shown in the file manager instead: the model can write
-# a .command, .bat, .desktop, .app or plain script, and "open" on those runs
-# them - so one click on a file name in a reply would execute code the model
-# wrote. Only document, text, data and media types are on this list.
+# Anything not listed is revealed instead: `open` would run a script the model wrote.
 OPENABLE = {
     ".txt", ".md", ".markdown", ".rtf", ".log", ".csv", ".tsv", ".json", ".yaml", ".yml",
     ".toml", ".xml", ".ini", ".pdf", ".html", ".htm", ".css",
@@ -573,13 +556,9 @@ OPENABLE = {
 
 
 def _open_command(full: str) -> tuple[list[str] | None, bool]:
-    """(command, revealed). command is None on Windows, where os.startfile
-    is used instead - never cmd /c start, which interprets & and | in the
-    file name."""
     system = platform.system()
     ext = os.path.splitext(full)[1].lower()
-    # A folder opens in the file manager, unless it is a bundle (Notes.app),
-    # which "open" would launch.
+    # A bundle such as Notes.app is a folder that `open` would launch.
     plain_dir = os.path.isdir(full) and not ext
     openable = plain_dir or (os.path.isfile(full) and ext in OPENABLE)
     if system == "Darwin":
@@ -591,13 +570,6 @@ def _open_command(full: str) -> tuple[list[str] | None, bool]:
 
 @app.post("/open-file")
 def open_file(body: OpenFileRequest):
-    """Open a workspace file in whatever the user's computer uses for it -
-    or, for anything that could run as a program, show it in the file
-    manager instead.
-
-    Clicking a file chip in a reply is the only thing that calls this, and
-    it is confined to the workspace like every other file operation.
-    """
     import subprocess
 
     from tools.files import _safe_path
@@ -1065,15 +1037,6 @@ def _turn_error(cid: str, exc: Exception, model: str | None, aid: str) -> dict:
 
 def _stream_turn_response(cid: str, text: str, memory: ShortTermMemory, model, effort,
                           images: list[str], skill: str | None, aid: str, claim: object):
-    """Stream one turn, pinned to the assistant that was active when it was
-    asked. Switching mid-turn must not move the reply - or its memories, or
-    its error - into the assistant the user switched to.
-
-    The caller has already claimed the conversation; this releases it when
-    the stream ends, or when the generator is thrown away unstarted - a client
-    that disconnects before the first byte never runs its `finally`, and the
-    chat would otherwise stay busy until the brain restarts.
-    """
     def events():
         try:
             for event in stream_turn(text, memory, model, effort, images, skill, aid):
@@ -1092,9 +1055,6 @@ def _stream_turn_response(cid: str, text: str, memory: ShortTermMemory, model, e
 
 
 def _claimed(cid: str, setup):
-    """Run a turn's setup with the conversation claimed, letting it go again
-    if the setup refuses the request - otherwise a 400 would leave the chat
-    marked busy."""
     claim = _claim(cid)
     try:
         return setup(claim)

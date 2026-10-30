@@ -50,15 +50,6 @@ def _chat_stream(model, messages, schemas, temperature, provider=None):
 
 
 def parse_arguments(raw) -> tuple[dict, str | None]:
-    """A tool call's arguments as a dict, or an error to hand back to the model.
-
-    Ollama gives a dict, but other models and servers send the JSON as a
-    string, and some send a string that isn't valid JSON at all. `dict(...)`
-    on a string raised and ended the whole turn, so every tool call from such
-    a model failed. A string is parsed; anything that still isn't an object
-    becomes an error the model reads, and the tool does not run - running it
-    with no arguments would be guessing at what was meant.
-    """
     if raw is None or raw == "":
         return {}, None
     if isinstance(raw, dict):
@@ -114,8 +105,6 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
     nudged = False
     # The user's question for this turn. Pinned so the compressor can never
     # drop it, however many tool results pile up behind it.
-    # Passed in when the turn already carries messages after it (the
-    # orchestrator's auto-search adds a tool call and its result).
     question = question if question is not None else (messages[-1] if messages else None)
 
     # A BYOK turn is billed to the user, one call per step. Counted as it goes
@@ -195,9 +184,6 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
                 yield {"type": "permission_result", "id": pid, "decision": decision}
 
                 if decision == "always":
-                    # The user said yes either way, so a failed save still
-                    # runs the tool - it just asks again next time, and the
-                    # reason is printed rather than lost.
                     try:
                         assistants.set_tool_state(name, "on", aid)
                     except (OSError, ValueError) as e:

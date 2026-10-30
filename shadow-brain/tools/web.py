@@ -29,9 +29,6 @@ def web_search(query: str) -> str:
     return "\n".join(lines)
 
 
-# Caps on what is read from a response. A page is cut to a few thousand
-# characters before the model sees it anyway; these stop a link to a huge
-# file from being read into memory first.
 MAX_PAGE_BYTES = 2_000_000
 MAX_RESPONSE_BYTES = 1_000_000
 

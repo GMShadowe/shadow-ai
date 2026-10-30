@@ -34,18 +34,14 @@ function token() {
    is sent without a preflight, so CORS alone wouldn't stop one. Refuse to
    attach the token to anything that didn't come from Shadow's own page. */
 function sameOrigin(req, origin) {
-  // Required, not just checked when present. A same-origin GET carries no
-  // Origin header, so with this missing nothing else here would tell Shadow's
-  // page from another one. Every current browser sends it (Safari since 16.4).
+  // Required: a same-origin GET has no Origin, so this is the only signal.
   const site = (req.headers["sec-fetch-site"] || "").toLowerCase();
   if (site !== "same-origin" && site !== "none") return false;
   const from = req.headers.origin;
   return !from || from === origin;
 }
 
-/* The names this server may be reached by. A DNS-rebinding page reaches
-   127.0.0.1 under its own name, and its requests are then same-origin in
-   every other respect, so the Host header is what gives it away. */
+// DNS rebinding sends the attacker's name as Host; only these are accepted.
 function localHost(req, port) {
   const host = (req.headers.host || "").toLowerCase();
   return host === `localhost:${port}` || host === `127.0.0.1:${port}`;
@@ -58,15 +54,11 @@ export default defineConfig({
     // Vite otherwise answers with Access-Control-Allow-Origin: *, which would
     // let any other local app's page drive this proxy.
     cors: false,
-    // Spelled out rather than left to Vite's default, so the host check that
-    // stops DNS rebinding can't be loosened by accident (allowedHosts: true
-    // would turn it off).
+    // Explicit: allowedHosts: true would turn the DNS-rebinding check off.
     allowedHosts: ["localhost", "127.0.0.1"],
     proxy: {
       "/api": {
         target: "http://127.0.0.1:8765",
-        // Rewrites Host to 127.0.0.1:8765, the only Host the brain accepts.
-        // The original one has already been checked below.
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api/, ""),
         configure: (proxy, options) => {

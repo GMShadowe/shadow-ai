@@ -1,11 +1,3 @@
-"""Shared setup for the brain's tests.
-
-Every test runs against a throwaway data folder. The real one holds the
-user's chats, memory, API keys and auth token, and no test may read or write
-it - so every module-level path that points into data/ is redirected here,
-before each test, whether or not that test looks like it touches storage.
-"""
-
 import os
 import sys
 
@@ -17,9 +9,7 @@ if BRAIN not in sys.path:
 
 
 def pytest_collection_finish(session):
-    # server.py initialises databases, migrates profiles and may load Laya
-    # the moment it is imported (#33). Imported at a test module's top level,
-    # that runs against the user's real data folder, before any redirect.
+    # Importing server touches the real data folder before the redirects run.
     if "server" in sys.modules:
         raise pytest.UsageError("A test module imports server at the top level. Import it inside "
                                 "the test, or use the client fixture, so it sees the test data folder.")
@@ -50,16 +40,12 @@ def data_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(files, "DATA_DIR", str(data))
     from tools import shell
     monkeypatch.setattr(shell, "DATA_DIR", str(data))
-    # Keyword routing, so no test ever loads Laya from Hugging Face.
     settings.update_settings({"router": "keywords"})
     return data
 
 
 @pytest.fixture
 def client(data_dir):
-    """The real FastAPI app, talking to the throwaway data folder, with the
-    token and Host every request needs. server.py does work at import (#33),
-    so it is imported here, after the paths above are redirected."""
     from fastapi.testclient import TestClient
 
     import auth

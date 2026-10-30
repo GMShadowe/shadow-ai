@@ -218,10 +218,7 @@ def _stream_attempt(client, url, payload, headers, cfg, sink):
     if building:
         calls = []
         for slot in building.values():
-            # Passed through as the raw string when it doesn't parse, rather
-            # than replaced with {}: model.parse_arguments turns it into an
-            # error the model can read, where {} silently ran the tool with
-            # no arguments at all.
+            # Raw string, not {}: {} would run the tool with no arguments.
             args = slot["arguments"]
             try:
                 parsed = json.loads(args) if args.strip() else {}
@@ -234,8 +231,6 @@ def _stream_attempt(client, url, payload, headers, cfg, sink):
 
 
 def _require_safe_url(cfg: dict) -> None:
-    """custom.py refuses plain http when an endpoint is saved; this catches
-    one saved before that rule existed, right before the key would go out."""
     import custom
     try:
         custom.check_base_url(cfg.get("base_url", ""))

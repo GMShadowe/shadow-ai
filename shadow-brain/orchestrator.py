@@ -89,10 +89,7 @@ def clean_query(text: str) -> str:
     return q or text
 
 
-# Tools that change something - files, processes, other servers - and so
-# must not run on the say-so of text from a web page. On a turn where web
-# content can come in, they ask first even if they are set to On: a page can
-# carry instructions, and a small model follows instructions it reads.
+# A web page can carry instructions, so these ask on any turn where web content can arrive.
 CHANGES_THINGS = ["write_file", "edit_file", "move_file", "delete_file", "delete_dir",
                   "run_command", "http_request", "kill_process", "open_app"]
 
@@ -105,8 +102,6 @@ UNTRUSTED_NOTE = (
 
 
 def gate_for_web(allowed: list[str], ask: list[str]) -> list[str]:
-    """When a web tool can run this turn, move tools that change things to
-    Ask, in place. Returns the ones it moved, for the log."""
     if not any(t in allowed for t in WEB_TOOLS):
         return []
     moved = [t for t in CHANGES_THINGS if t in allowed and t not in ask]
@@ -214,10 +209,7 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
                 images: list[str] | None = None, skill_name: str | None = None,
                 aid: str | None = None):
     images = images or []
-    # Resolved once. A turn can stream for minutes (a permission prompt alone
-    # waits up to five), and everything that read "the active assistant" as
-    # it went - the profile, the model, memory - would switch to whichever
-    # assistant the user moved to in the meantime.
+    # Resolved once: the user can switch assistants while this turn streams.
     aid = aid or active_id()
     profile = get_profile(aid)
     tier = tier or profile["model"]
@@ -286,10 +278,7 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     auto_search = wants_research and "web_search" not in ask and not images
     is_follow_up = previous is not None and len(user_input.split()) < 4
 
-    # The search runs on the user's own words, but what comes back is text
-    # from web pages. It goes in as the result of a web_search call - where
-    # the model treats it as data - and never into the system prompt, where
-    # it would carry the same authority as Shadow's own rules.
+    # Never in the system prompt: web text there would carry the authority of the rules.
     search_messages: list[dict] = []
     if auto_search and not is_follow_up:
         query = clean_query(user_input)
@@ -366,9 +355,6 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     # Save to long-term memory.
     try:
         if is_remember(user_input):
-            # Only what extraction pulled out is stored. The raw message used
-            # to be saved when it found nothing, which put whole sentences -
-            # questions, file requests - into long-term memory.
             facts = extract.extract_facts(user_input, tier)
             if facts:
                 saved = [long_term.add(f, source="asked", aid=aid) for f in facts]

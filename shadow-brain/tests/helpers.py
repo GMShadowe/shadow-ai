@@ -1,6 +1,3 @@
-"""Small fakes shared by the tests: a scripted model stream, so a turn can
-run without Ollama, and the chunk shapes model.py reads."""
-
 from providers import Call, Chunk, Msg
 
 
@@ -9,9 +6,6 @@ def call(name: str, arguments) -> Call:
 
 
 def scripted(*steps):
-    """A stand-in for model._chat_stream. Each step is either a reply string
-    or a list of tool calls; one step is consumed per request, and the
-    messages each request saw are kept for the test to inspect."""
     queue = list(steps)
     seen = []
 
@@ -27,8 +21,6 @@ def scripted(*steps):
 
 
 def quiet_turn(monkeypatch, *steps, facts=None):
-    """Run orchestrator turns with the model, embeddings and fact extraction
-    faked out. Returns (model fake, list of memories saved)."""
     import model
     from memory import extract, long_term
 

@@ -1,7 +1,3 @@
-"""#3: open_app was marked safe and on by default; on Windows it ran
-`cmd /c start "" <name>` (cmd metacharacters, and start runs scripts), and
-on Linux shutil.which accepted an absolute path to any executable."""
-
 import os
 
 import pytest

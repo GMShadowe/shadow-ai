@@ -19,8 +19,6 @@ S = {"type": "string"}
 
 
 def _tool(fn, schema, danger="safe", preview=None):
-    # preview(args) -> str says, on the approval card, what Allow would
-    # actually do, when the arguments alone don't make that obvious.
     return {"fn": fn, "schema": schema, "danger": danger, "preview": preview}
 
 
@@ -78,7 +76,6 @@ def get_schemas(names: list[str]) -> list[dict]:
 
 
 def preview(name: str, arguments: dict) -> str | None:
-    """What a tool call would affect, for the approval card, or None."""
     fn = TOOLS.get(name, {}).get("preview")
     if not fn:
         return None

@@ -1,6 +1,3 @@
-"""#8: fetch_url and http_request accepted any http(s) URL - loopback, LAN,
-link-local, cloud metadata - and urllib followed redirects anywhere."""
-
 import socket
 
 import httpx
@@ -15,7 +12,6 @@ ADDRESSES = {"public.example": ["93.184.216.34"], "evil.internal": ["10.0.0.5"],
 
 @pytest.fixture
 def net(monkeypatch):
-    """Fake DNS and a fake network that records what was actually sent."""
     lookups, sent = [], []
 
     def getaddrinfo(host, port, *a, **k):
@@ -74,7 +70,6 @@ def test_a_public_redirect_is_followed(net):
 
 
 def test_a_name_that_also_resolves_privately_is_refused(net):
-    # Any private answer is enough: the client could connect to any of them.
     assert web.fetch_url("http://rebind.example/").startswith("Blocked:")
 
 

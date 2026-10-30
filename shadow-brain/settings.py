@@ -29,9 +29,7 @@ BOOLEANS = ["offline", "log_turns", "onboarded"]
 
 
 class SettingsError(Exception):
-    """settings.json exists but can't be read. Raised, never replaced with
-    the defaults: those have offline mode off, so a damaged file would
-    quietly let the web tools and BYOK models reach the internet again."""
+    pass
 
 
 def get_settings() -> dict:

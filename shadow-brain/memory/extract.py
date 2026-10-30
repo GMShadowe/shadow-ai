@@ -26,14 +26,6 @@ Reply with ONLY the JSON array, nothing else."""
 
 
 def _ask(cfg: dict, prompt: str) -> str:
-    """One reply from whichever model the turn used.
-
-    A BYOK model's name means nothing to Ollama, so asking Ollama for it
-    failed on every turn - and the failure was swallowed, so "remember" and
-    auto-memory quietly did nothing for BYOK users. The message being
-    extracted from was already sent to that endpoint as part of the turn, so
-    this sends nothing new; it is counted and capped like any other call.
-    """
     messages = [{"role": "user", "content": prompt}]
     if cfg.get("kind") == "byok":
         from model import _record
@@ -51,12 +43,6 @@ def _ask(cfg: dict, prompt: str) -> str:
 
 
 def extract_facts(user_text: str, tier: str | None = None) -> list[str]:
-    """Facts from one message, using the model the turn ran on.
-
-    Never raises - a failed extraction must not fail a turn that has already
-    been answered - but always says why it found nothing, because an empty
-    list here is otherwise indistinguishable from "nothing worth keeping".
-    """
     try:
         cfg = load_tier_config(tier)
         content = _ask(cfg, PROMPT.format(text=user_text[:800])).strip()

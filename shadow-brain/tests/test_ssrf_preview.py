@@ -1,7 +1,3 @@
-"""#9: link previews checked only the first URL, then let httpx follow
-redirects - so a public page redirecting to a private address was fetched -
-and the host was resolved twice, once to check and once to connect."""
-
 import asyncio
 import socket
 

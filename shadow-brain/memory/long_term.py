@@ -23,8 +23,6 @@ def _now() -> str:
 
 @contextmanager
 def _db(aid: str | None = None):
-    # `aid` pins the assistant for a turn that is still running when the
-    # user switches, so its memories don't land in the other assistant.
     conn = sqlite3.connect(memory_db_path(aid))
     conn.row_factory = sqlite3.Row
     try:

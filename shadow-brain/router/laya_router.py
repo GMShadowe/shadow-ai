@@ -1,4 +1,3 @@
-
 """Fast, persistent Laya wrapper with automatic device selection."""
 
 import os
@@ -9,16 +8,8 @@ import warnings
 # Avoid TensorFlow initialization issues in supported environments.
 os.environ.setdefault("USE_TF", "0")
 
-# Pinned, and verified before a weight is parsed. Without a revision,
-# laya.load fetched whatever the Hugging Face repo's main branch held at the
-# time, so a compromised or simply changed upstream would be loaded into the
-# brain automatically - and the router thresholds in classifier.py were tuned
-# by hand against this exact checkpoint. laya.revisions.PINNED_REVISIONS has
-# its own "reviewed" SHA (55cf4c4e...), which is a different, later commit;
-# moving to it is a deliberate upgrade that needs the thresholds re-checked.
-#
-# To upgrade: download the new revision, re-run test_router.py, then update
-# both the SHA and the digests below (sha256 of each file in the snapshot).
+# classifier.py's thresholds were tuned on this exact revision. To upgrade, re-run
+# test_router.py, then update the SHA and the sha256 digests below.
 LAYA_REPO = "convaiinnovations/laya"
 LAYA_REVISION = "7b928d828b7b0e022f929d9bd2e44165aa270148"
 LAYA_SHA256 = {

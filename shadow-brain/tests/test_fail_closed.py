@@ -1,8 +1,3 @@
-"""#7: tool permissions failed open. run_command wasn't in the default-Ask
-set, profiles were written in place, and a damaged profile or settings
-file was silently replaced with defaults - resetting every tool approval
-and turning offline mode off."""
-
 import json
 import os
 
@@ -48,13 +43,11 @@ def test_profile_writes_are_atomic(monkeypatch):
     def crash(*args, **kwargs):
         raise OSError("disk full")
 
-    # Scoped: undo() on the test's own monkeypatch would also undo the data
-    # folder redirect in conftest and point the paths at the real data.
+    # Scoped: undo() would also undo conftest's data folder redirect.
     with monkeypatch.context() as m:
         m.setattr(assistants.json, "dump", crash)
         with pytest.raises(OSError):
             assistants.update_profile({"name": "After"})
-    # The old file is intact and no temp file is left behind.
     with open(_profile_path(aid)) as f:
         assert json.load(f)["name"] == "Before"
     assert sorted(os.listdir(os.path.dirname(_profile_path(aid)))) == ["images", "profile.json"]

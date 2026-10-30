@@ -1,8 +1,3 @@
-"""#1: research turns appended raw web search results to the system prompt,
-and the router can blend research with coding, which loads write_file and
-edit_file - both on, with no approval. Untrusted page text had system-level
-authority in a turn that could change files."""
-
 import model
 from memory.short_term import ShortTermMemory
 from orchestrator import gate_for_web, handle_turn

@@ -1,7 +1,3 @@
-"""#11: kill_process matched by substring, so a one-letter target matched
-most processes and an empty one matched all of them, the brain and Ollama
-included. The approval card didn't show what Allow would stop."""
-
 import os
 
 import psutil

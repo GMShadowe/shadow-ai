@@ -1,28 +1,3 @@
-"""Outbound requests that can only reach the public internet.
-
-The URLs Shadow fetches come out of a model, and a model repeats what it
-reads: a web page can tell it to fetch http://127.0.0.1:11434 (Ollama's API,
-which has no authentication), a router's admin page, or a cloud metadata
-address. Three things stop that, and all three are needed:
-
-- **Every address the host resolves to must be public** (`is_global`), not a
-  list of private ranges someone has to keep complete.
-- **Redirects are followed here, one hop at a time, and each hop is checked
-  again.** A public page that answers "302 -> http://127.0.0.1/" is the
-  oldest way around a check that only looks at the first URL.
-- **The connection goes to the address that was checked.** Resolving once to
-  check and letting the HTTP client resolve again to connect leaves a gap a
-  DNS-rebinding server can answer differently in. The request is sent to the
-  IP itself, with the real name in the Host header and in TLS (SNI and
-  certificate checks), so https still verifies against the real site.
-
-Bodies are read up to a cap and no further, so a link to a 4GB file can't
-fill the brain's memory.
-
-The environment's proxy settings are ignored on purpose: through a proxy,
-the address that gets connected to is the proxy's choice, not the checked one.
-"""
-
 import ipaddress
 import socket
 from dataclasses import dataclass, field
@@ -35,7 +10,7 @@ REDIRECTS = {301, 302, 303, 307, 308}
 
 
 class Blocked(Exception):
-    """The URL may not be fetched. The message says why, in plain words."""
+    pass
 
 
 @dataclass
@@ -71,7 +46,6 @@ def _is_public(ip: ipaddress._BaseAddress) -> bool:
 
 
 def check(url: str) -> tuple[str, str, int, str]:
-    """(scheme, host, port, ip) for a URL that may be fetched, else Blocked."""
     try:
         parts = urlsplit(url)
         port = parts.port
@@ -100,7 +74,6 @@ def check(url: str) -> tuple[str, str, int, str]:
 
 
 def _pinned(url: str, scheme: str, host: str, port: int, ip: str) -> tuple[str, dict, dict]:
-    """The same request, addressed to the checked IP."""
     parts = urlsplit(url)
     ip_host = f"[{ip}]" if ":" in ip else ip
     default = 443 if scheme == "https" else 80
@@ -111,8 +84,6 @@ def _pinned(url: str, scheme: str, host: str, port: int, ip: str) -> tuple[str, 
 
 
 def _next(status: int, method: str, body):
-    # 303, and 301/302 after a POST, become a GET without a body - what
-    # browsers do, and what the server meant.
     if status == 303 or (status in (301, 302) and method == "POST"):
         return "GET", None
     return method, body
@@ -121,10 +92,6 @@ def _next(status: int, method: str, body):
 def request(method: str, url: str, *, headers: dict | None = None, body: bytes | None = None,
             max_bytes: int, timeout: float | httpx.Timeout = 15.0,
             stop_at: bytes | None = None) -> Response:
-    """One request to the public internet, following redirects safely.
-
-    Reads at most max_bytes of the body (and stops early at `stop_at`, for
-    callers that only need the top of a page)."""
     with httpx.Client(timeout=timeout, follow_redirects=False, trust_env=False) as client:
         for _ in range(MAX_REDIRECTS + 1):
             scheme, host, port, ip = check(url)
@@ -142,7 +109,6 @@ def request(method: str, url: str, *, headers: dict | None = None, body: bytes |
                 for chunk in resp.iter_bytes():
                     data.extend(chunk)
                     if len(data) >= max_bytes:
-                        # Stopped at the cap, so there may have been more.
                         truncated = True
                         del data[max_bytes:]
                         break
@@ -157,9 +123,6 @@ def request(method: str, url: str, *, headers: dict | None = None, body: bytes |
 async def arequest(method: str, url: str, *, headers: dict | None = None, max_bytes: int,
                    timeout: float | httpx.Timeout = 15.0, stop_at: bytes | None = None,
                    client: httpx.AsyncClient | None = None) -> Response:
-    """The async twin of request(), for link previews. GET-shaped: no body.
-
-    The address check does a blocking DNS lookup, so it runs in a thread."""
     import asyncio
 
     own = client is None
@@ -181,7 +144,6 @@ async def arequest(method: str, url: str, *, headers: dict | None = None, max_by
                 async for chunk in resp.aiter_bytes():
                     data.extend(chunk)
                     if len(data) >= max_bytes:
-                        # Stopped at the cap, so there may have been more.
                         truncated = True
                         del data[max_bytes:]
                         break

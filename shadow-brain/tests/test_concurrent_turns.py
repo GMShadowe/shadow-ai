@@ -1,14 +1,8 @@
-"""#30: sync endpoints run on a threadpool and two requests on the same
-conversation mutated the same ShortTermMemory at once, interleaving turns."""
-
 import gc
 import threading
 
 import model
 from tests.helpers import quiet_turn
-
-# server.py does work at import (#33), so it is only ever imported after the
-# data folder has been redirected - through the client fixture, or here.
 
 
 def _server():
@@ -38,13 +32,11 @@ def test_a_second_turn_on_a_busy_chat_is_refused(client, monkeypatch):
     assert busy.status_code == 409 and "still answering" in busy.json()["detail"]
     rerun = client.post("/chat/regenerate", json={"conversation_id": "c1"})
     assert rerun.status_code == 409
-    # Another conversation is unaffected.
     assert client.post("/chat/stream", json={"conversation_id": "c2", "message": "hi"}).status_code == 200
 
     finish.set()
     t.join(10)
     assert first["r"].status_code == 200 and "first" in first["r"].text
-    # Free again once the first turn is done.
     assert client.post("/chat/stream", json={"conversation_id": "c1", "message": "now"}).status_code == 200
 
 
