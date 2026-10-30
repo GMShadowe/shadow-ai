@@ -3,9 +3,21 @@ can't touch the rest of your computer."""
 
 import fnmatch
 import os
+import shutil
+import time
+import uuid
 from config import get_workspace
 
 SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "__pycache__"}
+
+# write_file and edit_file are on by default, and either can destroy a file's
+# content as surely as delete_file (which asks): write_file with empty
+# content *is* a delete. So the version they replace is copied here first,
+# outside the workspace where the model can't list or touch it, and the
+# tool's result says where. Newest MAX_BACKUPS are kept.
+BACKUP_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "backups")
+MAX_BACKUPS = 100
+MAX_BACKUP_BYTES = 20 * 1024 * 1024
 
 
 def _safe_path(path: str) -> str:
@@ -23,6 +35,38 @@ def _walk(start: str):
             yield os.path.join(dirpath, name)
 
 
+def _backup(full: str) -> str:
+    """Copy a file that is about to change, and say so in a sentence for the
+    tool result. Never raises: a failed backup is reported, and the caller
+    decides what to do about it."""
+    rel = os.path.relpath(full, get_workspace())
+    try:
+        size = os.path.getsize(full)
+        if size > MAX_BACKUP_BYTES:
+            return f" No backup of the old version was kept: it is over {MAX_BACKUP_BYTES // (1024 * 1024)}MB."
+        os.makedirs(BACKUP_DIR, mode=0o700, exist_ok=True)
+        flat = rel.replace(os.sep, "__")[-120:]
+        name = f"{time.strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}-{flat}"
+        dest = os.path.join(BACKUP_DIR, name)
+        shutil.copyfile(full, dest)
+        # Workspace files can be private; the copy is readable by this user only.
+        os.chmod(dest, 0o600)
+        _prune_backups()
+    except OSError as e:
+        print(f"[files] couldn't back up {rel}: {e}")
+        return f" Warning: the old version could not be backed up ({e})."
+    return f" The previous version was kept in Shadow's backups as {name}."
+
+
+def _prune_backups() -> None:
+    names = sorted(os.listdir(BACKUP_DIR))
+    for old in names[:-MAX_BACKUPS]:
+        try:
+            os.remove(os.path.join(BACKUP_DIR, old))
+        except OSError as e:
+            print(f"[files] couldn't prune backup {old}: {e}")
+
+
 def read_file(path: str) -> str:
     full = _safe_path(path)
     if not os.path.isfile(full):
@@ -36,10 +80,23 @@ def read_file(path: str) -> str:
 
 def write_file(path: str, content: str) -> str:
     full = _safe_path(path)
+    if os.path.isdir(full):
+        return f"Error: '{path}' is a folder, not a file."
+    note = ""
+    if os.path.isfile(full):
+        # Only read the old file when it could be identical, so a rewrite of
+        # a large file doesn't load it just to compare.
+        unchanged = False
+        if os.path.getsize(full) == len(content.encode("utf-8")):
+            with open(full, "r", encoding="utf-8", errors="replace") as f:
+                unchanged = f.read() == content
+        if unchanged:
+            return f"{path} already has exactly this content, so nothing was changed."
+        note = _backup(full)
     os.makedirs(os.path.dirname(full), exist_ok=True)
     with open(full, "w", encoding="utf-8") as f:
         f.write(content)
-    return f"Wrote {len(content)} characters to {path}."
+    return f"Wrote {len(content)} characters to {path}.{note}"
 
 
 def edit_file(path: str, find: str, replace: str) -> str:
@@ -55,9 +112,10 @@ def edit_file(path: str, find: str, replace: str) -> str:
     if count > 1:
         return f"Error: that text appears {count} times. Include more surrounding text so it matches only once."
 
+    note = _backup(full)
     with open(full, "w", encoding="utf-8") as f:
         f.write(content.replace(find, replace, 1))
-    return f"Edited {path}: replaced 1 occurrence."
+    return f"Edited {path}: replaced 1 occurrence.{note}"
 
 
 def list_dir(path: str = ".") -> str:

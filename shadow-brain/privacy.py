@@ -196,7 +196,10 @@ def storage(log_path: str) -> list[dict]:
     """The files Shadow keeps, with their real sizes."""
     from memory import long_term
 
+    from tools import files
+
     images_bytes, images_count = _dir_size(images_dir())
+    backups_bytes, backups_count = _dir_size(files.BACKUP_DIR)
     aid = active_id()
     rows = [
         {"id": "chats", "label": "Chats", "path": chats_db_path(),
@@ -217,6 +220,10 @@ def storage(log_path: str) -> list[dict]:
         {"id": "profile", "label": "This assistant's profile", "path": os.path.join(ASSISTANTS_DIR, aid, "profile.json"),
          "bytes": _size(os.path.join(ASSISTANTS_DIR, aid, "profile.json")),
          "detail": "Name, model, tone, tools, location."},
+        {"id": "backups", "label": "Backups of changed files", "path": files.BACKUP_DIR,
+         "bytes": backups_bytes,
+         "detail": f"{backups_count} earlier version(s) of workspace files Shadow overwrote or edited. "
+                   f"The newest {files.MAX_BACKUPS} are kept."},
         {"id": "settings", "label": "Global settings", "path": SETTINGS_PATH,
          "bytes": _size(SETTINGS_PATH), "detail": "Workspace folder, router, privacy switches."},
     ]
