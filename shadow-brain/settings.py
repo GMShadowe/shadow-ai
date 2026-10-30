@@ -28,14 +28,31 @@ CHOICES = {
 BOOLEANS = ["offline", "log_turns", "onboarded"]
 
 
+class SettingsError(Exception):
+    """settings.json exists but can't be read. Raised, never replaced with
+    the defaults: those have offline mode off, so a damaged file would
+    quietly let the web tools and BYOK models reach the internet again."""
+
+
 def get_settings() -> dict:
     settings = dict(DEFAULTS)
     try:
         with open(SETTINGS_PATH, "r", encoding="utf-8") as f:
             saved = json.load(f)
-        settings.update({k: v for k, v in saved.items() if k in DEFAULTS})
-    except (FileNotFoundError, json.JSONDecodeError):
-        pass
+    except FileNotFoundError:
+        return settings
+    except (json.JSONDecodeError, UnicodeDecodeError, OSError) as e:
+        raise SettingsError(
+            f"Shadow's settings file is damaged ({SETTINGS_PATH}: {e}), so nothing will run until "
+            "it is fixed - whether offline mode is on can't be known. Fix the file, or move it "
+            "aside to go back to the default settings."
+        ) from e
+    if not isinstance(saved, dict):
+        raise SettingsError(
+            f"Shadow's settings file isn't in the expected shape ({SETTINGS_PATH}). Fix it, or move "
+            "it aside to go back to the default settings."
+        )
+    settings.update({k: v for k, v in saved.items() if k in DEFAULTS})
     return settings
 
 

@@ -6,7 +6,11 @@ from settings import get_settings
 TOOL_STATES = ["on", "ask", "off"]
 # The only tools that send anything off this computer.
 WEB_TOOLS = ["web_search", "fetch_url", "http_request"]
-DANGEROUS_DEFAULT_ASK = {"delete_file", "delete_dir", "http_request", "kill_process"}
+# Tools that start as Ask for any assistant whose profile doesn't say
+# otherwise. run_command is here because a shell can do anything the other
+# tools can and more; it used to be added per assistant instead, so any
+# profile without the entry - an old one, a hand-written one - had it on.
+DANGEROUS_DEFAULT_ASK = {"delete_file", "delete_dir", "http_request", "kill_process", "run_command"}
 
 
 def tool_state(name: str, profile: dict | None = None) -> str:

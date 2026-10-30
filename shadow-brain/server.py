@@ -32,7 +32,7 @@ import usage as usage_store
 from memory.short_term import ShortTermMemory
 from config import (TIER_ORDER, EFFORT_STEPS, all_tiers, get_workspace, is_placeholder,
                     load_tier_config, normalize_tier)
-from settings import get_settings, update_settings
+from settings import SettingsError, get_settings, update_settings
 from tools.state import offline, tool_state
 from hardware import get_hardware, recommend_tier
 from adapters.registry import list_adapters
@@ -67,6 +67,17 @@ async def require_token(request: Request, call_next):
         status, reason = refusal
         return JSONResponse({"detail": reason}, status_code=status)
     return await call_next(request)
+
+
+# A damaged profile.json or settings.json stops everything rather than
+# falling back to defaults (which would quietly re-enable tools and turn
+# offline mode off). Said in plain words, with the file to fix, instead of
+# FastAPI's bare "Internal Server Error".
+@app.exception_handler(assistants.ProfileError)
+@app.exception_handler(SettingsError)
+async def damaged_file(request: Request, exc: Exception):
+    print(f"[settings] {exc}")
+    return JSONResponse({"detail": str(exc)}, status_code=500)
 
 
 # There is deliberately no CORS middleware. The UI reaches the brain through
@@ -1005,7 +1016,7 @@ def _turn_error(cid: str, exc: Exception, model: str | None, aid: str) -> dict:
     try:
         tier = normalize_tier(model) or assistants.get_profile(aid)["model"]
         base = load_tier_config(tier).get("base_model")
-    except (ValueError, OSError):
+    except (ValueError, OSError, assistants.AssistantError, SettingsError):
         tier, base = None, None
     event = errors.event(exc, model=base, tier=tier)
     if event["kind"] != "unknown":

@@ -39,6 +39,51 @@ class AssistantError(Exception):
     """Something the user should be told in plain words."""
 
 
+class ProfileError(AssistantError):
+    """A profile.json that exists but can't be read.
+
+    Raised rather than papered over with defaults: the defaults turn every
+    tool back to its default state, so a damaged file would silently undo
+    the approvals the user set. Nothing runs on a profile we couldn't read.
+    """
+
+
+def _write_json(path: str, data: dict) -> None:
+    """Write through a temp file and swap it in, so a crash or a second
+    writer mid-write leaves the old file or the new one, never half of one."""
+    tmp = f"{path}.{os.getpid()}.tmp"
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        os.replace(tmp, path)
+    except BaseException:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        raise
+
+
+def _read_profile(aid: str) -> dict | None:
+    """The saved profile, None if there isn't one yet, ProfileError if it is damaged."""
+    path = os.path.join(ASSISTANTS_DIR, aid, "profile.json")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            saved = json.load(f)
+    except FileNotFoundError:
+        return None
+    except (json.JSONDecodeError, UnicodeDecodeError, OSError) as e:
+        raise ProfileError(
+            f"Assistant '{aid}' has a damaged settings file ({path}: {e}), so Shadow won't run "
+            "with it - its tool permissions can't be known. Fix the file, or move it aside to "
+            "start that assistant over with default settings."
+        ) from e
+    if not isinstance(saved, dict):
+        raise ProfileError(
+            f"Assistant '{aid}' has a settings file that isn't in the expected shape ({path}). "
+            "Fix the file, or move it aside to start that assistant over with default settings."
+        )
+    return saved
+
+
 def _assistant_dir(aid: str) -> str:
     path = os.path.join(ASSISTANTS_DIR, aid)
     os.makedirs(os.path.join(path, "images"), exist_ok=True)
@@ -111,8 +156,7 @@ def ensure(aid: str, profile: dict | None = None) -> None:
     profile_path = os.path.join(path, "profile.json")
     if not os.path.exists(profile_path):
         data = {**PROFILE_DEFAULTS, **(profile or {})}
-        with open(profile_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
+        _write_json(profile_path, data)
 
 
 def create(name: str, profile: dict | None = None) -> dict:
@@ -238,9 +282,11 @@ def migrate_tiers() -> list[str]:
     for aid in list_ids():
         path = os.path.join(ASSISTANTS_DIR, aid, "profile.json")
         try:
-            with open(path, "r", encoding="utf-8") as f:
-                saved = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
+            saved = _read_profile(aid)
+        except ProfileError as e:
+            print(f"[assistants] {e}")
+            continue
+        if saved is None:
             continue
         old = saved.get("model")
         if old in TIER_ORDER:
@@ -248,8 +294,7 @@ def migrate_tiers() -> list[str]:
         new = normalize_tier(old) or TIER_ORDER[0]
         saved["model"] = new
         try:
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(saved, f, indent=2)
+            _write_json(path, saved)
         except OSError as e:
             print(f"[assistants] couldn't migrate {aid}'s tier: {e}")
             continue
@@ -272,12 +317,9 @@ def raw_model(aid: str) -> str | None:
 def get_profile(aid: str | None = None) -> dict:
     aid = aid or active_id()
     profile = dict(PROFILE_DEFAULTS)
-    try:
-        with open(os.path.join(ASSISTANTS_DIR, aid, "profile.json"), "r", encoding="utf-8") as f:
-            saved = json.load(f)
+    saved = _read_profile(aid)
+    if saved:
         profile.update({k: v for k, v in saved.items() if k in PROFILE_DEFAULTS})
-    except (FileNotFoundError, json.JSONDecodeError):
-        pass
     # An old tier id resolves to its replacement even before migrate_tiers
     # has rewritten the file, so nothing ever reads a tier that is gone.
     from config import TIER_ORDER, normalize_tier
@@ -297,8 +339,7 @@ def update_profile(patch: dict, aid: str | None = None) -> dict:
     # Normalize on the way in as well as on the way out, so an old tier id
     # sent by an older UI isn't written back into the file.
     current["model"] = normalize_tier(current.get("model")) or TIER_ORDER[0]
-    with open(os.path.join(ASSISTANTS_DIR, aid, "profile.json"), "w", encoding="utf-8") as f:
-        json.dump(current, f, indent=2)
+    _write_json(os.path.join(ASSISTANTS_DIR, aid, "profile.json"), current)
     current["id"] = aid
     return current
 
