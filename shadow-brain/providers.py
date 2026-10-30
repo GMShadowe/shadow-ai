@@ -218,12 +218,17 @@ def _stream_attempt(client, url, payload, headers, cfg, sink):
     if building:
         calls = []
         for slot in building.values():
+            # Passed through as the raw string when it doesn't parse, rather
+            # than replaced with {}: model.parse_arguments turns it into an
+            # error the model can read, where {} silently ran the tool with
+            # no arguments at all.
+            args = slot["arguments"]
             try:
-                args = json.loads(slot["arguments"]) if slot["arguments"].strip() else {}
+                parsed = json.loads(args) if args.strip() else {}
+                if isinstance(parsed, dict):
+                    args = parsed
             except ValueError:
-                args = {}
-            if not isinstance(args, dict):
-                args = {}
+                pass
             calls.append(Call(function=Call.Function(name=slot["name"], arguments=args), id=slot["id"]))
         yield Chunk(Msg(tool_calls=calls))
 

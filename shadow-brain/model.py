@@ -1,6 +1,8 @@
 """Talks to Ollama with streaming. Yields events as they happen:
 tokens of text, tool starts and results, and permission requests."""
 
+import json
+
 import context
 import permissions
 import providers
@@ -45,6 +47,33 @@ def _chat_stream(model, messages, schemas, temperature, provider=None):
     if provider and provider.get("kind") == "byok":
         return providers.openai_stream(provider, messages, schemas, temperature)
     return providers.ollama_stream(model, messages, schemas, temperature, NUM_CTX)
+
+
+def parse_arguments(raw) -> tuple[dict, str | None]:
+    """A tool call's arguments as a dict, or an error to hand back to the model.
+
+    Ollama gives a dict, but other models and servers send the JSON as a
+    string, and some send a string that isn't valid JSON at all. `dict(...)`
+    on a string raised and ended the whole turn, so every tool call from such
+    a model failed. A string is parsed; anything that still isn't an object
+    becomes an error the model reads, and the tool does not run - running it
+    with no arguments would be guessing at what was meant.
+    """
+    if raw is None or raw == "":
+        return {}, None
+    if isinstance(raw, dict):
+        return dict(raw), None
+    if isinstance(raw, str):
+        try:
+            parsed = json.loads(raw)
+        except ValueError as e:
+            return {}, (f"Error: the arguments for this tool call weren't valid JSON ({e}), so nothing ran. "
+                        f"They were: {raw[:300]}. Call the tool again with a JSON object of arguments.")
+        if isinstance(parsed, dict):
+            return parsed, None
+        raw = parsed
+    return {}, (f"Error: the arguments for this tool call must be a JSON object, but got "
+                f"{type(raw).__name__}, so nothing ran. Call the tool again with a JSON object of arguments.")
 
 
 def _is_byok(provider: dict | None) -> bool:
@@ -130,7 +159,7 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
         messages.append({"role": "assistant", "content": content, "tool_calls": tool_calls})
         for call in tool_calls:
             name = call.function.name
-            args = dict(call.function.arguments or {})
+            args, bad_args = parse_arguments(call.function.arguments)
 
             if name not in allowed:
                 # A dead end on purpose, with the way out spelled out: the old
@@ -143,6 +172,13 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
                 yield {"type": "tool_start", "name": name, "args": args}
                 yield {"type": "tool_end", "name": name, "result": result}
                 messages.append({"role": "tool", "tool_name": name, "content": result})
+                continue
+
+            if bad_args:
+                print(f"[model] {name}: unusable arguments: {call.function.arguments!r:.200}")
+                yield {"type": "tool_start", "name": name, "args": {}}
+                yield {"type": "tool_end", "name": name, "result": bad_args}
+                messages.append({"role": "tool", "tool_name": name, "content": bad_args})
                 continue
 
             if name in ask:
