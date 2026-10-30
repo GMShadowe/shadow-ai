@@ -12,6 +12,7 @@ import {
   DownloadIcon,
   AssistantIcon,
   SwapIcon,
+  TerminalIcon,
 } from "./Icons.jsx";
 
 function groupLabel(iso) {
@@ -51,7 +52,7 @@ function ExportMenu({ onExport, onClose, leaving }) {
       ref={ref}
       className={`${
         leaving ? "animate-pop-out pointer-events-none" : "animate-pop"
-      } absolute right-1 top-full z-30 mt-1 w-36 origin-top-right overflow-hidden rounded-lg border border-line bg-panel shadow-[0_16px_48px_-20px_rgba(0,0,0,0.8)]`}
+      } absolute right-1 top-full z-30 mt-1 w-36 origin-top-right overflow-hidden rounded-lg border border-line bg-panel shadow-[0_16px_48px_-20px_var(--shadow-color)]`}
     >
       {[
         ["md", "Markdown", "Reads as text"],
@@ -110,8 +111,8 @@ function ConversationItem({ conv, active, onSelect, onRename, onDelete, onExport
 
   return (
     <div
-      className={`group relative flex items-center rounded-md transition-colors duration-150 ${
-        active ? "bg-panel-alt" : "hover:bg-panel-alt/60"
+      className={`group relative flex items-center rounded-lg transition-[background-color,box-shadow] duration-150 ${
+        active ? "bg-panel shadow-[0_1px_2px_var(--shadow-color),0_0_0_1px_var(--color-line)]" : "hover:bg-panel/70"
       }`}
     >
       <button
@@ -170,8 +171,8 @@ function ConversationItem({ conv, active, onSelect, onRename, onDelete, onExport
 /* Find an old chat by anything said in it, not just its title. */
 function SearchBox({ value, onChange, busy }) {
   return (
-    <div className="px-2 pb-2">
-      <div className="flex items-center gap-2 rounded-md border border-line bg-panel-alt px-2.5 py-1.5 transition-colors duration-150 focus-within:border-signal/60">
+    <div className="px-3 pb-2">
+      <div className="flex items-center gap-2 rounded-xl border border-transparent bg-panel-alt/70 px-3 py-2 transition-colors duration-150 focus-within:border-signal/40 focus-within:bg-panel">
         <SearchIcon width={13} height={13} className="shrink-0 text-ink-muted" />
         <input
           value={value}
@@ -282,11 +283,11 @@ export default function Sidebar({
 
   return (
     <aside
-      className="shrink-0 overflow-hidden border-r border-line bg-panel transition-[width] duration-300 ease-smooth"
-      style={{ width: collapsed ? "3rem" : "16rem" }}
+      className="shrink-0 overflow-hidden transition-[width] duration-300 ease-smooth"
+      style={{ width: collapsed ? "3.5rem" : "16.5rem" }}
     >
       {collapsed ? (
-        <div className="animate-fade flex h-full w-12 flex-col items-center py-3">
+        <div className="animate-fade flex h-full w-14 flex-col items-center py-3">
           <button onClick={onToggleCollapse} title="Expand sidebar" aria-label="Expand sidebar"
             className="rounded-md p-2 text-ink-muted transition-colors duration-150 hover:bg-panel-alt hover:text-ink">
             <SidebarIcon width={16} height={16} />
@@ -313,30 +314,38 @@ export default function Sidebar({
           </button>
         </div>
       ) : (
-        <div className="animate-fade flex h-full w-64 flex-col">
-          <div className="flex h-14 items-center justify-between px-4">
-            <div className="flex items-center gap-2">
-              <button onClick={onToggleCollapse} title="Collapse sidebar" aria-label="Collapse sidebar"
-                className="rounded-md p-1 text-ink-muted transition-colors duration-150 hover:bg-panel-alt hover:text-ink">
-                <SidebarIcon width={15} height={15} />
-              </button>
-              <span className="font-mono text-sm font-medium tracking-tight">shadow</span>
+        <div className="animate-fade flex h-full w-[16.5rem] flex-col">
+          <div className="flex h-14 items-center justify-between pl-4 pr-3">
+            <div className="flex items-center gap-2.5">
+              <span className="relative grid h-7 w-7 place-items-center rounded-[9px] bg-ink text-bg">
+                <TerminalIcon width={16} height={16} />
+                <span className="absolute -right-0.5 -top-0.5 h-[7px] w-[7px] rounded-full bg-phosphor ring-2 ring-bg" />
+              </span>
+              <span className="text-[16px] font-semibold tracking-[-0.03em]">shadow</span>
             </div>
-            <button onClick={onNew} title="New chat" aria-label="New chat"
-              className="rounded-md p-1.5 text-ink-muted transition-colors duration-150 hover:bg-panel-alt hover:text-ink active:scale-95">
-              <PlusIcon />
+            <button onClick={onToggleCollapse} title="Collapse sidebar" aria-label="Collapse sidebar"
+              className="rounded-lg p-1.5 text-ink-muted transition-colors duration-150 hover:bg-panel hover:text-ink">
+              <SidebarIcon width={15} height={15} />
+            </button>
+          </div>
+
+          <div className="px-3 pb-2">
+            <button onClick={onNew}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-3 py-2.5 text-[13px] font-medium text-bg shadow-[0_8px_20px_-12px_var(--shadow-color)] transition-transform duration-150 ease-smooth active:scale-[0.98]">
+              <PlusIcon width={14} height={14} />
+              New chat
             </button>
           </div>
 
           {/* Which assistant's chats these are. It opens the dashboard
               rather than a menu: switching changes every chat in the list
               below, which is too big a change to happen under the pointer. */}
-          <div className="px-2 pb-1">
+          <div className="px-3 pb-2">
             <button
               type="button"
               onClick={onOpenAssistants}
               title="Assistants"
-              className="group flex w-full items-center gap-2 rounded-md border border-line px-2.5 py-2 text-left transition-colors duration-150 hover:bg-panel-alt"
+              className="group flex w-full items-center gap-2 rounded-xl border border-line bg-panel px-3 py-2 text-left shadow-[0_1px_2px_var(--shadow-color)] transition-colors duration-150 hover:border-ink-muted/40"
             >
               <AssistantIcon width={15} height={15} className="shrink-0 text-ink-muted" />
               <span className="min-w-0 flex-1 truncate text-[13px] text-ink">
@@ -348,7 +357,7 @@ export default function Sidebar({
 
           <SearchBox value={query} onChange={setQuery} busy={searching && results === null && !searchError} />
 
-          <nav className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
+          <nav className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
             {query.trim() ? (
               <SearchResults
                 query={query}
@@ -363,7 +372,7 @@ export default function Sidebar({
             ) : (
               groups.map((g) => (
                 <div key={g.label} className="mt-4 first:mt-1">
-                  <div className="px-2.5 pb-1 text-[11px] font-medium text-ink-muted">{g.label}</div>
+                  <div className="px-2.5 pb-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted/80">{g.label}</div>
                   <ul className="space-y-px">
                     {g.items.map((c) => (
                       <li key={c.id}>
@@ -378,14 +387,14 @@ export default function Sidebar({
             )}
           </nav>
 
-          <div className="border-t border-line p-2">
+          <div className="p-3 pt-1">
             <button onClick={onOpenVoice}
-              className="group flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-ink/75 transition-colors duration-150 hover:bg-panel-alt hover:text-ink">
+              className="group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-ink/75 transition-colors duration-150 hover:bg-panel hover:text-ink">
               <MicIcon width={15} height={15} className="text-ink-muted transition-colors duration-150 group-hover:text-ink" />
               Voice mode
             </button>
             <button onClick={onOpenSettings}
-              className="group flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-ink/75 transition-colors duration-150 hover:bg-panel-alt hover:text-ink">
+              className="group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-ink/75 transition-colors duration-150 hover:bg-panel hover:text-ink">
               <SlidersIcon width={15} height={15} className="text-ink-muted transition-colors duration-150 group-hover:text-ink" />
               Settings
               <span

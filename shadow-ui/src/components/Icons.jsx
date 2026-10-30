@@ -348,3 +348,12 @@ export function SwapIcon(props) {
     </svg>
   );
 }
+
+export function TerminalIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="m7.5 10.5 2.5 2-2.5 2" />
+      <path d="M13 14.5h4" />
+    </svg>
+  );
+}
