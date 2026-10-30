@@ -317,14 +317,14 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
             # Only what extraction pulled out is stored. The raw message used
             # to be saved when it found nothing, which put whole sentences -
             # questions, file requests - into long-term memory.
-            facts = extract.extract_facts(user_input)
+            facts = extract.extract_facts(user_input, tier)
             if facts:
                 saved = [long_term.add(f, source="asked") for f in facts]
                 print(f"[memory] remember matched, saved {sum(saved)} of {len(facts)} facts")
             else:
                 print("[memory] remember matched, but no fact could be extracted, so nothing was saved")
         elif get_profile().get("auto_memory"):
-            for fact in extract.extract_facts(user_input):
+            for fact in extract.extract_facts(user_input, tier):
                 long_term.add(fact, source="auto")
     except Exception as e:
         print(f"[memory] save failed: {e}")
