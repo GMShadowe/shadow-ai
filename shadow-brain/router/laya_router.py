@@ -9,6 +9,26 @@ import warnings
 # Avoid TensorFlow initialization issues in supported environments.
 os.environ.setdefault("USE_TF", "0")
 
+# Pinned, and verified before a weight is parsed. Without a revision,
+# laya.load fetched whatever the Hugging Face repo's main branch held at the
+# time, so a compromised or simply changed upstream would be loaded into the
+# brain automatically - and the router thresholds in classifier.py were tuned
+# by hand against this exact checkpoint. laya.revisions.PINNED_REVISIONS has
+# its own "reviewed" SHA (55cf4c4e...), which is a different, later commit;
+# moving to it is a deliberate upgrade that needs the thresholds re-checked.
+#
+# To upgrade: download the new revision, re-run test_router.py, then update
+# both the SHA and the digests below (sha256 of each file in the snapshot).
+LAYA_REPO = "convaiinnovations/laya"
+LAYA_REVISION = "7b928d828b7b0e022f929d9bd2e44165aa270148"
+LAYA_SHA256 = {
+    "model.safetensors": "891102d372688fc2a094dac56a384bc537b87c63f21f9f3dac0be2b7cbc8d86c",
+    "rl_agent_config.json": "ae287b56bbcf5f8c4f4541ae9dfd00c914c4c48b940b8398c3058af37ba92bbd",
+    "encoder/config.json": "bf3ab80598fdccf414855a2ce80f22859e4492d06ca8a62ddd1cfb63972f8979",
+    "tokenizer/tokenizer_config.json": "50044de60daaa73df97d262e15a40d4faf0160e7d742df64b377877a1320dd12",
+    "tokenizer/tokenizer.json": "6c8aaa9a542084f2457eab775d4eeb51f92a70c0fd9de28d5edb0ddec3c08d30",
+}
+
 _agent = None
 _device = None
 _load_lock = threading.Lock()
@@ -99,7 +119,9 @@ def load():
                 import laya
 
                 _agent = laya.load(
-                    "convaiinnovations/laya",
+                    LAYA_REPO,
+                    revision=LAYA_REVISION,
+                    expected_sha256=LAYA_SHA256,
                     device="mps" if torch.backends.mps.is_available() else (
                         "cuda" if torch.cuda.is_available() else "cpu"
                     ),
