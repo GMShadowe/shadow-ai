@@ -20,11 +20,29 @@ MAX_BACKUPS = 100
 MAX_BACKUP_BYTES = 20 * 1024 * 1024
 
 
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+
+
+class PathRefused(ValueError):
+    """A path the file tools won't touch. A refusal, not a bug in Shadow,
+    so call_tool reports it as the plain error it is."""
+
+
+def _inside(full: str, folder: str) -> bool:
+    folder = os.path.realpath(folder)
+    return full == folder or full.startswith(folder + os.sep)
+
+
 def _safe_path(path: str) -> str:
     root = get_workspace()
     full = os.path.realpath(os.path.join(root, path))
     if full != root and not full.startswith(root + os.sep):
-        raise ValueError(f"Path escapes the workspace: {path}")
+        raise PathRefused(f"Path escapes the workspace: {path}")
+    # A workspace that contains the Shadow checkout (~/Coding, say) would
+    # otherwise hand the file tools the API key, the access token, and every
+    # assistant's chats and memory.
+    if _inside(full, DATA_DIR):
+        raise PathRefused(f"{path} is inside Shadow's own data folder, which the file tools never touch.")
     return full
 
 

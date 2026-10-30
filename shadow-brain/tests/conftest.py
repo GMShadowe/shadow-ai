@@ -47,6 +47,9 @@ def data_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "SETTINGS_PATH", str(data / "settings.json"))
     monkeypatch.setattr(usage, "PATH", str(data / "byok_usage.json"))
     monkeypatch.setattr(files, "BACKUP_DIR", str(data / "backups"))
+    monkeypatch.setattr(files, "DATA_DIR", str(data))
+    from tools import shell
+    monkeypatch.setattr(shell, "DATA_DIR", str(data))
     # Keyword routing, so no test ever loads Laya from Hugging Face.
     settings.update_settings({"router": "keywords"})
     return data

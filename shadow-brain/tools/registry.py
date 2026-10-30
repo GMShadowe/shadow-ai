@@ -51,7 +51,7 @@ TOOLS = {
                 {"query": S, "path": S}, ["query"])),
     "run_command": _tool(shell.run_command,
         _schema("run_command", "Run a shell command in the workspace. Returns output and exit code.",
-                {"command": S}, ["command"]), "caution"),
+                {"command": S}, ["command"]), "caution", preview=shell.describe),
     "kill_process": _tool(desktop.kill_process,
         _schema("kill_process", "Stop a running process by its exact name or its process id.",
                 {"target": S}, ["target"]), "dangerous", preview=desktop.describe_kill),
@@ -108,6 +108,8 @@ def call_tool(name: str, arguments: dict) -> str:
 
     try:
         return str(TOOLS[name]["fn"](**arguments))
+    except files.PathRefused as e:
+        return f"Error: {e}"
     except Exception as e:
         return (f"Internal error in Shadow's {name} tool: {e}. "
                 "This is a bug in Shadow itself, not in the user's code or computer. "
