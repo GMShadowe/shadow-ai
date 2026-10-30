@@ -8,7 +8,7 @@ import permissions
 import providers
 import usage
 from config import load_tier_config
-from settings import update_settings
+import assistants
 from tools.registry import get_schemas, call_tool
 
 MODEL_NAME = load_tier_config()["base_model"]  # default, used by the terminal chat
@@ -105,7 +105,7 @@ def _record(provider: dict, reported: dict | None) -> int:
 def stream_model(messages: list[dict], tool_names: list[str] | None = None,
                  max_steps: int = 6, temperature: float | None = None,
                  model_name: str | None = None, ask_tools: list[str] | None = None,
-                 provider: dict | None = None):
+                 provider: dict | None = None, aid: str | None = None):
     model = model_name or MODEL_NAME
     allowed = set(tool_names or [])
     ask = set(ask_tools or [])
@@ -188,7 +188,13 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
                 yield {"type": "permission_result", "id": pid, "decision": decision}
 
                 if decision == "always":
-                    update_settings({"tools": {name: "on"}})
+                    # The user said yes either way, so a failed save still
+                    # runs the tool - it just asks again next time, and the
+                    # reason is printed rather than lost.
+                    try:
+                        assistants.set_tool_state(name, "on", aid)
+                    except (OSError, ValueError) as e:
+                        print(f"[permissions] couldn't save 'always allow' for {name}: {e}")
                     ask.discard(name)
                 elif decision != "allow":
                     note = (TIMED_OUT if decision == "timeout" else DENIED).format(name=name)

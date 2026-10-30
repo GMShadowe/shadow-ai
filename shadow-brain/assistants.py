@@ -303,6 +303,19 @@ def update_profile(patch: dict, aid: str | None = None) -> dict:
     return current
 
 
+def set_tool_state(name: str, state: str, aid: str | None = None) -> dict:
+    """Change one tool's on/ask/off state for one assistant, keeping the rest.
+
+    Tool state is per assistant, so this goes into the profile - never into
+    global settings, which have no "tools" key and refused the write, so
+    "Always allow" on a permission prompt used to fail the whole turn.
+    """
+    aid = aid or active_id()
+    tools = dict(get_profile(aid).get("tools") or {})
+    tools[name] = state
+    return update_profile({"tools": tools}, aid)
+
+
 # Paths into the active assistant's folder.
 def chats_db_path(aid: str | None = None) -> str:
     return os.path.join(_assistant_dir(aid or active_id()), "chats.db")

@@ -290,7 +290,7 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     spend = None
     for event in stream_model(working, allowed or None, max_steps(effort),
                               merge_temperature(adapters), tier_cfg["base_model"], ask,
-                              tier_cfg if tier_cfg.get("custom") else None):
+                              tier_cfg if tier_cfg.get("custom") else None, aid):
         kind = event["type"]
         if kind == "final":
             reply = event["text"]
