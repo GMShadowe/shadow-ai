@@ -22,8 +22,10 @@ def _now() -> str:
 
 
 @contextmanager
-def _db():
-    conn = sqlite3.connect(memory_db_path())
+def _db(aid: str | None = None):
+    # `aid` pins the assistant for a turn that is still running when the
+    # user switches, so its memories don't land in the other assistant.
+    conn = sqlite3.connect(memory_db_path(aid))
     conn.row_factory = sqlite3.Row
     try:
         yield conn
@@ -73,14 +75,14 @@ def _cosine(a: list[float], b: list[float]) -> float:
     return dot / (na * nb) if na and nb else 0.0
 
 
-def add(text: str, source: str = "user") -> bool:
+def add(text: str, source: str = "user", aid: str | None = None) -> bool:
     text = text.strip()
     if not text:
         return False
     vec = _embed(text)
     if vec is None:
         return False
-    with _db() as conn:
+    with _db(aid) as conn:
         # Skip near-duplicates so memory doesn't fill with the same fact.
         for row in conn.execute("SELECT embedding FROM memories"):
             if _cosine(vec, _unpack(row["embedding"])) > 0.95:
@@ -92,12 +94,12 @@ def add(text: str, source: str = "user") -> bool:
     return True
 
 
-def search(query: str, k: int = TOP_K) -> list[str]:
+def search(query: str, k: int = TOP_K, aid: str | None = None) -> list[str]:
     vec = _embed(query)
     if vec is None:
         return []
     scored = []
-    with _db() as conn:
+    with _db(aid) as conn:
         for row in conn.execute("SELECT text, embedding FROM memories"):
             score = _cosine(vec, _unpack(row["embedding"]))
             if score >= MIN_SCORE:

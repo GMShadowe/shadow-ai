@@ -384,17 +384,17 @@ def _validate(req: ChatRequest) -> tuple[str, list[str], ShortTermMemory]:
     return text or DEFAULT_IMAGE_PROMPT, images, _memory_for(req.conversation_id)
 
 
-def _save_user_message(cid: str, text: str, images: list[str]) -> None:
-    storage.ensure_conversation(cid, text)
-    names = [storage.save_image(b) for b in images]
-    storage.add_message(cid, "user", text, {"images": names} if names else None)
+def _save_user_message(cid: str, text: str, images: list[str], aid: str) -> None:
+    storage.ensure_conversation(cid, text, aid=aid)
+    names = [storage.save_image(b, aid) for b in images]
+    storage.add_message(cid, "user", text, {"images": names} if names else None, aid=aid)
 
 
-def _save_reply(cid: str, event: dict) -> None:
+def _save_reply(cid: str, event: dict, aid: str) -> None:
     # "skill" is the only thing a skill leaves behind: the name, so a later
     # "do that again with the same skill" resolves to something real.
     meta = {k: event.get(k) for k in ("route", "router", "model", "effort", "tools", "skill")}
-    storage.add_message(cid, "assistant", event["reply"], meta)
+    storage.add_message(cid, "assistant", event["reply"], meta, aid=aid)
 
 
 @app.get("/status")
@@ -950,7 +950,7 @@ def _rerun_setup(req: RerunRequest, new_text: str | None) -> tuple[str, list[str
     return text, images, skill
 
 
-def _turn_error(cid: str, exc: Exception, model: str | None) -> dict:
+def _turn_error(cid: str, exc: Exception, model: str | None, aid: str) -> dict:
     """Translate a failed turn into something the user can act on, and save
     the plain words rather than the library's.
 
@@ -959,27 +959,30 @@ def _turn_error(cid: str, exc: Exception, model: str | None) -> dict:
     not the information.
     """
     try:
-        tier = normalize_tier(model) or assistants.get_profile()["model"]
+        tier = normalize_tier(model) or assistants.get_profile(aid)["model"]
         base = load_tier_config(tier).get("base_model")
     except (ValueError, OSError):
         tier, base = None, None
     event = errors.event(exc, model=base, tier=tier)
     if event["kind"] != "unknown":
         print(f"[chat] {event['kind']}: {event.get('detail') or event['message']}")
-    storage.add_message(cid, "error", event["message"])
+    storage.add_message(cid, "error", event["message"], aid=aid)
     return event
 
 
 def _stream_turn_response(cid: str, text: str, memory: ShortTermMemory, model, effort,
-                          images: list[str], skill: str | None):
+                          images: list[str], skill: str | None, aid: str):
+    """Stream one turn, pinned to the assistant that was active when it was
+    asked. Switching mid-turn must not move the reply - or its memories, or
+    its error - into the assistant the user switched to."""
     def events():
         try:
-            for event in stream_turn(text, memory, model, effort, images, skill):
+            for event in stream_turn(text, memory, model, effort, images, skill, aid):
                 if event["type"] == "done":
-                    _save_reply(cid, event)
+                    _save_reply(cid, event, aid)
                 yield _sse(event)
         except Exception as e:
-            yield _sse(_turn_error(cid, e, model))
+            yield _sse(_turn_error(cid, e, model, aid))
 
     return StreamingResponse(events(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache"})
@@ -989,9 +992,10 @@ def _stream_turn_response(cid: str, text: str, memory: ShortTermMemory, model, e
 def chat_regenerate(req: RerunRequest):
     """Answer the same question again, fresh. Uses whatever model and effort
     the pickers are on now, not the ones the first reply used."""
+    aid = assistants.active_id()
     text, images, skill = _rerun_setup(req, None)
     return _stream_turn_response(req.conversation_id, text, sessions[req.conversation_id],
-                                 req.model, req.effort, images, skill)
+                                 req.model, req.effort, images, skill, aid)
 
 
 @app.post("/chat/edit")
@@ -999,9 +1003,10 @@ def chat_edit(req: RerunRequest):
     """Change the last question and answer it again."""
     if req.message is None:
         raise HTTPException(status_code=400, detail="Send the new text of the message.")
+    aid = assistants.active_id()
     text, images, skill = _rerun_setup(req, req.message)
     return _stream_turn_response(req.conversation_id, text, sessions[req.conversation_id],
-                                 req.model, req.effort, images, skill)
+                                 req.model, req.effort, images, skill, aid)
 
 
 @app.post("/feedback")
@@ -1067,35 +1072,26 @@ def export_conversation(cid: str, format: str = "md"):
 
 @app.post("/chat")
 def chat(req: ChatRequest):
+    aid = assistants.active_id()
     text, images, memory = _validate(req)
     cid = req.conversation_id
-    _save_user_message(cid, text, images)
+    _save_user_message(cid, text, images, aid)
     try:
-        result = handle_turn(text, memory, req.model, req.effort, images, req.skill)
+        result = handle_turn(text, memory, req.model, req.effort, images, req.skill, aid)
     except Exception as e:
-        event = _turn_error(cid, e, req.model)
+        event = _turn_error(cid, e, req.model, aid)
         raise HTTPException(status_code=500, detail=event["message"])
-    _save_reply(cid, result)
+    _save_reply(cid, result, aid)
     return result
 
 
 @app.post("/chat/stream")
 def chat_stream(req: ChatRequest):
+    aid = assistants.active_id()
     text, images, memory = _validate(req)
-    cid = req.conversation_id
-    _save_user_message(cid, text, images)
-
-    def events():
-        try:
-            for event in stream_turn(text, memory, req.model, req.effort, images, req.skill):
-                if event["type"] == "done":
-                    _save_reply(cid, event)
-                yield _sse(event)
-        except Exception as e:
-            yield _sse(_turn_error(cid, e, req.model))
-
-    return StreamingResponse(events(), media_type="text/event-stream",
-                             headers={"Cache-Control": "no-cache"})
+    _save_user_message(req.conversation_id, text, images, aid)
+    return _stream_turn_response(req.conversation_id, text, memory, req.model, req.effort,
+                                 images, req.skill, aid)
 
 
 @app.post("/reset/{conversation_id}")

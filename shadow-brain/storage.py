@@ -19,8 +19,12 @@ def _now() -> str:
 
 
 @contextmanager
-def _db():
-    conn = sqlite3.connect(chats_db_path())
+def _db(aid: str | None = None):
+    # `aid` pins the assistant. Without it the path is re-read from the active
+    # pointer, which is right for a request that is over in milliseconds but
+    # wrong for a turn that streams for minutes: switching assistants part-way
+    # used to send the reply into the new assistant's chats.
+    conn = sqlite3.connect(chats_db_path(aid))
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     try:
@@ -64,11 +68,11 @@ def image_ext(data: bytes) -> str | None:
     return None
 
 
-def save_image(b64: str) -> str:
+def save_image(b64: str, aid: str | None = None) -> str:
     data = base64.b64decode(b64)
     ext = image_ext(data) or "jpg"
     name = f"{uuid.uuid4().hex}.{ext}"
-    folder = images_dir()
+    folder = images_dir(aid)
     os.makedirs(folder, exist_ok=True)
     with open(os.path.join(folder, name), "wb") as f:
         f.write(data)
@@ -108,20 +112,20 @@ def get_conversation(cid: str) -> dict | None:
     return {**dict(conv), "messages": messages}
 
 
-def ensure_conversation(cid: str, first_message: str) -> None:
+def ensure_conversation(cid: str, first_message: str, aid: str | None = None) -> None:
     now = _now()
     title = " ".join(first_message.split())[:60] or "New chat"
-    with _db() as conn:
+    with _db(aid) as conn:
         conn.execute(
             "INSERT OR IGNORE INTO conversations (id, title, created_at, updated_at) VALUES (?, ?, ?, ?)",
             (cid, title, now, now),
         )
 
 
-def add_message(cid: str, role: str, content: str, meta: dict | None = None) -> str:
+def add_message(cid: str, role: str, content: str, meta: dict | None = None, aid: str | None = None) -> str:
     mid = uuid.uuid4().hex
     now = _now()
-    with _db() as conn:
+    with _db(aid) as conn:
         conn.execute(
             "INSERT INTO messages (id, conversation_id, role, content, meta, created_at) VALUES (?, ?, ?, ?, ?, ?)",
             (mid, cid, role, content, json.dumps(meta or {}), now),

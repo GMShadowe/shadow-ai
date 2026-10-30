@@ -44,9 +44,10 @@ def _weather(location: str) -> str | None:
 
 
 def compact(tier: str | None = None, effort: str | None = None,
-            allowed: list[str] | None = None, ask: list[str] | None = None) -> str:
+            allowed: list[str] | None = None, ask: list[str] | None = None,
+            profile: dict | None = None) -> str:
     """The short block that goes into every system prompt."""
-    profile = get_profile()
+    profile = profile or get_profile()
     cfg = load_tier_config(tier)
     now = datetime.now()
 

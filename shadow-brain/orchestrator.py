@@ -13,7 +13,7 @@ from memory.short_term import ShortTermMemory
 from memory import long_term, extract
 from tools.registry import call_tool
 from config import load_tier_config, max_steps, EFFORT_STEPS, default_effort
-from assistants import get_profile
+from assistants import active_id, get_profile
 from tools.state import WEB_TOOLS, offline, tool_state
 from settings import get_settings
 
@@ -89,9 +89,9 @@ def clean_query(text: str) -> str:
     return q or text
 
 
-def split_tools(adapters: list[dict]) -> tuple[list[str], list[str], list[str]]:
+def split_tools(adapters: list[dict], profile: dict | None = None) -> tuple[list[str], list[str], list[str]]:
     """Returns (allowed, ask, blocked). Ask tools are allowed, but need approval each time."""
-    profile = get_profile()
+    profile = profile or get_profile()
     no_web = offline()
     allowed: list[str] = []
     ask: list[str] = []
@@ -121,7 +121,7 @@ SKILL_HEADER = (
 
 
 def add_skill_tools(allowed: list[str], ask: list[str], blocked: list[str],
-                    skill: dict | None) -> None:
+                    skill: dict | None, profile: dict | None = None) -> None:
     """Load the tools a skill's instructions depend on, in place.
 
     The user's own settings still decide: a tool they turned off stays in
@@ -130,7 +130,7 @@ def add_skill_tools(allowed: list[str], ask: list[str], blocked: list[str],
     """
     if not skill:
         return
-    profile = get_profile()
+    profile = profile or get_profile()
     no_web = offline()
     for name in skill["tools"]:
         if name in allowed or name in blocked:
@@ -145,10 +145,10 @@ def add_skill_tools(allowed: list[str], ask: list[str], blocked: list[str],
 
 
 def build_system_prompt(adapters, blocked, ask, image_count=0, tier=None, effort=None,
-                        allowed=None, skill=None):
-    p = get_profile()
+                        allowed=None, skill=None, profile=None):
+    p = profile or get_profile()
     prompt = (
-        f"{compact(tier, effort, allowed, ask)}\n\n"
+        f"{compact(tier, effort, allowed, ask, p)}\n\n"
         f"{TONES.get(p['tone'], '')} {LENGTHS.get(p['response_length'], '')}\n\n"
         f"{RULES}"
     )
@@ -186,13 +186,22 @@ def merge_temperature(adapters: list[dict]) -> float | None:
 
 def stream_turn(user_input: str, memory: ShortTermMemory,
                 tier: str | None = None, effort: str | None = None,
-                images: list[str] | None = None, skill_name: str | None = None):
+                images: list[str] | None = None, skill_name: str | None = None,
+                aid: str | None = None):
     images = images or []
+    # Resolved once. A turn can stream for minutes (a permission prompt alone
+    # waits up to five), and everything that read "the active assistant" as
+    # it went - the profile, the model, memory - would switch to whichever
+    # assistant the user moved to in the meantime.
+    aid = aid or active_id()
+    profile = get_profile(aid)
+    tier = tier or profile["model"]
     # Only ever set because the user typed a slash command. The model is never
     # told which skills exist, so it cannot ask for one.
     skill = skills.load(skill_name) if skill_name else None
     tier_cfg = load_tier_config(tier)
-    effort = effort if effort in EFFORT_STEPS else default_effort()
+    effort = effort if effort in EFFORT_STEPS else (
+        profile["effort"] if profile["effort"] in EFFORT_STEPS else default_effort())
 
     history = memory.get()
     previous = next((m["content"] for m in reversed(history) if m["role"] == "user"), None)
@@ -204,8 +213,8 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
            "model": tier_cfg["label"], "effort": effort,
            "skill": skill["name"] if skill else None}
 
-    allowed, ask, blocked = split_tools(adapters)
-    add_skill_tools(allowed, ask, blocked, skill)
+    allowed, ask, blocked = split_tools(adapters, profile)
+    add_skill_tools(allowed, ask, blocked, skill, profile)
 
     # A model the user brought may not do tool calling at all. Sending
     # schemas anyway gets a confusing provider error, so they are dropped
@@ -223,18 +232,18 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     # prompt is built, so the prompt's list of callable tools is the real one.
     # Not when the model can't call tools at all: one schema is enough for a
     # provider to refuse the whole request.
-    if not no_tools_reason and "about_me" not in allowed and tool_state("about_me") != "off":
+    if not no_tools_reason and "about_me" not in allowed and tool_state("about_me", profile) != "off":
         allowed.append("about_me")
 
     tools_used: list[dict] = []
     system_prompt = build_system_prompt(adapters, blocked, ask, len(images), tier, effort,
-                                        allowed, skill)
+                                        allowed, skill, profile)
     if no_tools_reason:
         system_prompt += "\n\n" + no_tools_reason
 
     # Pull relevant long-term memories into the prompt.
     try:
-        memories = long_term.search(user_input)
+        memories = long_term.search(user_input, aid=aid)
         if memories:
             system_prompt += "\n\nThings you remember about the user:\n" + "\n".join(f"- {m}" for m in memories)
     except Exception as e:
@@ -319,13 +328,13 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
             # questions, file requests - into long-term memory.
             facts = extract.extract_facts(user_input, tier)
             if facts:
-                saved = [long_term.add(f, source="asked") for f in facts]
+                saved = [long_term.add(f, source="asked", aid=aid) for f in facts]
                 print(f"[memory] remember matched, saved {sum(saved)} of {len(facts)} facts")
             else:
                 print("[memory] remember matched, but no fact could be extracted, so nothing was saved")
-        elif get_profile().get("auto_memory"):
+        elif get_profile(aid).get("auto_memory"):
             for fact in extract.extract_facts(user_input, tier):
-                long_term.add(fact, source="auto")
+                long_term.add(fact, source="auto", aid=aid)
     except Exception as e:
         print(f"[memory] save failed: {e}")
 
@@ -335,15 +344,17 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
         usage_store.count_turn(spend["endpoint"])
 
     yield {"type": "done", "reply": reply, "route": route_label, "tools": tools_used,
+           "assistant": aid,
            "router": decision, "model": tier_cfg["label"], "effort": effort,
            "skill": skill["name"] if skill else None, "usage": spend}
 
 
 def handle_turn(user_input: str, memory: ShortTermMemory,
                 tier: str | None = None, effort: str | None = None,
-                images: list[str] | None = None, skill_name: str | None = None) -> dict:
+                images: list[str] | None = None, skill_name: str | None = None,
+                aid: str | None = None) -> dict:
     result = {}
-    for event in stream_turn(user_input, memory, tier, effort, images, skill_name):
+    for event in stream_turn(user_input, memory, tier, effort, images, skill_name, aid):
         if event["type"] == "done":
             result = event
     return result

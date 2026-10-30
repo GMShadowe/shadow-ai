@@ -39,3 +39,27 @@ def data_dir(tmp_path, monkeypatch):
     # Keyword routing, so no test ever loads Laya from Hugging Face.
     settings.update_settings({"router": "keywords"})
     return data
+
+
+@pytest.fixture
+def client(data_dir):
+    """The real FastAPI app, talking to the throwaway data folder, with the
+    token and Host every request needs. server.py does work at import (#33),
+    so it is imported here, after the paths above are redirected."""
+    from fastapi.testclient import TestClient
+
+    import auth
+    import server
+
+    saved_token = auth._cached
+    auth._cached = None
+    server.sessions.clear()
+    import storage
+    from memory import long_term
+    storage.init()
+    long_term.init()
+    with TestClient(server.app, base_url="http://127.0.0.1:8765",
+                    headers={auth.HEADER: auth.token()}) as c:
+        yield c
+    auth._cached = saved_token
+    server.sessions.clear()
