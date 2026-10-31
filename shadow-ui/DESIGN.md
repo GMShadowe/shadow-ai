@@ -41,8 +41,6 @@ tuned for.
   token keeps its old name; the default accent is now Horizon, `#0f43e7` on
   Light and `#58a6ff` on the dark themes.
 - signal: links, keyboard focus and in-progress states. Set per theme.
-- glow / glow-deep: Cool Horizon `#58a6ff` and Midnight Blue `#191970`, for
-  the one gradient (see Depth) and nothing else.
 - shadow-color: the colour of floating-layer shadows, set per theme.
 - danger (red): errors and destructive actions ONLY.
 
@@ -59,12 +57,16 @@ Flat surfaces separated by 1px lines. Shadows only on floating layers:
 the prompt bar, menus and popovers, the settings window, always in
 `var(--shadow-color)`.
 
-**One gradient, used with restraint.** `.glow` in `index.css` is a
-Midnight Blue into Cool Horizon radial field, blurred until it has no edge,
-so it reads as colour in the room rather than a shape. At most one per
-screen, behind open space: today the empty chat. Never behind text someone
-has to read, never on cards or buttons, never as a fill. Don't let a
-container clip it, or the blur ends in a hard line.
+**No colour gradients.** The empty chat is the greeting on white over a
+fine dot grid (`.dot-field` in `index.css`): 1px dots 22px apart in ink at
+18%, masked to fade out from the prompt bar, so it reads as texture rather
+than a pattern. It sits under every child of the chat card and fades away
+with the first message. No glow, no accent dot.
+
+Two smaller depth rules: a list that scrolls under a fixed header fades out
+over its top 28px instead of being cut by the line, and the settings
+window's backdrop is `--shadow-color` with a 3px blur rather than black, so
+it dims a light theme without turning it grey.
 
 ## Shape
 Radius comes from the appearance setting (sm / md / lg / xl tokens).
@@ -100,6 +102,20 @@ Every interactive element needs: hover, focus-visible ring (signal),
 active/press, and disabled (40% opacity, no hover effect). A disabled
 control also drops its hover and press rules, or it still feels alive.
 
+Focus, in three rules:
+- **The default ring lives in `@layer base`** (`index.css`). It used to be
+  unlayered, and unlayered CSS beats every Tailwind utility, so each text
+  field's `focus:outline-none` was ignored and the prompt bar drew a square
+  ring inside its rounded card. Text fields show focus with their own
+  border (`focus:border-signal`); the prompt bar with its card border.
+- **Rings follow shape.** A control's ring takes its border-radius, so a
+  focusable element inside a rounded row is itself rounded. In a list that
+  scrolls (sidebar chats, the settings sections) the ring is inset
+  (`focus-visible:outline-offset-[-2px]`), or the scroll box clips it.
+- **Dialogs hold focus.** `ui/useFocusTrap.js`: focus moves in on open (to
+  `data-autofocus`, else the dialog), Tab cycles inside, and focus goes back
+  where it was on close. The settings window and the lightbox use it.
+
 An image in a sent message is interactive: it opens full size in a dark
 overlay (`ui/Lightbox.jsx`, escape or a click outside closes it). Clicking
 one used to do nothing, which read as broken rather than restrained.
@@ -119,6 +135,23 @@ Things attached to it follow it:
 the slash menu is a popover above it (shadow, fade + scale), and a chosen
 skill sits inside it as a mono chip with a way to remove it. Accent on the
 chip only because it is live state for the next message, never decoration.
+
+## Display cards
+Lists, charts and pictures Shadow was asked for (`rich/cards/`): one shell
+(`Frame.jsx`) - white block, hairline border, rounded-2xl, an icon and a
+semibold title, a mono count, and a copy button that copies the card as
+text. List rows are numbered in mono and arrive one after another. Charts
+are ink, never accent: horizontal bars for comparing, an SVG line for change
+over time that draws itself once (`.chart-draw`). End labels lean inward and
+a low point's label sits under it, so nothing is clipped or crossed by the
+line. Pictures sit in a grid with no hole in it, and open in the lightbox.
+
+## Voice screen
+The middle is for a card; without one, the exchange takes it, large. The
+control is an orb: ink when idle, accent while listening with a ring that
+follows the input level, a circling ring while working, a breathing ring
+while Shadow answers. Space talks. A first visit shows three spoken-style
+suggestions. The stage fades at its edges instead of being cut.
 
 ## Message actions
 The row under a reply stays hidden until the message is hovered — or until
@@ -146,6 +179,12 @@ Two shapes, both phosphor, neither invented per screen:
   doesn't vanish, so the row above it reads as history, not as a flash.
 
 ## Cards and empty slots
+The assistant dashboard is a full screen of its own, not a view inside the
+chat card: it is about every assistant, so it doesn't sit inside one of them
+with its chats down the side. Escape or "Back to chat" leaves it; switching
+or creating an assistant goes straight into its chat. A delete confirmation
+covers the card it is about rather than appearing above the grid.
+
 A dashboard of cards (`line` border, `panel` background, same as any other
 card) gets one more tile when it has room to grow: a dashed `line` border,
 no fill, a plus and a short label. Dashed means "not yet a thing" - a slot,
