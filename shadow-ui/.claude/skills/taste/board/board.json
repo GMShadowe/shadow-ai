@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "name": "My taste",
+  "written": "2026-10-30T13:07:17.977Z",
+  "groups": [],
+  "things": [
+    {
+      "id": "f530271c-c18b-4044-8070-4ebc91573a16",
+      "kind": "image",
+      "file": "images/7d93ffd3-157b-4493-b825-f94380143098.png",
+      "name": "image",
+      "why": "design",
+      "group": "",
+      "added": "2026-10-30",
+      "place": {
+        "x": -89,
+        "y": -184,
+        "w": 179,
+        "h": 320
+      }
+    },
+    {
+      "id": "6d7b732a-a4b7-4247-a56e-36933e5148e4",
+      "kind": "image",
+      "file": "images/a5b927fb-faf2-42ab-93d7-0319151c2c94.png",
+      "name": "image",
+      "why": "color palette",
+      "group": "",
+      "added": "2026-10-30",
+      "place": {
+        "x": 190,
+        "y": -286,
+        "w": 240,
+        "h": 320
+      }
+    },
+    {
+      "id": "29d1d2ea-7e5a-4396-95e8-d547e7ce086c",
+      "kind": "note",
+      "text": "controlled gradient not everywhere",
+      "group": "",
+      "added": "2026-10-30",
+      "place": {
+        "x": 455,
+        "y": -175,
+        "w": 220,
+        "h": 56
+      }
+    },
+    {
+      "id": "ed323cbb-4162-471f-9967-f75f9b8b50b3",
+      "kind": "note",
+      "text": "blur effect for background so the colors blend",
+      "group": "",
+      "added": "2026-10-30",
+      "place": {
+        "x": 455,
+        "y": -60,
+        "w": 220,
+        "h": 84
+      }
+    },
+    {
+      "id": "5e31b223-5a55-4747-a081-0795a610e107",
+      "kind": "note",
+      "text": "Plus Jakarta Sans font",
+      "group": "",
+      "added": "2026-10-30",
+      "place": {
+        "x": 247,
+        "y": 194,
+        "w": 220,
+        "h": 28
+      }
+    },
+    {
+      "id": "c54913ea-720f-41b1-a502-227deb93e150",
+      "kind": "image",
+      "file": "images/6143ef54-467e-4cd4-b3f5-2b3261675e38.png",
+      "name": "image",
+      "why": "",
+      "group": "",
+      "added": "2026-10-30",
+      "place": {
+        "x": -199,
+        "y": -96,
+        "w": 72,
+        "h": 320
+      }
+    }
+  ]
+}
