@@ -6,6 +6,8 @@ import MessageActions from "./MessageActions.jsx";
 import Lightbox from "./ui/Lightbox.jsx";
 import { CloseIcon, PencilIcon } from "./Icons.jsx";
 import ErrorAction from "./ErrorAction.jsx";
+import DisplayCard from "./rich/cards/DisplayCard.jsx";
+import { panelFor } from "./rich/display.js";
 
 /* Which files this turn actually touched, as {name or path -> full path}.
    A path only becomes a chip if a tool in the same turn read or wrote it:
@@ -206,6 +208,11 @@ export default function Message({
   }
 
   const tools = message.tools ?? [];
+  // A list, chart or pictures Shadow put on screen is drawn as the thing
+  // itself, not as a tool row; a call the brain refused stays a row, with
+  // the reason in it.
+  const panels = tools.map(panelFor);
+  const rows = tools.filter((_, i) => !panels[i]);
   const waiting = message.streaming && !message.content && tools.length === 0;
   const text = message.streaming && message.content ? message.content + " ▍" : message.content;
 
@@ -227,15 +234,21 @@ export default function Message({
         <span className="truncate text-ink-muted">{metaLine(message)}</span>
       </div>
 
-      {tools.length > 0 && (
+      {rows.length > 0 && (
         <div className="space-y-1.5">
-          {tools.map((t, i) =>
+          {rows.map((t, i) =>
             t.kind === "permission" ? (
               <PermissionCard key={t.id} request={t} onAnswer={onPermission} />
             ) : (
               <ToolCall key={i} call={t} />
             )
           )}
+        </div>
+      )}
+
+      {panels.some(Boolean) && (
+        <div className="space-y-3">
+          {panels.map((panel, i) => panel && <DisplayCard key={i} panel={panel} />)}
         </div>
       )}
 

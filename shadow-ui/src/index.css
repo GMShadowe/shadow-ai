@@ -60,6 +60,15 @@
    down from the middle instead of cutting to the bottom. */
 .dock { transition: padding-bottom 280ms var(--ease-smooth); }
 
+/* A line chart draws itself once, left to right. The path carries
+   pathLength="1", so the dash maths doesn't depend on its real length. */
+.chart-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: chart-draw 900ms var(--ease-smooth) 120ms forwards;
+}
+@keyframes chart-draw { to { stroke-dashoffset: 0; } }
+
 :root { --shadow-color: rgba(17, 24, 39, 0.16); }
 
 .glow {
