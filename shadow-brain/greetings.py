@@ -79,8 +79,28 @@ def _parse(content: str) -> list[str]:
     return out[:5]
 
 
+def _local_model() -> str | None:
+    """The Ollama model to write greetings with, or None when there isn't one
+    that is allowed to see the user's memories.
+
+    With a BYOK model selected, asking it would send those memories to the
+    provider - and bill for it - just to say hello, and Ollama doesn't know
+    the name either. Greetings are decoration; the generic ones are fine."""
+    try:
+        cfg = load_tier_config()
+    except ValueError as e:
+        print(f"[greetings] no model to write them with: {e}")
+        return None
+    if cfg.get("kind") == "byok":
+        print("[greetings] the selected model is BYOK, so memories stay here and the generic greetings are used")
+        return None
+    return cfg.get("base_model")
+
+
 def _generated(name: str, facts: list[str]) -> list[str]:
-    model = load_tier_config()["base_model"]
+    model = _local_model()
+    if not model:
+        return []
     try:
         resp = ollama.chat(
             model=model,
