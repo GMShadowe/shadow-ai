@@ -123,9 +123,17 @@ body {
   background: color-mix(in srgb, var(--color-phosphor) 25%, transparent);
 }
 
-:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--color-signal) 70%, transparent);
-  outline-offset: 2px;
+/* The keyboard focus ring for anything without one of its own. In the base
+   layer on purpose: unlayered, it beat every utility in the app - including
+   each field's focus:outline-none - so text fields drew a square ring over
+   their own focus border, and the prompt bar got a rectangle inside its
+   rounded card. Outlines follow border-radius, so the ring takes each
+   control's shape. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-signal) 60%, transparent);
+    outline-offset: 2px;
+  }
 }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }

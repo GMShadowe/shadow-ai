@@ -11,7 +11,7 @@ export function Row({ label, description, children, stacked = false }) {
   return (
     <div className={`py-3.5 ${live} ${stacked ? "space-y-2.5" : "flex items-center gap-4"}`}>
       <div className="flex-1 min-w-0">
-        <div className="text-sm text-ink">{label}</div>
+        <div className="text-sm font-medium text-ink">{label}</div>
         {description && <div className="text-xs text-ink-muted mt-0.5 leading-relaxed">{description}</div>}
       </div>
       {children && <div className={stacked ? "" : "shrink-0"}>{children}</div>}

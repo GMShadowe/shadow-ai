@@ -118,9 +118,9 @@ function ConversationItem({ conv, active, onSelect, onRename, onDelete, onExport
       <button
         onClick={() => onSelect(conv.id)}
         onDoubleClick={() => conv.saved && setEditing(true)}
-        className={`flex min-w-0 flex-1 items-center gap-1.5 px-2.5 py-1.5 text-left text-sm transition-colors duration-150 ${
+        className={`flex min-w-0 flex-1 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors duration-150 focus-visible:outline-offset-[-2px] ${
           active ? "text-ink" : "text-ink/70 group-hover:text-ink"
-        }`}
+        } ${conv.saved ? (exporting ? "pr-[4.75rem]" : "group-hover:pr-[4.75rem] group-has-[:focus-visible]:pr-[4.75rem]") : ""}`}
       >
         {conv.voice && (
           <MicIcon width={12} height={12} role="img" aria-label="Used voice mode"
@@ -129,7 +129,7 @@ function ConversationItem({ conv, active, onSelect, onRename, onDelete, onExport
         <span className="min-w-0 truncate">{conv.title}</span>
       </button>
       {conv.saved && (
-        <div className="flex items-center gap-0.5 pr-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100 focus-within:opacity-100">
+        <div className={`absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-0.5 transition-opacity duration-150 group-hover:opacity-100 group-has-[:focus-visible]:opacity-100 ${exporting ? "opacity-100" : "opacity-0"}`}>
           <button
             onClick={() => setEditing(true)}
             title="Rename"

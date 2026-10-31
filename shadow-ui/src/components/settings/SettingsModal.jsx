@@ -19,6 +19,7 @@ import {
 } from "../Icons.jsx";
 import { Row, GroupTitle, Note, Segmented, TriState, SmallButton, Toggle, SavedInput, Pill, Bytes } from "./controls.jsx";
 import { useExit } from "../ui/useExit.js";
+import useFocusTrap from "../ui/useFocusTrap.js";
 import { formatBytes } from "./format.js";
 import {
   API_BASE,
@@ -1400,6 +1401,8 @@ export default function SettingsModal({ open, onClose, onSaved, appearance, onAp
   const [report, setReport] = useState(null);
   const [reportError, setReportError] = useState(null);
   const navRef = useRef(null);
+  const dialogRef = useRef(null);
+  useFocusTrap(dialogRef, shell.mounted && !shell.leaving);
 
   useEffect(() => {
     if (!open) return;
@@ -1537,24 +1540,26 @@ export default function SettingsModal({ open, onClose, onSaved, appearance, onAp
     <div
       className={`${
         shell.leaving ? "animate-fade-out pointer-events-none" : "animate-fade"
-      } fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4`}
+      } fixed inset-0 z-50 flex items-center justify-center bg-[var(--shadow-color)] p-4 backdrop-blur-[3px]`}
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-label="Settings"
-        className={`${
+        className={`focus:outline-none ${
           shell.leaving ? "animate-pop-out" : "animate-pop"
-        } flex h-[min(680px,88vh)] w-full max-w-3xl overflow-hidden rounded-xl border border-line bg-panel shadow-2xl shadow-black/50`}
+        } flex h-[min(680px,88vh)] w-full max-w-3xl overflow-hidden rounded-2xl border border-line bg-panel shadow-[0_1px_3px_var(--shadow-color),0_32px_80px_-32px_var(--shadow-color)]`}
       >
         <nav
           ref={navRef}
           onKeyDown={onNavKey}
           aria-label="Settings sections"
-          className="flex w-52 shrink-0 flex-col border-r border-line bg-bg/40 p-2"
+          className="flex w-56 shrink-0 flex-col border-r border-line bg-bg/40 p-3"
         >
-          <div className="px-2 pb-3 pt-1.5 text-sm text-ink">Settings</div>
+          <div className="px-2.5 pb-4 pt-2 text-sm font-semibold tracking-[-0.01em] text-ink">Settings</div>
           <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
             {SECTIONS.map((s) => {
               const active = section === s.id;
@@ -1564,9 +1569,10 @@ export default function SettingsModal({ open, onClose, onSaved, appearance, onAp
                   key={s.id}
                   type="button"
                   data-section={s.id}
+                  data-autofocus={active ? "" : undefined}
                   aria-current={active ? "page" : undefined}
                   onClick={() => setSection(s.id)}
-                  className={`relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-sm transition-[background-color,color,transform] duration-150 ease-smooth active:scale-[0.99] ${
+                  className={`relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-[background-color,color,transform] duration-150 ease-smooth focus-visible:outline-offset-[-2px] active:scale-[0.99] ${
                     active ? "bg-panel-alt text-ink" : "text-ink/70 hover:bg-panel-alt/60 hover:text-ink"
                   }`}
                 >
@@ -1583,19 +1589,19 @@ export default function SettingsModal({ open, onClose, onSaved, appearance, onAp
               );
             })}
           </div>
-          <div className="mt-2 flex items-center gap-2 border-t border-line px-2.5 pt-2.5 text-[11px] text-ink-muted">
+          <div className="mt-3 flex items-center gap-2 border-t border-line px-2.5 pb-1 pt-3.5 text-[12px] text-ink-muted">
             <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${offline ? "bg-signal" : "bg-phosphor"}`} />
             <span className="truncate">{offline ? "Offline mode on" : "Local by default"}</span>
           </div>
         </nav>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="flex h-14 shrink-0 items-start gap-3 border-b border-line px-5 pt-3">
+          <header className="flex shrink-0 items-center gap-4 border-b border-line px-7 py-4">
             <div className="min-w-0 flex-1">
-              <h2 className="text-sm text-ink">{current.label}</h2>
-              <p className="truncate text-[11px] text-ink-muted">{current.hint}</p>
+              <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-ink">{current.label}</h2>
+              <p className="mt-0.5 truncate text-[12px] text-ink-muted">{current.hint}</p>
             </div>
-            <span className="mt-0.5 min-w-0 truncate text-xs">
+            <span className="min-w-0 truncate text-xs">
               {error && <span className="text-danger">{error}</span>}
               {!error && notice && <span className="text-phosphor">{notice}</span>}
             </span>
@@ -1603,12 +1609,12 @@ export default function SettingsModal({ open, onClose, onSaved, appearance, onAp
               type="button"
               onClick={onClose}
               aria-label="Close settings"
-              className="-mt-0.5 rounded-md p-1 text-ink-muted transition-colors hover:bg-panel-alt hover:text-ink active:scale-95"
+              className="-mr-1.5 shrink-0 rounded-lg p-1.5 text-ink-muted transition-colors hover:bg-panel-alt hover:text-ink active:scale-95"
             >
               <CloseIcon width={15} height={15} />
             </button>
           </header>
-          <div key={section} className="animate-fade min-h-0 flex-1 overflow-y-auto px-5 py-3">
+          <div key={section} className="animate-fade min-h-0 flex-1 overflow-y-auto px-7 py-5">
             {renderSection()}
           </div>
         </div>
