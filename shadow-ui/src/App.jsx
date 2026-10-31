@@ -666,6 +666,29 @@ export default function App() {
     );
   }
 
+  // The dashboard takes the whole window: it is about every assistant, so
+  // it shouldn't sit inside one of them with its chats down the side.
+  if (assistantsOpen) {
+    return (
+      <Dashboard
+        onClose={() => setAssistantsOpen(false)}
+        onSwitched={handleAssistantSwitched}
+        onEdited={async () => {
+          // Renaming the active assistant changes the sidebar and the
+          // pickers; don't make the user wait for the next status poll.
+          try {
+            const s = await getStatus();
+            setStatus(s);
+            changeModel(s.default_model);
+            changeEffort(s.default_effort);
+          } catch {
+            // the poll will pick it up
+          }
+        }}
+      />
+    );
+  }
+
   return (
     <PreviewProvider>
     <div className="flex h-screen bg-bg p-2 pl-0">
@@ -688,24 +711,7 @@ export default function App() {
         model={models.find((m) => m.id === model)}
       />
       <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-line bg-panel shadow-[0_1px_3px_var(--shadow-color),0_20px_50px_-30px_var(--shadow-color)]">
-        {assistantsOpen ? (
-          <Dashboard
-            onClose={() => setAssistantsOpen(false)}
-            onSwitched={handleAssistantSwitched}
-            onEdited={async () => {
-              // Renaming the active assistant changes the sidebar and the
-              // pickers; don't make the user wait for the next status poll.
-              try {
-                const s = await getStatus();
-                setStatus(s);
-                changeModel(s.default_model);
-                changeEffort(s.default_effort);
-              } catch {
-                // the poll will pick it up
-              }
-            }}
-          />
-        ) : voiceOpen ? (
+        {voiceOpen ? (
           <VoiceScreen
             messages={active.messages}
             streaming={pendingId === active.id}

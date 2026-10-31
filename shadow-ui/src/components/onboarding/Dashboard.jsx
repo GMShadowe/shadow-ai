@@ -8,87 +8,61 @@ import {
   listAssistants,
   patchAssistant,
 } from "../../api.js";
-import { AssistantIcon, CheckIcon, CloseIcon, PencilIcon, PlusIcon, TrashIcon } from "../Icons.jsx";
+import { ArrowLeftIcon, PencilIcon, PlusIcon, TerminalIcon, TrashIcon } from "../Icons.jsx";
 import AssistantWizard, { BLANK } from "./AssistantWizard.jsx";
 
-/* The assistant dashboard. Up to three cards, each one its own set of chats
-   and memory.
+/* The assistant dashboard: a full screen of its own, up to three cards, each
+   one its own set of chats and memory.
 
    Reached from the switcher at the top of the sidebar, not on launch: the
    app opens straight into the last assistant's chat, because putting a
    chooser in front of every session would tax the common case to serve the
    rare one. */
 
-function Card({ assistant, modelLabel, onSwitch, onEdit, onDelete, busy }) {
-  const { name, active, chats, memories } = assistant;
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+const capital = (s) => (s ? s[0].toUpperCase() + s.slice(1) : "");
+
+const PRIMARY =
+  "rounded-lg bg-phosphor px-3.5 py-2 text-[13px] font-medium text-bg transition-[opacity,transform] duration-150 ease-smooth hover:opacity-90 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:opacity-40 disabled:active:scale-100";
+const SECONDARY =
+  "flex items-center gap-1.5 rounded-lg border border-line bg-panel px-3 py-2 text-[13px] text-ink-muted transition-[color,border-color,transform] duration-150 ease-smooth hover:border-ink-muted/40 hover:text-ink active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40";
+
+function Shell({ onBack, backLabel, escapes = true, children }) {
   return (
-    <div
-      className={`group relative rounded-lg border p-4 transition-colors duration-150 ${
-        active ? "border-phosphor-dim/60 bg-panel" : "border-line bg-panel hover:border-line/80"
-      }`}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <AssistantIcon className={active ? "text-phosphor" : "text-ink-muted"} />
-        {active ? (
-          <span className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-phosphor">
-            <CheckIcon width={11} height={11} />
-            Active
+    <div className="animate-fade flex h-screen flex-col overflow-y-auto bg-bg">
+      <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between bg-bg/80 px-6 backdrop-blur-md">
+        <div className="flex items-center gap-2.5">
+          <span className="relative grid h-7 w-7 place-items-center rounded-[9px] bg-ink text-bg">
+            <TerminalIcon width={16} height={16} />
+            <span className="absolute -right-0.5 -top-0.5 h-[7px] w-[7px] rounded-full bg-phosphor ring-2 ring-bg" />
           </span>
-        ) : (
-          <div className="flex items-center gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-            <button
-              type="button"
-              title={`Delete ${name}`}
-              disabled={busy}
-              onClick={onDelete}
-              className="rounded p-1 text-ink-muted transition-colors duration-150 hover:text-danger disabled:opacity-40"
-            >
-              <TrashIcon width={14} height={14} />
-            </button>
-          </div>
-        )}
-      </div>
+          <span className="text-[16px] font-semibold tracking-[-0.03em] text-ink">shadow</span>
+        </div>
+        <button type="button" onClick={onBack} className={SECONDARY}>
+          <ArrowLeftIcon width={14} height={14} />
+          {backLabel}
+          {escapes && <kbd className="ml-1 rounded border border-line px-1 font-mono text-[10px] text-ink-muted">esc</kbd>}
+        </button>
+      </header>
+      {children}
+    </div>
+  );
+}
 
-      <div className="mt-3 truncate text-sm text-ink" title={name}>
-        {name}
-      </div>
-      <div className="mt-1 font-mono text-[11px] text-ink-muted">{modelLabel}</div>
-      <div className="mt-0.5 font-mono text-[11px] text-ink-muted">
-        {chats} {chats === 1 ? "chat" : "chats"} · {memories}{" "}
-        {memories === 1 ? "memory" : "memories"}
-      </div>
+function Stat({ value, label }) {
+  return (
+    <div className="px-4 py-3 first:pl-0">
+      <div className="text-[22px] font-medium leading-none tracking-[-0.02em] text-ink tabular-nums">{value}</div>
+      <div className="mt-1.5 text-[11px] text-ink-muted">{label}</div>
+    </div>
+  );
+}
 
-      <div className="mt-4 flex items-center gap-2">
-        {active ? (
-          <button
-            type="button"
-            onClick={onEdit}
-            className="flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1 text-xs text-ink-muted transition-colors duration-150 hover:text-ink"
-          >
-            <PencilIcon width={13} height={13} />
-            Edit
-          </button>
-        ) : (
-          <>
-            <button
-              type="button"
-              onClick={onSwitch}
-              disabled={busy}
-              className="rounded-md bg-phosphor-dim px-2.5 py-1 text-xs font-medium text-bg transition-all duration-150 hover:bg-phosphor active:scale-[0.97] disabled:opacity-40"
-            >
-              Switch to
-            </button>
-            <button
-              type="button"
-              onClick={onEdit}
-              className="flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1 text-xs text-ink-muted transition-colors duration-150 hover:text-ink"
-            >
-              <PencilIcon width={13} height={13} />
-              Edit
-            </button>
-          </>
-        )}
-      </div>
+function Detail({ label, children }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 py-1.5">
+      <dt className="font-mono text-[11px] uppercase tracking-wider text-ink-muted">{label}</dt>
+      <dd className="min-w-0 truncate text-[13px] text-ink">{children}</dd>
     </div>
   );
 }
@@ -99,34 +73,139 @@ function ConfirmDelete({ assistant, onCancel, onConfirm, busy }) {
   const { name, chats, memories } = assistant;
   const nothing = !chats && !memories;
   return (
-    <div className="rounded-lg border border-danger/40 bg-danger/5 p-4">
-      <div className="text-sm text-ink">Delete {name}?</div>
-      <div className="mt-1.5 text-xs leading-relaxed text-ink-muted">
+    <div className="animate-fade absolute inset-0 z-10 flex flex-col rounded-2xl bg-panel p-5">
+      <div className="text-[15px] font-semibold tracking-[-0.01em] text-ink">Delete {name}?</div>
+      <p className="mt-2 text-[13px] leading-relaxed text-ink-muted">
         {nothing
           ? "It has no chats or memories yet, so nothing is lost but the assistant itself."
-          : `This permanently deletes ${chats} ${chats === 1 ? "chat" : "chats"} and ${memories} ${
-              memories === 1 ? "memory" : "memories"
-            }, and any images in them. It can't be undone.`}
-      </div>
-      <div className="mt-4 flex items-center gap-2">
+          : `This permanently deletes ${plural(chats, "chat", "chats")} and ${plural(
+              memories,
+              "memory",
+              "memories",
+            )}, and any images in them. It can't be undone.`}
+      </p>
+      <div className="mt-auto flex items-center gap-2 pt-4">
         <button
           type="button"
           onClick={onConfirm}
           disabled={busy}
-          className="rounded-md border border-danger/60 px-3 py-1.5 text-xs font-medium text-danger transition-colors duration-150 hover:bg-danger/10 disabled:opacity-40"
+          className="rounded-lg bg-danger px-3.5 py-2 text-[13px] font-medium text-bg transition-[opacity,transform] duration-150 ease-smooth hover:opacity-90 active:scale-[0.97] disabled:opacity-40"
         >
           {busy ? "Deleting…" : "Delete permanently"}
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={busy}
-          className="rounded-md px-3 py-1.5 text-xs text-ink-muted transition-colors duration-150 hover:text-ink disabled:opacity-40"
-        >
+        <button type="button" onClick={onCancel} disabled={busy} className={SECONDARY}>
           Keep it
         </button>
       </div>
     </div>
+  );
+}
+
+function Card({ assistant, modelLabel, onSwitch, onOpen, onEdit, onDelete, confirming, onConfirm, onCancel, canDelete, busy }) {
+  const { name, active, chats, memories, effort, tone, auto_memory, location } = assistant;
+  return (
+    <article
+      className={`group relative flex min-h-[22rem] flex-col rounded-2xl border bg-panel p-5 transition-[border-color,box-shadow] duration-200 ease-smooth ${
+        active
+          ? "border-phosphor/40 shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-phosphor)_8%,transparent)]"
+          : "border-line hover:border-ink-muted/30"
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden
+          className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[17px] font-semibold ${
+            active ? "bg-phosphor text-bg" : "bg-panel-alt text-ink"
+          }`}
+        >
+          {name.trim()[0]?.toUpperCase() ?? "?"}
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-[17px] font-semibold tracking-[-0.02em] text-ink" title={name}>
+            {name}
+          </h2>
+          <div className="mt-0.5 flex items-center gap-1.5 text-[12px]">
+            {active ? (
+              <>
+                <span className="h-1.5 w-1.5 rounded-full bg-phosphor" />
+                <span className="text-phosphor">Active now</span>
+              </>
+            ) : (
+              <span className="text-ink-muted">Not active</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 grid grid-cols-2 divide-x divide-line border-y border-line">
+        <Stat value={chats} label={chats === 1 ? "chat" : "chats"} />
+        <Stat value={memories} label={memories === 1 ? "memory" : "memories"} />
+      </div>
+
+      <dl className="mt-3">
+        <Detail label="Model">{modelLabel}</Detail>
+        <Detail label="Effort">{capital(effort)}</Detail>
+        <Detail label="Tone">{capital(tone)}</Detail>
+        <Detail label="Memory">{auto_memory ? "Saves on its own" : "When asked"}</Detail>
+        <Detail label="Location">{location ? capital(location) : <span className="text-ink-muted">Not set</span>}</Detail>
+      </dl>
+
+      <div className="mt-auto flex items-center gap-2 pt-5">
+        {active ? (
+          <button type="button" onClick={onOpen} className={PRIMARY}>
+            Open chat
+          </button>
+        ) : (
+          <button type="button" onClick={onSwitch} disabled={busy} className={PRIMARY}>
+            Switch to
+          </button>
+        )}
+        <button type="button" onClick={onEdit} disabled={busy} className={SECONDARY}>
+          <PencilIcon width={13} height={13} />
+          Edit
+        </button>
+        <button
+          type="button"
+          onClick={onDelete}
+          disabled={busy || !canDelete}
+          title={canDelete ? `Delete ${name}` : "The last assistant can't be deleted"}
+          aria-label={`Delete ${name}`}
+          className="ml-auto rounded-lg p-2 text-ink-muted transition-[color,background-color,transform] duration-150 ease-smooth hover:bg-danger/5 hover:text-danger active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-muted disabled:active:scale-100"
+        >
+          <TrashIcon width={15} height={15} />
+        </button>
+      </div>
+
+      {confirming && <ConfirmDelete assistant={assistant} busy={busy} onCancel={onCancel} onConfirm={onConfirm} />}
+    </article>
+  );
+}
+
+function EmptySlot({ used, max, full, onCreate }) {
+  if (full) {
+    return (
+      <div className="flex min-h-[22rem] flex-col items-center justify-center rounded-2xl border border-dashed border-line p-6 text-center">
+        <div className="text-[14px] font-medium text-ink">{max} is the most Shadow keeps</div>
+        <p className="mt-1.5 max-w-[16rem] text-[13px] leading-relaxed text-ink-muted">
+          Delete one to make room, or edit an existing assistant instead.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={onCreate}
+      className="group flex min-h-[22rem] flex-col items-center justify-center rounded-2xl border border-dashed border-line p-6 text-center transition-[border-color,background-color] duration-200 ease-smooth hover:border-phosphor/50 hover:bg-panel/60"
+    >
+      <span className="grid h-10 w-10 place-items-center rounded-xl border border-line bg-panel text-ink-muted transition-[color,transform] duration-200 ease-smooth group-hover:scale-105 group-hover:text-phosphor">
+        <PlusIcon width={16} height={16} />
+      </span>
+      <div className="mt-3 text-[14px] font-medium text-ink">New assistant</div>
+      <div className="mt-1 font-mono text-[11px] text-ink-muted">
+        {used} of {max} used
+      </div>
+    </button>
   );
 }
 
@@ -156,11 +235,17 @@ export default function Dashboard({ onClose, onSwitched, onEdited }) {
     load();
   }, []);
 
+  // Escape backs out one level: a delete prompt, then the dashboard. It does
+  // nothing inside the edit form, where it would throw away what was typed.
   useEffect(() => {
-    const esc = (e) => e.key === "Escape" && !editing && onClose();
+    const esc = (e) => {
+      if (e.key !== "Escape" || editing) return;
+      if (confirming) setConfirming(null);
+      else onClose();
+    };
     document.addEventListener("keydown", esc);
     return () => document.removeEventListener("keydown", esc);
-  }, [editing, onClose]);
+  }, [editing, confirming, onClose]);
 
   const models = status?.models ?? [];
   const assistants = data?.assistants ?? [];
@@ -173,11 +258,10 @@ export default function Dashboard({ onClose, onSwitched, onEdited }) {
     setError(null);
     try {
       await activateAssistant(id);
-      await load();
-      onSwitched?.();
+      await onSwitched?.();
+      onClose();
     } catch (e) {
       setError(e.message);
-    } finally {
       setBusy(false);
     }
   }
@@ -209,13 +293,14 @@ export default function Dashboard({ onClose, onSwitched, onEdited }) {
         const { assistant } = await createAssistant(name, draft);
         // A new assistant is only useful once you are in it.
         await activateAssistant(assistant.id);
-        onSwitched?.();
-      } else {
-        // Edits land on the named assistant whether or not it is the active
-        // one, so renaming another assistant doesn't switch you into it.
-        await patchAssistant(editing, { ...draft, name });
-        if (editing === data?.active) onEdited?.();
+        await onSwitched?.();
+        onClose();
+        return;
       }
+      // Edits land on the named assistant whether or not it is the active
+      // one, so renaming another assistant doesn't switch you into it.
+      await patchAssistant(editing, { ...draft, name });
+      if (editing === data?.active) onEdited?.();
       setEditing(null);
       await load();
     } catch (e) {
@@ -233,8 +318,13 @@ export default function Dashboard({ onClose, onSwitched, onEdited }) {
     setEditing(assistant.id);
   }
 
+  function startNew() {
+    setDraft({ ...BLANK, model: status?.recommended_model ?? "default" });
+    setEditing("new");
+  }
+
   const banner = error && (
-    <div className="mb-4 rounded-md border border-danger/40 bg-danger/5 px-3 py-2.5 text-xs leading-relaxed text-ink">
+    <div className="animate-rise mb-6 rounded-xl border border-danger/40 bg-danger/5 px-4 py-3 text-[13px] leading-relaxed text-ink">
       {error}
     </div>
   );
@@ -242,139 +332,89 @@ export default function Dashboard({ onClose, onSwitched, onEdited }) {
   if (editing) {
     const isNew = editing === "new";
     return (
-      <div className="flex h-full flex-col overflow-y-auto">
-        <div className="mx-auto w-full max-w-xl px-6 py-10">
+      <Shell onBack={() => setEditing(null)} backLabel="Back to assistants" escapes={false}>
+        <main className="mx-auto w-full max-w-xl px-6 pb-16 pt-10">
           <div className="animate-rise">
-            <div className="mb-6 flex items-start justify-between gap-4">
-              <div>
-                <h1 className="text-lg font-semibold tracking-tight text-ink">
-                  {isNew ? "New assistant" : `Edit ${draft.name || "assistant"}`}
-                </h1>
-                <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">
-                  {isNew
-                    ? "It gets its own chats and its own memory. Nothing is shared with your other assistants except the downloaded models."
-                    : "Changes apply from its next message. Editing doesn't switch you to it."}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditing(null)}
-                className="rounded p-1 text-ink-muted transition-colors duration-150 hover:text-ink"
-                title="Cancel"
-              >
-                <CloseIcon />
-              </button>
+            <div className="font-mono text-[11px] uppercase tracking-wider text-ink-muted">
+              {isNew ? "New assistant" : "Edit assistant"}
             </div>
-            {banner}
-            <AssistantWizard
-              value={draft}
-              onChange={setDraft}
-              models={models}
-              tools={status?.tools ?? []}
-              recommended={status?.recommended_model}
-            />
-            <div className="mt-7 flex items-center gap-2">
-              <button
-                type="button"
-                onClick={saveDraft}
-                disabled={!draft.name.trim() || busy}
-                className="rounded-md bg-phosphor-dim px-4 py-2 text-sm font-medium text-bg transition-all duration-150 hover:bg-phosphor active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {busy ? "Saving…" : isNew ? "Create assistant" : "Save changes"}
+            <h1 className="mt-2 text-[clamp(1.75rem,3vw,2.25rem)] font-medium leading-[1.1] tracking-[-0.035em] text-ink">
+              {isNew ? "Make a new assistant" : draft.name || "Unnamed assistant"}
+            </h1>
+            <p className="mt-3 text-[14px] leading-relaxed text-ink-muted">
+              {isNew
+                ? "It gets its own chats and its own memory. Nothing is shared with your other assistants except the downloaded models."
+                : "Changes apply from its next message. Editing doesn't switch you to it."}
+            </p>
+            <div className="mt-8">
+              {banner}
+              <AssistantWizard
+                value={draft}
+                onChange={setDraft}
+                models={models}
+                tools={status?.tools ?? []}
+                recommended={status?.recommended_model}
+              />
+            </div>
+            <div className="mt-8 flex items-center gap-2 border-t border-line pt-6">
+              <button type="button" onClick={saveDraft} disabled={!draft.name.trim() || busy} className={PRIMARY}>
+                {busy ? "Saving…" : isNew ? "Create and open" : "Save changes"}
               </button>
-              <button
-                type="button"
-                onClick={() => setEditing(null)}
-                disabled={busy}
-                className="rounded-md border border-line px-4 py-2 text-sm text-ink-muted transition-colors duration-150 hover:text-ink disabled:opacity-40"
-              >
+              <button type="button" onClick={() => setEditing(null)} disabled={busy} className={SECONDARY}>
                 Cancel
               </button>
             </div>
           </div>
-        </div>
-      </div>
+        </main>
+      </Shell>
     );
   }
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto">
-      <div className="mx-auto w-full max-w-3xl px-6 py-10">
+    <Shell onBack={onClose} backLabel="Back to chat">
+      <main className="mx-auto w-full max-w-5xl px-6 pb-16 pt-12 sm:px-10">
         <div className="animate-rise">
-          <div className="mb-6 flex items-start justify-between gap-4">
-            <div>
-              <h1 className="text-lg font-semibold tracking-tight text-ink">Assistants</h1>
-              <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">
-                Each one keeps its own chats and its own memory. They share the models already
-                downloaded, so another one costs nothing to run.
-              </p>
+          <div className="max-w-xl">
+            <div className="font-mono text-[11px] uppercase tracking-wider text-ink-muted">
+              {data ? `${assistants.length} of ${max}` : "Assistants"}
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded p-1 text-ink-muted transition-colors duration-150 hover:text-ink"
-              title="Back to chat"
-            >
-              <CloseIcon />
-            </button>
-          </div>
-
-          {banner}
-
-          {confirming && (
-            <div className="mb-4 animate-rise">
-              <ConfirmDelete
-                assistant={confirming}
-                busy={busy}
-                onCancel={() => setConfirming(null)}
-                onConfirm={() => handleDelete(confirming.id)}
-              />
-            </div>
-          )}
-
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {assistants.map((a) => (
-              <Card
-                key={a.id}
-                assistant={a}
-                modelLabel={label(a.model)}
-                busy={busy}
-                onSwitch={() => handleSwitch(a.id)}
-                onEdit={() => startEdit(a)}
-                onDelete={() => setConfirming(a)}
-              />
-            ))}
-
-            {full ? (
-              <div className="rounded-lg border border-dashed border-line p-4">
-                <div className="text-sm text-ink-muted">
-                  {max} is the most Shadow keeps
-                </div>
-                <div className="mt-1 text-xs leading-relaxed text-ink-muted">
-                  Delete one to make room, or edit an existing assistant instead.
-                </div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setDraft({ ...BLANK, model: status?.recommended_model ?? "default" });
-                  setEditing("new");
-                }}
-                className="flex min-h-[9.5rem] flex-col items-start justify-center gap-2 rounded-lg border border-dashed border-line p-4 text-left transition-colors duration-150 hover:border-phosphor-dim/60"
-              >
-                <PlusIcon className="text-ink-muted" />
-                <div>
-                  <div className="text-sm text-ink">New assistant</div>
-                  <div className="mt-0.5 text-xs text-ink-muted">
-                    {assistants.length} of {max} used
-                  </div>
-                </div>
-              </button>
-            )}
+            <h1 className="mt-2 text-[clamp(2rem,4vw,2.75rem)] font-medium leading-[1.05] tracking-[-0.035em] text-ink">
+              Your assistants
+            </h1>
+            <p className="mt-3 text-[15px] leading-relaxed text-ink-muted">
+              Each one keeps its own chats and its own memory. They share the models already downloaded, so
+              another one costs nothing to run.
+            </p>
           </div>
         </div>
-      </div>
-    </div>
+
+        <div className="mt-10">
+          {banner}
+          {!data && !error ? (
+            <div className="shimmer wait-to-show text-sm font-medium">Loading assistants</div>
+          ) : (
+            <div className="animate-rise grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {assistants.map((a) => (
+                <Card
+                  key={a.id}
+                  assistant={a}
+                  modelLabel={label(a.model)}
+                  busy={busy}
+                  canDelete={assistants.length > 1}
+                  confirming={confirming === a.id}
+                  onOpen={onClose}
+                  onSwitch={() => handleSwitch(a.id)}
+                  onEdit={() => startEdit(a)}
+                  onDelete={() => setConfirming(a.id)}
+                  onConfirm={() => handleDelete(a.id)}
+                  onCancel={() => setConfirming(null)}
+                />
+              ))}
+              <EmptySlot used={assistants.length} max={max} full={full} onCreate={startNew} />
+            </div>
+          )}
+        </div>
+      </main>
+    </Shell>
   );
 }
