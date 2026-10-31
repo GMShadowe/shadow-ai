@@ -7,7 +7,7 @@ Don't reorder without asking Ayaan.
 
 - Brain: router → adapters → tools → model, streaming over SSE
 - Laya router with confidence thresholds, blending, explicit overrides
-- 17 tools with danger levels and per-tool on/ask/off state
+- 20 tools with danger levels and per-tool on/ask/off state
 - Permission flow for "ask" tools (approve in chat, with Always allow)
 - Three model tiers + five effort levels (3/6/12/20/32 tool steps)
 - Vision (images via the base models, no separate vision model needed)
@@ -50,6 +50,17 @@ Don't reorder without asking Ayaan.
 - Light theme as the default (near-white, one blue, Plus Jakarta Sans), with
   the app restyled to match; the dark themes remain choices
 - Adding skills from a file, a link, or a pasted `npx skills add` command
+- Stop keeps the partial reply (`POST /chat/stop`), marked stopped
+- Laya warmed at startup and again when the user starts typing
+- Greetings stay local with a BYOK model
+- Full-screen assistant dashboard
+- STT tuned for accents: base.en, beam 5 and a local vocabulary prompt
+  (9.4% -> 4.7% word errors on Indian-English test speech)
+- Lists, charts and pictures on request (`show_list`, `show_chart`,
+  `show_images`), drawn from tool data in chat and on the voice screen
+- Voice screen redesigned: the orb, cards in the middle, suggestions, space
+  to talk; placeholders and the dev bar removed; voice turns are short
+  and low effort
 
 **A tool tree was built, measured and removed.** Branches instead of one
 flat list measured worse on the 2B it was for, and gave small models two new
@@ -65,17 +76,10 @@ text is arriving. This is the piece that makes voice mode voice mode.
 - TTS: `piper`, local
 - Latency trick: start TTS on the first finished sentence while the model is
   still generating
-- Voice replies must be short and spoken-style (a `voice` flag on the turn),
-  forced low effort
 - Ayaan's idea: when a tool or search is needed, say "hang on, let me look
   that up" out loud to cover the pause
-- The voice screen's cards (`voice/cards/`) still run on `placeholders.js`.
-  Its header says it is the contract: list from `web_search` or `list_dir`,
-  chart from a numeric answer, image from anything visual. Wire them to real
-  tool results and delete the file and the dev bar.
-  **A chart here is the sixth rich element** - CLAUDE.md rules one out for
-  replies, and allows it only if the data arrives as data. These do. Decide
-  that deliberately rather than by drift.
+- A multilingual whisper for Hindi-English code-switching, if real users
+  need it
 
 Reality check: whisper + piper + the chat model + Laya + the embedder on a
 16GB Mac is tight. Expect to recommend Default for voice.
@@ -120,7 +124,6 @@ global, and decide what the compressor does with the extra room.
 - Per-tier tool sets (Default may need fewer tools than Plus)
 - A browser-screenshot tool so Shadow can see the web pages it builds
   (it can't currently verify its own HTML the way it verifies Python)
-- Save partial replies when the user hits Stop
 - Summarise what the compressor dropped instead of just noting that it did
 - Writing and editing skills in the app; adding one from a file or a link
   works, but there's no editor
