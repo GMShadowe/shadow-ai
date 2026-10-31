@@ -21,6 +21,7 @@ PyAV, and PyAV 19 removed a keyword it still passes.
 
 import io
 import os
+import re
 import threading
 import time
 import wave
@@ -28,10 +29,21 @@ import wave
 import numpy as np
 
 SAMPLE_RATE = 16000
-# tiny.en is the floor Shadow is designed for: ~0.15s for a 3s utterance on
-# this laptop, and accurate on normal speech. SHADOW_WHISPER overrides it
-# ("base.en", "small.en", or a multilingual size like "tiny").
-MODEL_SIZE = os.environ.get("SHADOW_WHISPER", "tiny.en")
+# Measured on Indian-English speech (three en_IN voices, ten Shadow-style
+# requests, background noise added), word error rate and time per clip:
+#   tiny.en          9.4%   6.7s  - loops on noisy audio until it hits the cap
+#   base.en          6.4%   0.30s
+#   base.en, beam 5 + VOCABULARY prompt   4.7%   0.33s   <- this
+#   small.en, same   5.4%   1.1s
+#   large-v3-turbo, same   3.4%   5.7s  - too slow on CPU for a voice turn
+# The prompt did more than a bigger model: it is what turned "a him about"
+# into "Ahmedabad" and "Kune" into "Pune". SHADOW_WHISPER overrides the size.
+MODEL_SIZE = os.environ.get("SHADOW_WHISPER", "base.en")
+BEAM_SIZE = 5
+# Words whisper should expect. Everything here is already on this computer;
+# the prompt is never sent anywhere.
+BASE_VOCABULARY = ["Shadow", "workspace", "Python", "JavaScript", "React", "folder", "file"]
+MAX_VOCABULARY = 40
 MAX_SECONDS = 60
 MIN_SECONDS = 0.2
 # Silero keeps a little air around each phrase so whisper hears the edges.
@@ -98,7 +110,7 @@ def load():
     started = time.time()
     first_run = not model_cached()
     if first_run:
-        print(f"[stt] downloading the {MODEL_SIZE} model (one time, ~75MB)…")
+        print(f"[stt] downloading the {MODEL_SIZE} model (one time, ~150MB)…")
     try:
         # int8 on CPU: the whole model is ~40MB in memory and fast enough that
         # transcription is never the thing a user waits for.
@@ -181,6 +193,38 @@ def trim_to_speech(audio: np.ndarray) -> np.ndarray:
     return audio[start:end]
 
 
+def _proper_nouns(text: str) -> list[str]:
+    """Capitalised words that aren't just starting the sentence: the names
+    of people and places, which is what an accent most often trips on."""
+    words = re.findall(r"[A-Za-z][A-Za-z'-]+", text)
+    return [w for i, w in enumerate(words) if i > 0 and w[0].isupper() and w.lower() not in ("i", "user")]
+
+
+def vocabulary(aid: str | None = None) -> str:
+    """The prompt whisper is primed with: the assistant's name, the user's
+    location, and the names in what it remembers. Failing to build it is
+    survivable - transcription just loses the hint - so it says why and
+    carries on."""
+    words = list(BASE_VOCABULARY)
+    try:
+        from assistants import get_profile
+        from memory import long_term
+        profile = get_profile(aid)
+        words[:0] = [profile.get("name") or "Shadow"]
+        if profile.get("location"):
+            words.append(profile["location"].strip().title())
+        for memory in long_term.all_memories():
+            words.extend(_proper_nouns(memory["text"]))
+    except Exception as e:
+        print(f"[stt] couldn't build the vocabulary hint, transcribing without it: {e}")
+    seen, out = set(), []
+    for w in words:
+        if w and w.lower() not in seen:
+            seen.add(w.lower())
+            out.append(w)
+    return ", ".join(out[:MAX_VOCABULARY]) + "."
+
+
 def transcribe(data: bytes) -> dict:
     """WAV bytes in, text out. Everything that can go wrong raises SttError
     with a sentence the user can act on."""
@@ -195,14 +239,16 @@ def transcribe(data: bytes) -> dict:
     speech = trim_to_speech(audio)
 
     model = load()
+    prompt = vocabulary()
     started = time.time()
     with _lock:
         segments, _info = model.transcribe(
             speech,
-            beam_size=1,            # greedy: the quality difference on speech this
-            language="en",          # short isn't worth doubling the time
+            beam_size=BEAM_SIZE,    # beam 5 cost ~10% more time than greedy here
+            language="en",
             vad_filter=False,       # silero already did it, above
             condition_on_previous_text=False,
+            initial_prompt=prompt,
         )
         text = " ".join(s.text.strip() for s in segments).strip()
     took = int((time.time() - started) * 1000)
