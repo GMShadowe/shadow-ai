@@ -279,6 +279,12 @@ export async function stopChat(conversationId) {
   );
 }
 
+/* Laya is slow for its first prediction after under a minute idle. Typing
+   is the warning that a message is coming, so it gets warmed then. */
+export async function warmRouter() {
+  return readJson(await fetch(`${BASE}/router/warm`, { method: "POST" }), "Couldn't warm the router");
+}
+
 export async function answerPermission(id, decision) {
   return readJson(
     await fetch(`${BASE}/permission/${encodeURIComponent(id)}`, jsonRequest("POST", { decision })),

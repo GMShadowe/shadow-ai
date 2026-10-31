@@ -159,9 +159,9 @@ def _maybe_load_laya() -> None:
     if get_settings()["router"] != "laya":
         return
     try:
-        from router.laya_router import load
+        from router.laya_router import load, warmup
         load()
-        print("[router] Laya loaded")
+        print(f"[router] Laya loaded, first prediction {warmup():.0f}ms")
     except Exception as e:
         print(f"[router] Laya unavailable, using keywords: {e}")
 
@@ -1327,6 +1327,18 @@ def chat_stream(req: ChatRequest):
                                      images, req.skill, aid, claim)
 
     return _claimed(cid, setup)
+
+
+@app.post("/router/warm")
+def warm_router():
+    """Called by the composer when someone starts typing. Laya slows to its
+    cold speed after under a minute idle, so a discarded prediction now means
+    the message they're writing is routed at warm speed. Returns at once; the
+    prediction runs on a thread."""
+    if get_settings()["router"] != "laya":
+        return {"state": "not used"}
+    from router import laya_router
+    return {"state": laya_router.warm_in_background()}
 
 
 @app.post("/chat/stop")

@@ -21,6 +21,7 @@ function matchSkills(skills, query) {
 export default function Composer({
   onSend,
   onStop,
+  onTyping,
   streaming,
   disabled,
   models,
@@ -230,6 +231,7 @@ export default function Composer({
             disabled={disabled}
             onChange={(e) => {
               setValue(e.target.value);
+              if (e.target.value.trim()) onTyping?.();
               setMenuClosed(false);
               setMenuIndex(0);
             }}

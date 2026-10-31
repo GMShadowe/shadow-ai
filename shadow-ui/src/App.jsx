@@ -26,7 +26,8 @@ import {
   rateReply,
   exportChat,
   searchChats,
-  stopChat
+  stopChat,
+  warmRouter
 } from "./api.js";
 import { loadAppearance, saveAppearance, applyAppearance } from "./theme.js";
 
@@ -337,6 +338,16 @@ export default function App() {
     controller.abort();
   }
 
+  // Warm the router while someone types. The brain holds off on its own if
+  // it predicted recently; this only saves sending a request per keystroke.
+  const lastWarm = useRef(0);
+  function handleTyping() {
+    const now = Date.now();
+    if (now - lastWarm.current < 10_000) return;
+    lastWarm.current = now;
+    warmRouter().catch((e) => console.warn("[router] couldn't warm:", e.message));
+  }
+
   /* Every kind of turn streams the same events back, so they share one
      handler: `request` is whichever call starts it. `msgId` is the placeholder
      reply already on screen. */
@@ -577,6 +588,7 @@ export default function App() {
     <Composer
       onSend={handleSend}
       onStop={handleStop}
+      onTyping={handleTyping}
       streaming={pendingId === active.id}
       disabled={!connected || active.messages === null || (pendingId !== null && pendingId !== active.id)}
       models={models}

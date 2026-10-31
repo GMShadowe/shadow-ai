@@ -23,6 +23,17 @@ LAYA_SHA256 = {
 _agent = None
 _device = None
 _load_lock = threading.Lock()
+# One prediction at a time, so a warmup started while typing and the real
+# routing of the message that follows can't run on the device together.
+_predict_lock = threading.Lock()
+_last_predict = 0.0
+_warming = False
+
+# Measured on an M-series Mac: a prediction right after another takes ~65ms,
+# ~110ms after up to 20s idle, and ~320ms - as slow as the first one - after
+# 45s. Warming at most this often while someone types keeps it in the first
+# two bands without running predictions back to back.
+WARM_INTERVAL_S = 10
 
 
 def _select_device(torch) -> str:
@@ -138,16 +149,20 @@ def predict_routes(
             f"Current message: {state}"
         )
 
-    start = time.perf_counter()
-
-    # Safe for inference; avoids autograd overhead if not already disabled.
-    with torch.inference_mode():
-        result = agent.predict(state, QUESTIONS)
-
-    elapsed_ms = (time.perf_counter() - start) * 1000
-
+    result, elapsed_ms = _predict(agent, torch, state, QUESTIONS)
     probabilities = result["answers"]["route"]["probabilities"]
     return probabilities, elapsed_ms
+
+
+def _predict(agent, torch, state: str, questions) -> tuple[dict, float]:
+    global _last_predict
+    with _predict_lock:
+        start = time.perf_counter()
+        # Safe for inference; avoids autograd overhead if not already disabled.
+        with torch.inference_mode():
+            result = agent.predict(state, questions)
+        _last_predict = time.monotonic()
+        return result, (time.perf_counter() - start) * 1000
 
 
 def warmup() -> float:
@@ -155,10 +170,32 @@ def warmup() -> float:
     import torch
     from router.routes import QUESTIONS
 
-    agent = load()
-    start = time.perf_counter()
+    return _predict(load(), torch, "Warmup routing request.", QUESTIONS)[1]
 
-    with torch.inference_mode():
-        agent.predict("Warmup routing request.", QUESTIONS)
 
-    return (time.perf_counter() - start) * 1000
+def warm_in_background() -> str:
+    """Warm Laya on a thread because someone has started typing, so the
+    message they send is routed at warm speed. Returns what it did, and never
+    loads Laya: a router that isn't loaded yet is loading at startup already.
+    """
+    global _warming
+    if _agent is None:
+        return "not loaded"
+    with _load_lock:
+        if _warming:
+            return "already warming"
+        if time.monotonic() - _last_predict < WARM_INTERVAL_S:
+            return "already warm"
+        _warming = True
+
+    def run():
+        global _warming
+        try:
+            warmup()
+        except Exception as e:
+            print(f"[Laya] warmup failed: {e}")
+        finally:
+            _warming = False
+
+    threading.Thread(target=run, name="laya-warm", daemon=True).start()
+    return "warming"
