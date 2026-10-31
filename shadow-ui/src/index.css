@@ -71,20 +71,24 @@
 
 :root { --shadow-color: rgba(17, 24, 39, 0.16); }
 
-.glow {
+/* A dot grid behind the empty chat that fades out from the prompt bar, so it
+   reads as texture rather than a pattern. It sits under every child of the
+   card (isolate + z-index -1) and only shows while the chat is empty. */
+.dot-field { isolation: isolate; }
+.dot-field::before {
+  content: "";
   position: absolute;
+  inset: 0;
+  z-index: -1;
   pointer-events: none;
-  border-radius: 9999px;
-  background: radial-gradient(
-    closest-side,
-    color-mix(in srgb, var(--color-glow) 55%, transparent),
-    color-mix(in srgb, var(--color-glow-deep) 18%, transparent) 60%,
-    transparent
-  );
-  filter: blur(64px);
-  opacity: 0.55;
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--color-ink) 18%, transparent) 1px, transparent 1.5px);
+  background-size: 22px 22px;
+  background-position: center;
+  mask-image: radial-gradient(ellipse 50% 46% at 50% 50%, #000 0%, rgba(0, 0, 0, 0.5) 45%, transparent 100%);
+  opacity: 0;
+  transition: opacity 280ms var(--ease-smooth);
 }
-[data-theme="dark"] .glow { opacity: 0.22; }
+.dot-field[data-empty="true"]::before { opacity: 1; }
 
 /* Syntax colors, adjusted for light themes below */
 :root {

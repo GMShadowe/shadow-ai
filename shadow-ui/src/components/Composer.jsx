@@ -158,7 +158,7 @@ export default function Composer({
             setDragging(false);
             addFiles(e.dataTransfer.files);
           }}
-          className={`relative rounded-[22px] border bg-panel shadow-[0_1px_2px_var(--shadow-color),0_24px_60px_-28px_var(--shadow-color)] transition-[border-color,box-shadow,opacity] duration-200 ease-smooth ${edge} ${
+          className={`relative rounded-[22px] border bg-panel shadow-[0_1px_2px_color-mix(in_srgb,var(--shadow-color)_50%,transparent),0_12px_32px_-20px_color-mix(in_srgb,var(--shadow-color)_60%,transparent)] transition-[border-color,box-shadow,opacity] duration-200 ease-smooth ${edge} ${
             disabled ? "opacity-60" : ""
           }`}
         >

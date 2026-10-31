@@ -710,7 +710,9 @@ export default function App() {
         onToggleCollapse={toggleSidebar}
         model={models.find((m) => m.id === model)}
       />
-      <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-line bg-panel shadow-[0_1px_3px_var(--shadow-color),0_20px_50px_-30px_var(--shadow-color)]">
+      <main
+        data-empty={!voiceOpen && active.messages?.length === 0}
+        className="dot-field relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-line bg-panel shadow-[0_1px_3px_var(--shadow-color),0_20px_50px_-30px_var(--shadow-color)]">
         {voiceOpen ? (
           <VoiceScreen
             messages={active.messages}

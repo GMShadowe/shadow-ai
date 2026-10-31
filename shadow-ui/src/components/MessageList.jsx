@@ -4,12 +4,7 @@ import Message from "./Message.jsx";
 function EmptyState({ greeting }) {
   return (
     <div className="relative flex min-h-0 flex-1 flex-col items-center justify-end px-6 pb-6">
-      <div aria-hidden className="glow animate-fade -bottom-24 left-1/2 h-[420px] w-[640px] -translate-x-1/2" />
       <div className="animate-rise relative flex w-full max-w-3xl flex-col items-center">
-        <div
-          className="mb-5 h-2.5 w-2.5 rounded-full bg-phosphor"
-          style={{ boxShadow: "0 0 24px 6px color-mix(in srgb, var(--color-phosphor) 35%, transparent)" }}
-        />
         <h1 className="text-center text-[clamp(1.75rem,3.4vw,2.6rem)] font-medium leading-[1.1] tracking-[-0.035em] text-ink">{greeting}</h1>
       </div>
     </div>
@@ -68,7 +63,7 @@ export default function MessageList({
   const settled = !busy && (tail?.role !== "assistant" || !tail.streaming);
 
   return (
-    <div ref={scrollRef} onScroll={handleScroll} className="min-h-0 flex-1 overflow-y-auto">
+    <div ref={scrollRef} onScroll={handleScroll} className="min-h-0 flex-1 overflow-y-auto [mask-image:linear-gradient(to_bottom,transparent,#000_28px)]">
       <div className="mx-auto max-w-3xl px-6 pb-6 pt-8">
         {messages.map((m, i) => (
           <div key={m.id ?? i} className={gapFor(messages[i - 1], m)}>
