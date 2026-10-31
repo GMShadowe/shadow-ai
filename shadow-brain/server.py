@@ -8,6 +8,7 @@ import json
 import os
 import platform
 import threading
+import time
 import weakref
 
 import ollama
@@ -240,6 +241,10 @@ class FeedbackRequest(BaseModel):
 
 class PermissionAnswer(BaseModel):
     decision: str
+
+
+class StopRequest(BaseModel):
+    conversation_id: str
 
 
 def _installed_models() -> set[str] | None:
@@ -1074,21 +1079,118 @@ def _turn_error(cid: str, exc: Exception, model: str | None, aid: str) -> dict:
     return event
 
 
+class _Partial:
+    """What a turn has put on screen so far, kept the way the UI shows it, so
+    a stopped reply is saved as it was seen: text written before a tool call
+    is dropped, because it is usually "let me check" and the UI clears it."""
+
+    def __init__(self):
+        self.text = ""
+        self.meta: dict = {}
+        self.tools: list[dict] = []
+        self._running: dict | None = None
+
+    def see(self, event: dict) -> None:
+        kind = event["type"]
+        if kind == "route":
+            self.meta = {k: event.get(k) for k in ("route", "router", "model", "effort", "skill")}
+        elif kind == "token":
+            self.text += event["text"]
+        elif kind == "tool_start":
+            self.text = ""
+            self._running = {"name": event["name"], "args": event["args"]}
+        elif kind == "tool_end" and self._running:
+            self.tools.append({**self._running, "result": event["result"]})
+            self._running = None
+        elif kind == "permission":
+            self.text = ""
+            self.tools.append({"kind": "permission", "id": event["id"], "name": event["name"],
+                               "args": event["args"], "preview": event.get("preview"),
+                               "decision": None})
+        elif kind == "permission_result":
+            for t in self.tools:
+                if t.get("kind") == "permission" and t["id"] == event["id"]:
+                    t["decision"] = event["decision"]
+
+    def waiting_permissions(self) -> list[str]:
+        return [t["id"] for t in self.tools if t.get("kind") == "permission" and t["decision"] is None]
+
+    def finished_tools(self) -> list[dict]:
+        # A tool the stream announced but never ran: the turn stops at an
+        # event, so it was stopped before the call, not halfway through it.
+        if self._running:
+            return self.tools + [{**self._running, "result": "Not run: the reply was stopped first."}]
+        return self.tools
+
+
+# Turns that can be stopped, by conversation, guarded by _sessions_lock.
+_stops: dict[str, tuple[threading.Event, _Partial]] = {}
+
+
+def _save_stopped(cid: str, text: str, images: list[str], partial: _Partial,
+                  memory: ShortTermMemory | None, aid: str) -> None:
+    """Keep a reply that was cut short as far as it got, marked stopped, so
+    the chat on disk matches what was on screen and the next turn knows the
+    question was asked."""
+    try:
+        reply = partial.text.strip()
+        if memory is not None:
+            memory.add("user", text, images)
+        tools = partial.finished_tools()
+        if not reply and not tools:
+            print("[chat] stopped before anything was written, so there is no reply to save")
+            return
+        storage.add_message(cid, "assistant", reply,
+                            {**partial.meta, "tools": tools, "stopped": True}, aid=aid)
+        if memory is not None:
+            memory.add("assistant", reply)
+        print(f"[chat] stopped, saved {len(reply)} characters and {len(tools)} tool calls")
+    except Exception as e:
+        print(f"[chat] couldn't save the stopped reply: {e}")
+
+
+def _forget_turn(cid: str, claim: object, stop: threading.Event) -> None:
+    with _sessions_lock:
+        if _stops.get(cid, (None,))[0] is stop:
+            del _stops[cid]
+    _release(cid, claim)
+
+
 def _stream_turn_response(cid: str, text: str, memory: ShortTermMemory, model, effort,
                           images: list[str], skill: str | None, aid: str, claim: object):
+    stop = threading.Event()
+    partial = _Partial()
+    with _sessions_lock:
+        _stops[cid] = (stop, partial)
+
     def events():
+        finished = False
+        turn = stream_turn(text, memory, model, effort, images, skill, aid)
         try:
-            for event in stream_turn(text, memory, model, effort, images, skill, aid):
+            for event in turn:
+                if stop.is_set():
+                    break
                 if event["type"] == "done":
                     _save_reply(cid, event, aid)
+                    finished = True
+                else:
+                    partial.see(event)
                 yield _sse(event)
+                if stop.is_set() and not finished:
+                    break
         except Exception as e:
+            finished = True
             yield _sse(_turn_error(cid, e, model, aid))
         finally:
-            _release(cid, claim)
+            # Reached by Stop, and also when the browser simply went away:
+            # the generator is closed then, and lands here the same way.
+            turn.close()
+            if not finished:
+                _save_stopped(cid, text, images, partial, memory, aid)
+            _forget_turn(cid, claim, stop)
 
     stream = events()
-    weakref.finalize(stream, _release, cid, claim)
+    weakref.finalize(stream, _forget_turn, cid, claim, stop)
     return StreamingResponse(stream, media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache"})
 
@@ -1225,6 +1327,34 @@ def chat_stream(req: ChatRequest):
                                      images, req.skill, aid, claim)
 
     return _claimed(cid, setup)
+
+
+@app.post("/chat/stop")
+def chat_stop(req: StopRequest):
+    """End the running turn at its next event and keep what it wrote.
+
+    The UI calls this before it drops the connection, so the reply is saved
+    before it re-reads the chat. An approval still waiting is denied, or a
+    turn paused on one could not stop until it timed out. Returns once the
+    turn has let go of the chat, or after a few seconds if it is stuck inside
+    a call that can't be interrupted (a model still reading the prompt)."""
+    cid = req.conversation_id
+    with _sessions_lock:
+        entry = _stops.get(cid)
+    if entry is None:
+        return {"stopped": False}
+    stop, partial = entry
+    stop.set()
+    for pid in partial.waiting_permissions():
+        permissions.resolve(pid, "deny")
+    deadline = time.monotonic() + 5
+    while time.monotonic() < deadline:
+        with _sessions_lock:
+            if _stops.get(cid, (None,))[0] is not stop:
+                return {"stopped": True}
+        time.sleep(0.05)
+    print(f"[chat] stop asked for {cid}, but the turn is still inside a call")
+    return {"stopped": False}
 
 
 @app.post("/reset/{conversation_id}")

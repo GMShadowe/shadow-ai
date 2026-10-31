@@ -269,6 +269,16 @@ export async function deleteConversation(id) {
   );
 }
 
+/* Stop asks the brain to end the turn before the connection is dropped, so
+   the reply written so far is saved, marked stopped, before the chat is
+   re-read. */
+export async function stopChat(conversationId) {
+  return readJson(
+    await fetch(`${BASE}/chat/stop`, jsonRequest("POST", { conversation_id: conversationId })),
+    "Couldn't stop the reply"
+  );
+}
+
 export async function answerPermission(id, decision) {
   return readJson(
     await fetch(`${BASE}/permission/${encodeURIComponent(id)}`, jsonRequest("POST", { decision })),

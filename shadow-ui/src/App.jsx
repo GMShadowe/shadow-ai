@@ -25,7 +25,8 @@ import {
   editMessage,
   rateReply,
   exportChat,
-  searchChats
+  searchChats,
+  stopChat
 } from "./api.js";
 import { loadAppearance, saveAppearance, applyAppearance } from "./theme.js";
 
@@ -44,6 +45,7 @@ function fromServer(m) {
     router: m.router ?? null,
     model: m.model,
     effort: m.effort,
+    stopped: !!m.stopped,
     streaming: false,
   };
 }
@@ -322,8 +324,17 @@ export default function App() {
     if (activeId === id) setActiveId(null);
   }
 
-  function handleStop() {
-    abortRef.current?.abort();
+  async function handleStop() {
+    const controller = abortRef.current;
+    if (!controller) return;
+    // The brain ends the turn and saves what it wrote; cutting the connection
+    // first would race the re-read of the chat and lose it from the screen.
+    try {
+      await stopChat(pendingId);
+    } catch (e) {
+      console.warn("[stop] the brain didn't confirm, dropping the connection:", e.message);
+    }
+    controller.abort();
   }
 
   /* Every kind of turn streams the same events back, so they share one
