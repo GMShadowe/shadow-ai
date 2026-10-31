@@ -285,6 +285,19 @@ body {
   50% { transform: scaleY(1); }
 }
 
+/* The voice orb: a ring that breathes while Shadow answers, and one that
+   circles while it works. Both are flattened by the reduced-motion rule. */
+.voice-breathe { animation: voice-breathe 1.6s var(--ease-smooth) infinite; }
+@keyframes voice-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.16); }
+}
+.voice-orbit {
+  border: 2px solid color-mix(in srgb, var(--color-phosphor) 15%, transparent);
+  border-top-color: var(--color-phosphor);
+  animation: spin 0.9s linear infinite;
+}
+
 /* The history panel slides in from the right. */
 .voice-panel {
   transition: transform 280ms var(--ease-smooth), opacity 200ms var(--ease-smooth);

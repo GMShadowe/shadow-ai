@@ -16,7 +16,7 @@ export default function HistoryPanel({ open, turns, onClose }) {
     <aside
       aria-label="Conversation history"
       aria-hidden={!open}
-      className={`voice-panel absolute inset-y-0 right-0 z-20 flex w-80 max-w-[85%] flex-col border-l border-line bg-panel shadow-2xl shadow-black/40 ${
+      className={`voice-panel absolute inset-y-0 right-0 z-20 flex w-80 max-w-[85%] flex-col border-l border-line bg-panel shadow-[0_24px_60px_-24px_var(--shadow-color)] ${
         open ? "translate-x-0 opacity-100" : "pointer-events-none translate-x-full opacity-0"
       }`}
     >

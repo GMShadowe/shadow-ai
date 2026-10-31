@@ -1,39 +1,44 @@
-/* The exchange happening right now, under the stage. Always visible: not
-   knowing whether it misheard you is the worst part of talking to a
-   computer, and the text removes the doubt.
+/* The exchange happening right now. Always visible: not knowing whether it
+   misheard you is the worst part of talking to a computer, and the text
+   removes the doubt.
 
-   The two voices are told apart the way the history panel does it — a
-   small mono label, the user's words muted, Shadow's in full ink. */
-function Line({ who, children, dim = false }) {
-  return (
-    <div className="space-y-1">
-      <div className="font-mono text-[10px] uppercase tracking-wider text-ink-muted/80">{who}</div>
-      <p className={dim ? "text-sm leading-relaxed text-ink-muted" : "text-[0.9375rem] font-medium leading-relaxed text-ink"}>
-        {children}
-      </p>
-    </div>
-  );
-}
+   Large when it has the middle of the screen to itself, small when a card
+   is there. The user's words are muted, Shadow's in full ink. */
+const SIZES = {
+  large: {
+    gap: "space-y-5",
+    user: "text-[15px] leading-relaxed text-ink-muted",
+    shadow: "text-[clamp(1.25rem,2.2vw,1.6rem)] font-medium leading-snug tracking-[-0.02em] text-ink",
+  },
+  small: {
+    gap: "space-y-1.5",
+    user: "line-clamp-1 text-[13px] text-ink-muted",
+    shadow: "line-clamp-3 text-[15px] font-medium leading-relaxed text-ink",
+  },
+};
 
-export default function VoiceTranscript({ user, assistant, state, listening }) {
+export default function VoiceTranscript({ size = "large", user, assistant, state }) {
+  const s = SIZES[size];
+
   if (!user && !assistant) {
     return (
-      <p className="text-center text-xs text-ink-muted">
-        {listening ? "Listening…" : "Nothing said yet"}
+      <p className="text-center text-[13px] text-ink-muted">
+        {state === "listening" ? "Go ahead, I'm listening." : state === "transcribing" ? "Writing down what you said…" : ""}
       </p>
     );
   }
 
   return (
-    <div className="space-y-3 text-center">
-      {user && (
-        <Line who="you" dim>
-          {user}
-          {listening && <span className="text-phosphor"> ▍</span>}
-        </Line>
+    <div className={`w-full text-center ${s.gap}`}>
+      {user && <p className={`animate-fade ${s.user}`}>“{user}”</p>}
+      {assistant ? (
+        <p className={`animate-fade ${s.shadow}`}>
+          {assistant}
+          {state === "speaking" && <span className="ml-0.5 text-phosphor">▍</span>}
+        </p>
+      ) : (
+        state === "thinking" && <p className="shimmer text-[14px] font-medium">Working on it</p>
       )}
-      {assistant && <Line who="shadow">{assistant}</Line>}
-      {state === "thinking" && !assistant && <p className="shimmer text-sm font-medium">Working on it</p>}
     </div>
   );
 }
