@@ -146,7 +146,7 @@ def detailed() -> str:
         "",
         "Limits: everything runs locally on this computer. You cannot see the screen, "
         "hear audio, or touch files outside the workspace. Web access is only through "
-        "the web_search, fetch_url and http_request tools.",
+        "the web_search, fetch_url, http_request and show_images tools.",
     ]
     if profile.get("custom_instructions"):
         out += ["", f"The user's custom instructions: {profile['custom_instructions']}"]

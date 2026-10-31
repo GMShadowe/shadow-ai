@@ -1,7 +1,7 @@
 """Every tool Shadow has, in one place. Each entry has the function
 to run and the schema the model sees. Adapters pick a subset."""
 
-from tools import files, shell, web, desktop, meta
+from tools import files, shell, web, desktop, meta, display
 
 
 def _schema(name: str, description: str, props: dict, required: list[str]) -> dict:
@@ -16,6 +16,10 @@ def _schema(name: str, description: str, props: dict, required: list[str]) -> di
 
 
 S = {"type": "string"}
+LIST_ITEMS = {"type": "array", "items": {"type": "object", "properties": {
+    "title": S, "detail": S}, "required": ["title"]}}
+STRINGS = {"type": "array", "items": S}
+NUMBERS = {"type": "array", "items": {"type": "number"}}
 
 
 def _tool(fn, schema, danger="safe", preview=None):
@@ -66,6 +70,18 @@ TOOLS = {
     "http_request": _tool(web.http_request,
         _schema("http_request", "Make an HTTP request to a URL. Can POST/PUT/DELETE, so it can change things on the server.",
                 {"url": S, "method": S, "body": S}, ["url"]), "dangerous"),
+    "show_list": _tool(display.show_list,
+        _schema("show_list", "Put a list on the user's screen. Use it when they ask for a list. Each item has a "
+                "short title and a one-line detail. Only real items you know or got from a tool.",
+                {"title": S, "items": LIST_ITEMS}, ["title", "items"])),
+    "show_chart": _tool(display.show_chart,
+        _schema("show_chart", "Put a chart on the user's screen. labels and values must be the same length. "
+                "kind is 'bar' to compare things or 'line' for change over time. Only real numbers.",
+                {"title": S, "labels": STRINGS, "values": NUMBERS, "unit": S, "kind": S},
+                ["title", "labels", "values"])),
+    "show_images": _tool(display.show_images,
+        _schema("show_images", "Search the web for pictures and put them on the user's screen.",
+                {"query": S, "count": {"type": "integer"}}, ["query"])),
     "about_me": _tool(meta.about_me,
         _schema("about_me", "Get full details about yourself: your model, settings, every tool and its state, memory count and limits. Use this when the user asks what you can do.", {}, [])),
 }

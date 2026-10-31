@@ -5,7 +5,7 @@ from settings import get_settings
 
 TOOL_STATES = ["on", "ask", "off"]
 # The only tools that send anything off this computer.
-WEB_TOOLS = ["web_search", "fetch_url", "http_request"]
+WEB_TOOLS = ["web_search", "fetch_url", "http_request", "show_images"]
 # A profile without an entry for these asks.
 DANGEROUS_DEFAULT_ASK = {"delete_file", "delete_dir", "http_request", "kill_process", "run_command",
                          "open_app"}

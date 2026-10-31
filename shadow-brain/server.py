@@ -50,7 +50,8 @@ TOOL_GROUPS = {
     "Files": ["read_file", "write_file", "edit_file", "move_file", "delete_file", "delete_dir",
               "list_dir", "find_files", "search_text"],
     "Computer": ["run_command", "kill_process", "open_app", "system_info"],
-    "Web": ["web_search", "fetch_url", "http_request"],
+    "Web": ["web_search", "fetch_url", "http_request", "show_images"],
+    "Screen": ["show_list", "show_chart"],
     "Self": ["about_me"],
 }
 

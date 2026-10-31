@@ -32,6 +32,39 @@ def is_remember(text: str) -> bool:
     return bool(REMEMBER_RE.match(text or ""))
 
 
+# Asking to *see* something. Matched on the words, like the research phrases,
+# because these tools are granted only when asked for: a small model given a
+# list tool on every turn starts answering everything as a list.
+CHART_RE = re.compile(r"\b(chart|graph|plot|visuali[sz]e)\b", re.I)
+LIST_RE = re.compile(r"\b(list|top \d+|ranking|rank)\b", re.I)
+# "list the files" is a job for list_dir; a list tool there invites a model to
+# write a file listing from memory instead of reading the folder.
+FILES_RE = re.compile(r"\b(files?|folders?|director(y|ies)|workspace)\b", re.I)
+IMAGES_RE = re.compile(
+    r"\b(pictures?|photos?|images?|pics?)\s+of\b"
+    r"|\bshow me (?:a |an |some )?(?:pictures?|photos?|images?|pics?)\b"
+    r"|\bwhat does .+ look like\b",
+    re.I,
+)
+
+
+def display_tools(text: str, has_images: bool = False) -> list[str]:
+    """The on-screen tools this message asks for, if any."""
+    text = text or ""
+    wanted = []
+    if LIST_RE.search(text) and not FILES_RE.search(text):
+        wanted.append("show_list")
+    if CHART_RE.search(text):
+        # A chart is numbers, and the numbers usually live on the web. Asked
+        # for in plain chat, the model had nothing to draw it from and
+        # (rightly) refused rather than inventing them.
+        wanted += ["show_chart", "web_search"]
+    # With a picture attached, "image" is about that picture.
+    if not has_images and IMAGES_RE.search(text):
+        wanted.append("show_images")
+    return wanted
+
+
 def _decide(probs: dict) -> list[str]:
     """Turn Laya's probabilities into a list of adapters (may be empty = chat)."""
     ranked = sorted(probs.items(), key=lambda kv: kv[1], reverse=True)

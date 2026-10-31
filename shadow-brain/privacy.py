@@ -64,6 +64,8 @@ def outbound(log_path: str) -> list[dict]:
         tool_row("web_search", "duckduckgo.com", "Sends your search words to DuckDuckGo."),
         tool_row("fetch_url", "the page you ask for", "Requests one page and reads its text."),
         tool_row("http_request", "the address it is given", "Can send data, so it asks before running."),
+        tool_row("show_images", "duckduckgo.com, then the image hosts",
+                 "Sends your picture search to DuckDuckGo; the brain fetches the thumbnails, not your browser."),
     ]
 
     if off:
