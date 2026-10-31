@@ -199,6 +199,13 @@ def build_system_prompt(adapters, blocked, ask, image_count=0, tier=None, effort
     return prompt
 
 
+VOICE_NOTE = (
+    "This is a voice conversation: your reply appears as a caption and will be spoken aloud. "
+    "Answer in one to three short spoken sentences. No markdown, headings, bullet points or code. "
+    "Anything long or detailed belongs on the screen through a show_ tool if you have one, not in your words."
+)
+
+
 def merge_temperature(adapters: list[dict]) -> float | None:
     temps = [a["temperature"] for a in adapters if "temperature" in a]
     return min(temps) if temps else None
@@ -207,7 +214,7 @@ def merge_temperature(adapters: list[dict]) -> float | None:
 def stream_turn(user_input: str, memory: ShortTermMemory,
                 tier: str | None = None, effort: str | None = None,
                 images: list[str] | None = None, skill_name: str | None = None,
-                aid: str | None = None):
+                aid: str | None = None, voice: bool = False):
     images = images or []
     # Resolved once: the user can switch assistants while this turn streams.
     aid = aid or active_id()
@@ -219,6 +226,9 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     tier_cfg = load_tier_config(tier)
     effort = effort if effort in EFFORT_STEPS else (
         profile["effort"] if profile["effort"] in EFFORT_STEPS else default_effort())
+    # A spoken answer is waited for in silence, so voice turns take the fewest steps.
+    if voice:
+        effort = "low"
 
     history = memory.get()
     previous = next((m["content"] for m in reversed(history) if m["role"] == "user"), None)
@@ -262,6 +272,8 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
         system_prompt += "\n\n" + no_tools_reason
     if any(t in allowed for t in WEB_TOOLS):
         system_prompt += "\n\n" + UNTRUSTED_NOTE
+    if voice:
+        system_prompt += "\n\n" + VOICE_NOTE
 
     # Pull relevant long-term memories into the prompt.
     try:
@@ -375,15 +387,15 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     yield {"type": "done", "reply": reply, "route": route_label, "tools": tools_used,
            "assistant": aid,
            "router": decision, "model": tier_cfg["label"], "effort": effort,
-           "skill": skill["name"] if skill else None, "usage": spend}
+           "skill": skill["name"] if skill else None, "usage": spend, "voice": voice}
 
 
 def handle_turn(user_input: str, memory: ShortTermMemory,
                 tier: str | None = None, effort: str | None = None,
                 images: list[str] | None = None, skill_name: str | None = None,
-                aid: str | None = None) -> dict:
+                aid: str | None = None, voice: bool = False) -> dict:
     result = {}
-    for event in stream_turn(user_input, memory, tier, effort, images, skill_name, aid):
+    for event in stream_turn(user_input, memory, tier, effort, images, skill_name, aid, voice):
         if event["type"] == "done":
             result = event
     return result

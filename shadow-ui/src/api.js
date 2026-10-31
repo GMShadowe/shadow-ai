@@ -60,6 +60,7 @@ export async function streamMessage(conversationId, message, options, onEvent, s
       effort: options.effort,
       images: options.images ?? [],
       skill: options.skill ?? null,
+      voice: options.voice ?? false,
     }),
     signal,
   });

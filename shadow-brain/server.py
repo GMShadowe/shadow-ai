@@ -185,6 +185,8 @@ class ChatRequest(BaseModel):
     images: list[str] = []
     # Set only when the user picked a skill with a slash command.
     skill: str | None = None
+    # Sent from the voice screen: short spoken replies, the fewest steps.
+    voice: bool = False
 
 
 class RenameRequest(BaseModel):
@@ -441,6 +443,8 @@ def _save_reply(cid: str, event: dict, aid: str) -> None:
     # "skill" is the only thing a skill leaves behind: the name, so a later
     # "do that again with the same skill" resolves to something real.
     meta = {k: event.get(k) for k in ("route", "router", "model", "effort", "tools", "skill")}
+    if event.get("voice"):
+        meta["voice"] = True
     storage.add_message(cid, "assistant", event["reply"], meta, aid=aid)
 
 
@@ -1157,7 +1161,8 @@ def _forget_turn(cid: str, claim: object, stop: threading.Event) -> None:
 
 
 def _stream_turn_response(cid: str, text: str, memory: ShortTermMemory, model, effort,
-                          images: list[str], skill: str | None, aid: str, claim: object):
+                          images: list[str], skill: str | None, aid: str, claim: object,
+                          voice: bool = False):
     stop = threading.Event()
     partial = _Partial()
     with _sessions_lock:
@@ -1165,7 +1170,7 @@ def _stream_turn_response(cid: str, text: str, memory: ShortTermMemory, model, e
 
     def events():
         finished = False
-        turn = stream_turn(text, memory, model, effort, images, skill, aid)
+        turn = stream_turn(text, memory, model, effort, images, skill, aid, voice=voice)
         try:
             for event in turn:
                 if stop.is_set():
@@ -1324,7 +1329,7 @@ def chat_stream(req: ChatRequest):
         text, images, memory = _validate(req)
         _save_user_message(cid, text, images, aid)
         return _stream_turn_response(cid, text, memory, req.model, req.effort,
-                                     images, req.skill, aid, claim)
+                                     images, req.skill, aid, claim, req.voice)
 
     return _claimed(cid, setup)
 

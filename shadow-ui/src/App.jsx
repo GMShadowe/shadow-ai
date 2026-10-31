@@ -478,7 +478,7 @@ export default function App() {
     };
   }
 
-  async function handleSend(text, images = [], skillName = null) {
+  async function handleSend(text, images = [], skillName = null, { voice = false } = {}) {
     if (active.messages === null) return;
     const convId = active.id;
     const reply = placeholder(skillName);
@@ -505,7 +505,7 @@ export default function App() {
       streamMessage(
         convId,
         text,
-        { model, effort, images: images.map((i) => i.base64), skill: skillName },
+        { model, effort, images: images.map((i) => i.base64), skill: skillName, voice },
         onEvent,
         signal
       )
@@ -709,7 +709,7 @@ export default function App() {
           <VoiceScreen
             messages={active.messages}
             streaming={pendingId === active.id}
-            onSend={handleSend}
+            onSend={(text) => handleSend(text, [], null, { voice: true })}
             onStop={handleStop}
             onExit={() => setVoiceOpen(false)}
           />
