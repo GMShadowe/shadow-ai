@@ -365,12 +365,28 @@ def _settings_payload() -> dict:
     }
 
 
+def _route_adapters(route: str | None) -> list[str]:
+    """"coding+research" -> ["coding", "research"]; chat and no route -> []."""
+    return [r for r in (route or "").split("+") if r and r != "chat"]
+
+
+def _remember(memory: ShortTermMemory, m: dict) -> None:
+    """Put a saved message back into short-term memory, with the adapters
+    its reply ran with, so sticky tools survive a restart."""
+    try:
+        meta = json.loads(m.get("meta") or "{}")
+    except json.JSONDecodeError as e:
+        print(f"[memory] a saved message has unreadable meta, rebuilding it without adapters: {e}")
+        meta = {}
+    memory.add(m["role"], m["content"], adapters=_route_adapters(meta.get("route")))
+
+
 def _memory_for(cid: str) -> ShortTermMemory:
     with _sessions_lock:
         if cid not in sessions:
             memory = ShortTermMemory()
             for m in storage.recent_history(cid, memory.max_turns * 2):
-                memory.add(m["role"], m["content"])
+                _remember(memory, m)
             sessions[cid] = memory
         return sessions[cid]
 
@@ -1057,7 +1073,7 @@ def _rerun_setup(req: RerunRequest, new_text: str | None) -> tuple[str, list[str
 
     memory = ShortTermMemory()
     for m in storage.history_before(cid, user["seq"], memory.max_turns * 2):
-        memory.add(m["role"], m["content"])
+        _remember(memory, m)
     with _sessions_lock:
         sessions[cid] = memory
 
@@ -1148,7 +1164,7 @@ def _save_stopped(cid: str, text: str, images: list[str], partial: _Partial,
         storage.add_message(cid, "assistant", reply,
                             {**partial.meta, "tools": tools, "stopped": True}, aid=aid)
         if memory is not None:
-            memory.add("assistant", reply)
+            memory.add("assistant", reply, adapters=_route_adapters(partial.meta.get("route")))
         print(f"[chat] stopped, saved {len(reply)} characters and {len(tools)} tool calls")
     except Exception as e:
         print(f"[chat] couldn't save the stopped reply: {e}")

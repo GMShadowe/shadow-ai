@@ -168,7 +168,7 @@ def delete_all_conversations() -> int:
 def recent_history(cid: str, limit: int = 20) -> list[dict]:
     with _db() as conn:
         rows = conn.execute(
-            "SELECT role, content FROM messages WHERE conversation_id = ? "
+            "SELECT role, content, meta FROM messages WHERE conversation_id = ? "
             "AND role IN ('user', 'assistant') ORDER BY seq DESC LIMIT ?",
             (cid, limit),
         ).fetchall()
@@ -294,7 +294,7 @@ def history_before(cid: str, seq: int, limit: int = 20) -> list[dict]:
     turn is re-run: the message being re-run must not appear twice."""
     with _db() as conn:
         rows = conn.execute(
-            "SELECT role, content FROM messages WHERE conversation_id = ? AND seq < ? "
+            "SELECT role, content, meta FROM messages WHERE conversation_id = ? AND seq < ? "
             "AND role IN ('user', 'assistant') ORDER BY seq DESC LIMIT ?",
             (cid, seq, limit),
         ).fetchall()

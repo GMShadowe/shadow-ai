@@ -242,6 +242,19 @@ def add_display_tools(allowed: list[str], blocked: list[str], wanted: list[str],
     return granted
 
 
+STICKY_TURNS = 3
+
+
+def carried_adapters(routed: list[dict], sticky: list[dict], tools_used: list[dict]) -> list[str]:
+    """What this reply hands on to the next turns: the adapters it was routed
+    to, plus any kept ones it actually used. Unused kept tools fade out after
+    STICKY_TURNS replies instead of following the chat forever."""
+    used = {t.get("name") for t in tools_used}
+    names = [a["name"] for a in routed]
+    names += [a["name"] for a in sticky if used & set(a["tools"]) and a["name"] not in names]
+    return names
+
+
 def merge_temperature(adapters: list[dict]) -> float | None:
     temps = [a["temperature"] for a in adapters if "temperature" in a]
     return min(temps) if temps else None
@@ -276,7 +289,15 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
            "model": tier_cfg["label"], "effort": effort,
            "skill": skill["name"] if skill else None}
 
-    allowed, ask, blocked = split_tools(adapters, profile)
+    # Tools stay for a few turns after a task uses them. Laya reads one message
+    # at a time, so "yes, go ahead" after "shall I code it?" routes as chat and
+    # would otherwise arrive with no tools. The tools carry over; the specialty
+    # prompt doesn't.
+    sticky = [a for a in (get_adapter(n) for n in memory.recent_adapters(STICKY_TURNS))
+              if a and a["name"] not in decision["adapters"]]
+    if sticky:
+        print(f"[tools] kept from earlier in this chat: {', '.join(a['name'] for a in sticky)}")
+    allowed, ask, blocked = split_tools(adapters + sticky, profile)
     add_skill_tools(allowed, ask, blocked, skill, profile)
     display = add_display_tools(allowed, blocked, display_tools(user_input, bool(images)), profile)
     gated = gate_for_web(allowed, ask)
@@ -402,7 +423,7 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
         yield event
 
     memory.add("user", user_input, images)
-    memory.add("assistant", reply)
+    memory.add("assistant", reply, adapters=carried_adapters(adapters, sticky, tools_used))
     log_turn(user_input, route_label, decision, reply, len(images),
              skill["name"] if skill else None)
 

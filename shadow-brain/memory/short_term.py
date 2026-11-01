@@ -4,7 +4,10 @@ in context. Old turns get trimmed.
 
 Images: only the most recent image stays attached, and only while it's
 within the last few messages. Re-sending every old image on every turn
-would make each reply slower."""
+would make each reply slower.
+
+Each reply also remembers which adapters it ran with, so a follow-up the
+router reads as chat ("yes, go ahead") keeps the tools the task needs."""
 
 
 class ShortTermMemory:
@@ -13,10 +16,13 @@ class ShortTermMemory:
         self.image_window = image_window
         self.messages: list[dict] = []
 
-    def add(self, role: str, content: str, images: list[str] | None = None) -> None:
+    def add(self, role: str, content: str, images: list[str] | None = None,
+            adapters: list[str] | None = None) -> None:
         message = {"role": role, "content": content}
         if images:
             message["images"] = list(images)
+        if adapters:
+            message["adapters"] = list(adapters)
         self.messages.append(message)
         limit = self.max_turns * 2
         if len(self.messages) > limit:
@@ -36,6 +42,16 @@ class ShortTermMemory:
                     item["content"] += f"\n[{len(m['images'])} image(s) attached earlier]"
             out.append(item)
         return out
+
+    def recent_adapters(self, turns: int) -> list[str]:
+        """Adapters the last `turns` replies ran with, most recent first."""
+        names: list[str] = []
+        replies = [m for m in self.messages if m["role"] == "assistant"][-turns:]
+        for m in reversed(replies):
+            for name in m.get("adapters", []):
+                if name not in names:
+                    names.append(name)
+        return names
 
     def clear(self) -> None:
         self.messages = []
