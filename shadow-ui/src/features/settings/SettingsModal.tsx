@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { THEMES, ACCENTS, DEFAULT_APPEARANCE } from "../../theme.js";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import type { Json } from "@/lib/api/client";
+import type { AccentId, Appearance, ThemeId } from "@/theme/appearance";
+import { THEMES, ACCENTS, DEFAULT_APPEARANCE } from "@/theme/appearance";
 import {
   AboutIcon,
   AppearanceIcon,
@@ -16,11 +18,11 @@ import {
   SkillsIcon,
   ToolsIcon,
   TrashIcon,
-} from "../Icons.jsx";
-import { Row, GroupTitle, Note, Segmented, TriState, SmallButton, Toggle, SavedInput, Pill, Bytes } from "./controls.jsx";
-import { useExit } from "../ui/useExit.js";
-import useFocusTrap from "../ui/useFocusTrap.js";
-import { formatBytes } from "./format.js";
+} from "@/components/icons";
+import { Row, GroupTitle, Note, Segmented, TriState, SmallButton, Toggle, SavedInput, Pill, Bytes } from "./controls";
+import { useExit } from "@/hooks/useExit";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { formatBytes } from "./format";
 import {
   API_BASE,
   getSettings,
@@ -37,12 +39,19 @@ import {
   deleteSkill,
   SKILLS_CHANGED,
   getInstalledModels,
-  getCustomModels,
   addCustomModel,
   deleteCustomModel,
   patchCustomModel,
   testCustomModel,
-} from "../../api.js";
+} from "@/lib/api";
+
+/* The brain's settings payload is passed through and read field by field,
+   so it is deliberately loose here. */
+type Save = (patch: Record<string, unknown>) => Promise<void>;
+interface SectionProps {
+  data: Json;
+  save: Save;
+}
 
 const SECTIONS = [
   { id: "general", label: "General", icon: GeneralIcon, hint: "Name, model, effort and where Shadow is allowed to work." },
@@ -82,7 +91,7 @@ const TEXT_SIZES = [
   { id: 17, label: "Large" },
 ];
 
-function Spec({ label, value }) {
+function Spec({ label, value }: { label: ReactNode; value: ReactNode }) {
   return (
     <div className="flex justify-between gap-4 py-1.5 text-sm">
       <span className="text-ink-muted">{label}</span>
@@ -92,15 +101,15 @@ function Spec({ label, value }) {
 }
 
 /* A one-line path. Always the real path on disk, so it can be checked. */
-function Path({ children }) {
-  return <div className="truncate font-mono text-[10px] text-ink-muted/80" title={children}>{children}</div>;
+function Path({ children }: { children: ReactNode }) {
+  return <div className="truncate font-mono text-[10px] text-ink-muted/80" title={typeof children === "string" ? children : undefined}>{children}</div>;
 }
 
-function GeneralSection({ data, save }) {
+function GeneralSection({ data, save }: SectionProps) {
   // Workspace is a global setting, the rest live in this assistant's profile.
   const s = { ...data.settings, ...data.profile };
 
-  const models = data.models.map((m) => ({
+  const models = data.models.map((m: Json) => ({
     id: m.id,
     label: m.label,
     hint: m.reason ?? m.description,
@@ -125,7 +134,7 @@ function GeneralSection({ data, save }) {
   );
 }
 
-function PersonalitySection({ data, save }) {
+function PersonalitySection({ data, save }: SectionProps) {
   const s = data.profile;
   const [instructions, setInstructions] = useState(s.custom_instructions);
   useEffect(() => setInstructions(s.custom_instructions), [s.custom_instructions]);
@@ -173,15 +182,15 @@ function PersonalitySection({ data, save }) {
   );
 }
 
-function ToolsSection({ data, save }) {
+function ToolsSection({ data, save }: SectionProps) {
   const [query, setQuery] = useState("");
   const offline = !!data.settings.offline;
   const needle = query.trim().toLowerCase();
 
   const matches = data.tools.filter(
-    (t) => !needle || t.name.includes(needle) || t.description.toLowerCase().includes(needle)
+    (t: Json) => !needle || t.name.includes(needle) || t.description.toLowerCase().includes(needle)
   );
-  const groups = [...new Set(matches.map((t) => t.group))];
+  const groups: string[] = [...new Set<string>(matches.map((t: Json) => t.group))];
 
   return (
     <div>
@@ -216,8 +225,8 @@ function ToolsSection({ data, save }) {
       )}
 
       {groups.map((group) => {
-        const tools = matches.filter((t) => t.group === group);
-        const on = tools.filter((t) => t.state !== "off").length;
+        const tools = matches.filter((t: Json) => t.group === group);
+        const on = tools.filter((t: Json) => t.state !== "off").length;
         return (
           <div key={group}>
             <div className="flex items-baseline justify-between">
@@ -227,7 +236,7 @@ function ToolsSection({ data, save }) {
               </span>
             </div>
             <div className="divide-y divide-line">
-              {tools.map((t) => (
+              {tools.map((t: Json) => (
                 <Row
                   key={t.name}
                   label={
@@ -255,23 +264,23 @@ function ToolsSection({ data, save }) {
   );
 }
 
-function MemorySection({ data, save }) {
-  const [memories, setMemories] = useState(null);
-  const [error, setError] = useState(null);
+function MemorySection({ data, save }: SectionProps) {
+  const [memories, setMemories] = useState<Json>(null);
+  const [error, setError] = useState<Json>(null);
   const autoOn = data.profile.auto_memory;
 
   useEffect(() => {
     listMemory()
       .then((r) => setMemories(r.memories))
-      .catch((e) => setError(e.message));
+      .catch((e: Error) => setError((e as Error).message));
   }, []);
 
-  async function removeOne(id) {
+  async function removeOne(id: string) {
     try {
       await deleteMemory(id);
-      setMemories((prev) => prev.filter((m) => m.id !== id));
+      setMemories((prev: Json) => prev.filter((m: Json) => m.id !== id));
     } catch (e) {
-      setError(e.message);
+      setError((e as Error).message);
     }
   }
 
@@ -281,7 +290,7 @@ function MemorySection({ data, save }) {
       await clearMemory();
       setMemories([]);
     } catch (e) {
-      setError(e.message);
+      setError((e as Error).message);
     }
   }
 
@@ -317,11 +326,11 @@ function MemorySection({ data, save }) {
 
       {memories && memories.length > 0 && (
         <ul className="space-y-1">
-          {memories.map((m) => (
+          {memories.map((m: Json) => (
             <li key={m.id} className="group flex items-start gap-2 rounded-lg border border-line bg-panel px-3 py-2">
               <div className="min-w-0 flex-1">
                 <div className="text-sm text-ink">{m.text}</div>
-                <div className="mt-0.5 text-[11px] text-ink-muted">{sourceLabel[m.source] ?? m.source}</div>
+                <div className="mt-0.5 text-[11px] text-ink-muted">{(sourceLabel as Record<string, string>)[m.source] ?? m.source}</div>
               </div>
               <button
                 type="button"
@@ -339,18 +348,18 @@ function MemorySection({ data, save }) {
   );
 }
 
-function AddSkill({ offline, onAdded }) {
+function AddSkill({ offline, onAdded }: { offline: boolean; onAdded: (result: Json) => void }) {
   const [mode, setMode] = useState("file");
   const [link, setLink] = useState("");
   const [name, setName] = useState("");
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState<Json>(null);
   const [busy, setBusy] = useState(false);
-  const [problem, setProblem] = useState(null);
+  const [problem, setProblem] = useState<Json>(null);
   const [taken, setTaken] = useState(false);
   const [dragging, setDragging] = useState(false);
-  const input = useRef(null);
+  const input = useRef<HTMLInputElement>(null);
 
-  async function pick(f) {
+  async function pick(f: File | null | undefined) {
     setProblem(null);
     setTaken(false);
     if (!f) return;
@@ -361,7 +370,7 @@ function AddSkill({ offline, onAdded }) {
     try {
       setFile({ filename: f.name, content: await f.text() });
     } catch (e) {
-      setProblem(`Couldn't read ${f.name}: ${e.message}`);
+      setProblem(`Couldn't read ${f.name}: ${(e as Error).message}`);
     }
   }
 
@@ -369,7 +378,7 @@ function AddSkill({ offline, onAdded }) {
     setBusy(true);
     setProblem(null);
     try {
-      const body = mode === "link" ? { url: link.trim() } : { content: file.content, filename: file.filename };
+      const body: Record<string, unknown> = mode === "link" ? { url: link.trim() } : { content: file.content, filename: file.filename };
       if (name.trim()) body.name = name.trim();
       const { skill } = await addSkill({ ...body, replace });
       setLink("");
@@ -378,8 +387,8 @@ function AddSkill({ offline, onAdded }) {
       setTaken(false);
       onAdded(skill);
     } catch (e) {
-      setProblem(e.message);
-      setTaken(e.status === 409);
+      setProblem((e as Error).message);
+      setTaken((e as { status?: number }).status === 409);
     } finally {
       setBusy(false);
     }
@@ -481,7 +490,7 @@ function AddSkill({ offline, onAdded }) {
             type="button"
             disabled={!ready || busy}
             onClick={() => submit(false)}
-            className="rounded-md bg-phosphor px-3.5 py-1.5 text-xs font-medium text-bg transition-[opacity,transform] duration-150 ease-smooth active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-35"
+            className="rounded-md bg-phosphor px-3.5 py-1.5 text-xs font-medium text-bg transition-[opacity,transform] duration-150 ease-smooth active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-35"
           >
             {busy ? (mode === "link" ? "Downloading…" : "Adding…") : "Add skill"}
           </button>
@@ -502,18 +511,18 @@ function AddSkill({ offline, onAdded }) {
   );
 }
 
-function SkillsSection({ offline }) {
-  const [list, setList] = useState(null);
-  const [error, setError] = useState(null);
-  const [open, setOpen] = useState(null); // the skill whose text is showing
-  const [body, setBody] = useState(null);
-  const [confirming, setConfirming] = useState(null);
-  const [fresh, setFresh] = useState(null);
+function SkillsSection({ offline }: { offline: boolean }) {
+  const [list, setList] = useState<Json>(null);
+  const [error, setError] = useState<Json>(null);
+  const [open, setOpen] = useState<Json>(null); // the skill whose text is showing
+  const [body, setBody] = useState<Json>(null);
+  const [confirming, setConfirming] = useState<Json>(null);
+  const [fresh, setFresh] = useState<Json>(null);
 
   const reload = () =>
     getSkills()
       .then((r) => setList(r.skills))
-      .catch((e) => setError(e.message));
+      .catch((e: Error) => setError((e as Error).message));
 
   useEffect(() => {
     reload();
@@ -524,18 +533,18 @@ function SkillsSection({ offline }) {
     window.dispatchEvent(new Event(SKILLS_CHANGED));
   }
 
-  async function remove(name) {
+  async function remove(name: string) {
     try {
       await deleteSkill(name);
       setConfirming(null);
       if (open === name) setOpen(null);
       changed();
     } catch (e) {
-      setError(e.message);
+      setError((e as Error).message);
     }
   }
 
-  async function show(name) {
+  async function show(name: string) {
     if (open === name) {
       setOpen(null);
       return;
@@ -546,7 +555,7 @@ function SkillsSection({ offline }) {
       const skill = await getSkill(name);
       setBody(skill.content);
     } catch (e) {
-      setBody(`Couldn't read it: ${e.message}`);
+      setBody(`Couldn't read it: ${(e as Error).message}`);
     }
   }
 
@@ -578,7 +587,7 @@ function SkillsSection({ offline }) {
 
       {list && list.length > 0 && (
         <div className="mt-3 space-y-1.5">
-          {list.map((s) => (
+          {list.map((s: Json) => (
             <div
               key={s.name}
               className={`rounded-lg border bg-panel transition-colors duration-700 ${
@@ -643,13 +652,19 @@ function SkillsSection({ offline }) {
   );
 }
 
-function PrivacySection({ data, save, report, reportError, onReload }) {
+function PrivacySection({
+  data,
+  save,
+  report,
+  reportError,
+  onReload,
+}: SectionProps & { report: Json; reportError: string | null; onReload: () => void }) {
   const offline = !!data.settings.offline;
   const location = (data.profile.location ?? "").trim();
   const outbound = report?.outbound ?? [];
-  const live = outbound.filter((o) => o.active).length;
+  const live = outbound.filter((o: Json) => o.active).length;
 
-  async function set(patch) {
+  async function set(patch: Record<string, unknown>) {
     await save(patch);
     onReload();
   }
@@ -694,7 +709,7 @@ function PrivacySection({ data, save, report, reportError, onReload }) {
 
       {outbound.length > 0 && (
         <ul className="space-y-1">
-          {outbound.map((o) => (
+          {outbound.map((o: Json) => (
             <li key={o.id} className="flex items-start gap-3 rounded-lg border border-line bg-panel px-3 py-2.5">
               <OutboundIcon
                 width={15}
@@ -755,12 +770,26 @@ function PrivacySection({ data, save, report, reportError, onReload }) {
   );
 }
 
-function DataSection({ data, report, reportError, onReload, onNotice, onError }) {
+function DataSection({
+  data,
+  report,
+  reportError,
+  onReload,
+  onNotice,
+  onError,
+}: {
+  data: Json;
+  report: Json;
+  reportError: string | null;
+  onReload: () => void;
+  onNotice: (text: string) => void;
+  onError: (text: string) => void;
+}) {
   const turns = data.log.turns;
   const storage = report?.storage ?? [];
-  const [busy, setBusy] = useState(null);
+  const [busy, setBusy] = useState<Json>(null);
 
-  async function run(id, confirmText, action, done) {
+  async function run(id: string, confirmText: string, action: () => Promise<unknown>, done: string) {
     if (!window.confirm(confirmText)) return;
     setBusy(id);
     try {
@@ -768,7 +797,7 @@ function DataSection({ data, report, reportError, onReload, onNotice, onError })
       await onReload();
       onNotice(done);
     } catch (e) {
-      onError(e.message);
+      onError((e as Error).message);
     } finally {
       setBusy(null);
     }
@@ -790,7 +819,7 @@ function DataSection({ data, report, reportError, onReload, onNotice, onError })
 
       {storage.length > 0 && (
         <div className="divide-y divide-line">
-          {storage.map((row) => (
+          {storage.map((row: Json) => (
             <div key={row.id} className="flex items-start gap-4 py-2.5">
               <div className="min-w-0 flex-1">
                 <div className="text-sm text-ink">{row.label}</div>
@@ -888,18 +917,18 @@ function DataSection({ data, report, reportError, onReload, onNotice, onError })
   );
 }
 
-function AppearanceSection({ appearance, onChange }) {
-  const set = (patch) => onChange({ ...appearance, ...patch });
+function AppearanceSection({ appearance, onChange }: { appearance: Appearance; onChange: (next: Appearance) => void }) {
+  const set = (patch: Partial<Appearance>) => onChange({ ...appearance, ...patch });
 
   return (
     <div className="divide-y divide-line">
       <Row label="Theme" stacked>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
           {Object.entries(THEMES).map(([id, t]) => (
             <button
               key={id}
               type="button"
-              onClick={() => set({ theme: id })}
+              onClick={() => set({ theme: id as ThemeId })}
               className={`rounded-lg border p-1.5 text-left transition-colors ${
                 appearance.theme === id ? "border-phosphor" : "border-line hover:border-ink-muted"
               }`}
@@ -925,8 +954,8 @@ function AppearanceSection({ appearance, onChange }) {
               type="button"
               title={a.label}
               aria-label={a.label}
-              onClick={() => set({ accent: id })}
-              className={`h-6 w-6 rounded-full transition-transform hover:scale-110 active:scale-95 ${
+              onClick={() => set({ accent: id as AccentId })}
+              className={`h-6 w-6 rounded-full transition-transform active:scale-[0.96] ${
                 appearance.accent === id ? "ring-2 ring-ink ring-offset-2 ring-offset-panel" : ""
               }`}
               style={{ background: a.main }}
@@ -972,11 +1001,19 @@ function AppearanceSection({ appearance, onChange }) {
    Tokens only. Rates differ per provider, per model and over time, so Shadow
    does not convert them to money - a wrong price is worse than none, because
    someone would plan around it. */
-function Spend({ model, used, onSave }) {
+function Spend({
+  model,
+  used,
+  onSave,
+}: {
+  model: Json;
+  used: Json;
+  onSave: (caps: { cap_turn: number; cap_day: number }) => Promise<void>;
+}) {
   const [turn, setTurn] = useState(String(model.cap_turn ?? 0));
   const [day, setDay] = useState(String(model.cap_day ?? 0));
   const [saving, setSaving] = useState(false);
-  const [problem, setProblem] = useState(null);
+  const [problem, setProblem] = useState<Json>(null);
 
   const dirty =
     String(model.cap_turn ?? 0) !== turn.trim() || String(model.cap_day ?? 0) !== day.trim();
@@ -987,13 +1024,13 @@ function Spend({ model, used, onSave }) {
     try {
       await onSave({ cap_turn: Number(turn) || 0, cap_day: Number(day) || 0 });
     } catch (e) {
-      setProblem(e.message);
+      setProblem((e as Error).message);
     } finally {
       setSaving(false);
     }
   }
 
-  const n = (v) => (v ?? 0).toLocaleString();
+  const n = (v: number | undefined) => (v ?? 0).toLocaleString();
 
   return (
     <div className="rounded-md border border-line bg-panel-alt px-3 py-2.5">
@@ -1011,10 +1048,12 @@ function Spend({ model, used, onSave }) {
         </div>
       )}
       <div className="mt-2.5 flex flex-wrap items-end gap-2">
-        {[
-          ["Per turn", turn, setTurn],
-          ["Per day", day, setDay],
-        ].map(([label, value, set]) => (
+        {(
+          [
+            ["Per turn", turn, setTurn],
+            ["Per day", day, setDay],
+          ] as [string, string, (v: string) => void][]
+        ).map(([label, value, set]) => (
           <label key={label} className="block">
             <span className="text-[11px] text-ink-muted">{label}</span>
             <input
@@ -1039,13 +1078,13 @@ function Spend({ model, used, onSave }) {
   );
 }
 
-function OwnModels({ data, save, onChanged }) {
-  const [models, setModels] = useState(data.custom_models ?? []);
-  const [installed, setInstalled] = useState(null);
-  const [error, setError] = useState(null);
-  const [result, setResult] = useState(null);
-  const [busy, setBusy] = useState(null);
-  const [adding, setAdding] = useState(null); // "byom" | "byok" | null
+function OwnModels({ data, onChanged }: { data: Json; onChanged: () => void }) {
+  const [models, setModels] = useState<Json[]>(data.custom_models ?? []);
+  const [installed, setInstalled] = useState<Json>(null);
+  const [error, setError] = useState<Json>(null);
+  const [result, setResult] = useState<Json>(null);
+  const [busy, setBusy] = useState<Json>(null);
+  const [adding, setAdding] = useState<Json>(null); // "byom" | "byok" | null
   const [pick, setPick] = useState("");
   const [key, setKey] = useState({ label: "", base_url: "", model: "", key: "", vision: false });
 
@@ -1053,23 +1092,23 @@ function OwnModels({ data, save, onChanged }) {
     if (adding !== "byom" || installed !== null) return;
     getInstalledModels()
       .then((r) => setInstalled(r.models))
-      .catch((e) => setError(e.message));
+      .catch((e: Error) => setError((e as Error).message));
   }, [adding, installed]);
 
-  async function refresh(payload) {
+  async function refresh(payload: Json) {
     setModels(payload.models);
     setError(null);
     await onChanged();
   }
 
-  async function run(what, fn) {
+  async function run(what: string, fn: () => Promise<Json>) {
     setBusy(what);
     setResult(null);
     setError(null);
     try {
       return await fn();
     } catch (e) {
-      setError(e.message);
+      setError((e as Error).message);
       return null;
     } finally {
       setBusy(null);
@@ -1100,7 +1139,7 @@ function OwnModels({ data, save, onChanged }) {
 
       {models.length > 0 && (
         <div className="divide-y divide-line">
-          {models.map((m) => (
+          {models.map((m: Json) => (
             <Row
               key={m.id}
               label={m.label}
@@ -1139,11 +1178,11 @@ function OwnModels({ data, save, onChanged }) {
         </div>
       )}
 
-      {models.some((m) => m.kind === "byok") && (
+      {models.some((m: Json) => m.kind === "byok") && (
         <div className="mt-1 space-y-2">
           {models
-            .filter((m) => m.kind === "byok")
-            .map((m) => (
+            .filter((m: Json) => m.kind === "byok")
+            .map((m: Json) => (
               <div key={`spend-${m.id}`}>
                 <div className="pb-1 text-[11px] text-ink-muted">{m.label} · spend</div>
                 <Spend
@@ -1188,7 +1227,7 @@ function OwnModels({ data, save, onChanged }) {
             <div className="shimmer mt-2 text-sm">Reading your Ollama</div>
           ) : (
             <div className="mt-2 max-h-56 space-y-0.5 overflow-y-auto">
-              {installed.map((m) => (
+              {installed.map((m: Json) => (
                 <button
                   key={m.model}
                   type="button"
@@ -1244,7 +1283,7 @@ function OwnModels({ data, save, onChanged }) {
               <label key={field} className="block">
                 <span className="text-[11px] text-ink-muted">{label}</span>
                 <input
-                  value={key[field]}
+                  value={String(key[field as keyof typeof key])}
                   onChange={(e) => setKey({ ...key, [field]: e.target.value })}
                   placeholder={placeholder}
                   className="mt-0.5 w-full rounded-md border border-line bg-panel-alt px-2.5 py-1.5 font-mono text-[13px] text-ink placeholder:text-ink-muted focus:border-signal focus:outline-none"
@@ -1289,10 +1328,10 @@ function OwnModels({ data, save, onChanged }) {
   );
 }
 
-function BrainSection({ data, save, onChanged }) {
+function BrainSection({ data, save, onChanged }: SectionProps & { onChanged: () => void }) {
   const s = { ...data.settings, ...data.profile };
   const hw = data.hardware;
-  const recommended = data.models.find((m) => m.id === data.recommended_model);
+  const recommended = data.models.find((m: Json) => m.id === data.recommended_model);
 
   return (
     <div>
@@ -1304,7 +1343,7 @@ function BrainSection({ data, save, onChanged }) {
 
       <GroupTitle>Models</GroupTitle>
       <div className="divide-y divide-line">
-        {data.models.map((m) => (
+        {data.models.map((m: Json) => (
           <Row key={m.id} label={m.label} description={m.reason ?? m.description}>
             <div className="flex items-center gap-2.5">
               <span className="font-mono text-[11px] text-ink-muted">{m.model}</span>
@@ -1314,7 +1353,7 @@ function BrainSection({ data, save, onChanged }) {
         ))}
       </div>
 
-      <OwnModels data={data} save={save} onChanged={onChanged} />
+      <OwnModels data={data} onChanged={onChanged} />
 
       <GroupTitle>Your computer</GroupTitle>
       <div className="pb-1">
@@ -1348,9 +1387,9 @@ function BrainSection({ data, save, onChanged }) {
   );
 }
 
-function AboutSection({ data }) {
+function AboutSection({ data }: { data: Json }) {
   const s = { ...data.settings, ...data.profile };
-  const enabledTools = data.tools.filter((t) => t.state === "on").length;
+  const enabledTools = data.tools.filter((t: Json) => t.state === "on").length;
   const shortcuts = [
     ["Send message", "Enter"],
     ["New line", "Shift + Enter"],
@@ -1374,7 +1413,7 @@ function AboutSection({ data }) {
           label="Router"
           value={s.router === "laya" ? (data.laya_loaded ? "Laya (loaded)" : "Laya (not loaded)") : "Keywords"}
         />
-        <Spec label="Default model" value={data.models.find((m) => m.id === s.model)?.model} />
+        <Spec label="Default model" value={data.models.find((m: Json) => m.id === s.model)?.model} />
         <Spec label="Tools on" value={`${enabledTools} of ${data.tools.length}`} />
         <Spec label="Workspace" value={s.workspace} />
         <Spec label="Offline mode" value={s.offline ? "On — nothing leaves this computer" : "Off"} />
@@ -1390,18 +1429,33 @@ function AboutSection({ data }) {
   );
 }
 
-export default function SettingsModal({ open, onClose, onSaved, appearance, onAppearanceChange }) {
+interface SettingsModalProps {
+  open: boolean;
+  /** Which section to show when it opens (an error's "Open privacy settings"). */
+  initialSection?: string;
+  onClose: () => void;
+  onSaved: (settings: Json, patch: Record<string, unknown>) => void | Promise<void>;
+  appearance: Appearance;
+  onAppearanceChange: (next: Appearance) => void;
+}
+
+export default function SettingsModal({ open, initialSection, onClose, onSaved, appearance, onAppearanceChange }: SettingsModalProps) {
   // Kept mounted for the length of the closing animation, so the window
   // leaves the way it arrived instead of blinking out.
   const shell = useExit(open, 150);
   const [section, setSection] = useState("general");
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
-  const [notice, setNotice] = useState(null);
-  const [report, setReport] = useState(null);
-  const [reportError, setReportError] = useState(null);
-  const navRef = useRef(null);
-  const dialogRef = useRef(null);
+  useEffect(() => {
+    if (open && initialSection && SECTIONS.some((x) => x.id === initialSection)) setSection(initialSection);
+    // "models" is what an error asks for; that section is called "brain" here.
+    else if (open && initialSection === "models") setSection("brain");
+  }, [open, initialSection]);
+  const [data, setData] = useState<Json>(null);
+  const [error, setError] = useState<Json>(null);
+  const [notice, setNotice] = useState<Json>(null);
+  const [report, setReport] = useState<Json>(null);
+  const [reportError, setReportError] = useState<Json>(null);
+  const navRef = useRef<HTMLElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef, shell.mounted && !shell.leaving);
 
   useEffect(() => {
@@ -1409,7 +1463,7 @@ export default function SettingsModal({ open, onClose, onSaved, appearance, onAp
     setError(null);
     getSettings()
       .then(setData)
-      .catch((e) => setError(e.message));
+      .catch((e: Error) => setError((e as Error).message));
   }, [open]);
 
   // The privacy report reads real files, so it is only fetched for the two
@@ -1420,7 +1474,7 @@ export default function SettingsModal({ open, onClose, onSaved, appearance, onAp
     setReportError(null);
     getPrivacy()
       .then(setReport)
-      .catch((e) => setReportError(e.message));
+      .catch((e: Error) => setReportError((e as Error).message));
   }, [needsReport]);
 
   async function reload() {
@@ -1431,7 +1485,7 @@ export default function SettingsModal({ open, onClose, onSaved, appearance, onAp
       // nothing in it should be treated as a settings change.
       onSaved?.(fresh.settings, {});
     } catch (e) {
-      setError(e.message);
+      setError((e as Error).message);
     }
   }
 
@@ -1441,13 +1495,13 @@ export default function SettingsModal({ open, onClose, onSaved, appearance, onAp
       setReport(fresh);
       setData(settings);
     } catch (e) {
-      setReportError(e.message);
+      setReportError((e as Error).message);
     }
   }
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
@@ -1458,7 +1512,7 @@ export default function SettingsModal({ open, onClose, onSaved, appearance, onAp
     return () => clearTimeout(timer);
   }, [notice]);
 
-  async function save(patch) {
+  async function save(patch: Record<string, unknown>) {
     try {
       const d = await updateSettings(patch);
       setData(d);
@@ -1467,19 +1521,19 @@ export default function SettingsModal({ open, onClose, onSaved, appearance, onAp
       onSaved?.(d.settings, patch);
       return d;
     } catch (e) {
-      setError(e.message);
+      setError((e as Error).message);
       return null;
     }
   }
 
   // ↑/↓ moves between sections while the nav has focus.
-  function onNavKey(e) {
+  function onNavKey(e: ReactKeyboardEvent) {
     if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
     e.preventDefault();
     const i = SECTIONS.findIndex((s) => s.id === section);
     const next = SECTIONS[(i + (e.key === "ArrowDown" ? 1 : SECTIONS.length - 1)) % SECTIONS.length];
     setSection(next.id);
-    navRef.current?.querySelector(`[data-section="${next.id}"]`)?.focus();
+    navRef.current?.querySelector<HTMLElement>(`[data-section="${next.id}"]`)?.focus();
   }
 
   const current = useMemo(() => SECTIONS.find((s) => s.id === section), [section]);
@@ -1598,8 +1652,8 @@ export default function SettingsModal({ open, onClose, onSaved, appearance, onAp
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="flex shrink-0 items-center gap-4 border-b border-line px-7 py-4">
             <div className="min-w-0 flex-1">
-              <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-ink">{current.label}</h2>
-              <p className="mt-0.5 truncate text-[12px] text-ink-muted">{current.hint}</p>
+              <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-ink">{current?.label}</h2>
+              <p className="mt-0.5 truncate text-[12px] text-ink-muted">{current?.hint}</p>
             </div>
             <span className="min-w-0 truncate text-xs">
               {error && <span className="text-danger">{error}</span>}
@@ -1609,12 +1663,12 @@ export default function SettingsModal({ open, onClose, onSaved, appearance, onAp
               type="button"
               onClick={onClose}
               aria-label="Close settings"
-              className="-mr-1.5 shrink-0 rounded-lg p-1.5 text-ink-muted transition-colors hover:bg-panel-alt hover:text-ink active:scale-95"
+              className="-mr-1.5 shrink-0 rounded-lg p-1.5 text-ink-muted transition-colors hover:bg-panel-alt hover:text-ink active:scale-[0.96]"
             >
               <CloseIcon width={15} height={15} />
             </button>
           </header>
-          <div key={section} className="animate-fade min-h-0 flex-1 overflow-y-auto px-7 py-5">
+          <div key={section} className="animate-fade min-h-0 flex-1 overflow-y-auto overscroll-contain px-7 py-5">
             {renderSection()}
           </div>
         </div>
