@@ -1,10 +1,26 @@
-export default function Segmented({ options, value, onChange, size = "md" }) {
+export interface Option<T extends string | number> {
+  id: T;
+  label: string;
+  hint?: string;
+  disabled?: boolean;
+}
+
+interface SegmentedProps<T extends string | number> {
+  options: readonly Option<T>[];
+  value: T;
+  onChange: (value: T) => void;
+  size?: "sm" | "md";
+}
+
+/* A row of mutually exclusive choices with one sliding thumb. */
+export default function Segmented<T extends string | number>({ options, value, onChange, size = "md" }: SegmentedProps<T>) {
   const index = options.findIndex((o) => o.id === value);
   const n = options.length;
   const pad = size === "sm" ? "px-2.5 py-0.5 text-[11px]" : "px-3 py-1 text-xs";
 
   return (
     <div
+      role="radiogroup"
       className="relative inline-grid rounded-md border border-line bg-panel-alt/60 p-0.5"
       style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}
     >
@@ -19,6 +35,8 @@ export default function Segmented({ options, value, onChange, size = "md" }) {
         <button
           key={o.id}
           type="button"
+          role="radio"
+          aria-checked={value === o.id}
           title={o.hint}
           disabled={o.disabled}
           onClick={() => onChange(o.id)}

@@ -1,4 +1,14 @@
-export default function Slider({ options, value, onChange }) {
+import type { Option } from "./Segmented";
+
+interface SliderProps<T extends string> {
+  options: readonly Option<T>[];
+  value: T;
+  onChange: (value: T) => void;
+  label?: string;
+}
+
+/* A stepped slider over a short list of named options (effort levels). */
+export default function Slider<T extends string>({ options, value, onChange, label = "Effort level" }: SliderProps<T>) {
   const index = Math.max(0, options.findIndex((o) => o.id === value));
   const n = options.length;
   const pct = n > 1 ? (index / (n - 1)) * 100 : 0;
@@ -19,17 +29,15 @@ export default function Slider({ options, value, onChange }) {
           step={1}
           value={index}
           onChange={(e) => onChange(options[Number(e.target.value)].id)}
-          aria-label="Effort level"
+          aria-label={label}
+          aria-valuetext={current?.label}
           className="peer absolute inset-0 z-20 w-full cursor-pointer opacity-0"
         />
-        {/* track */}
         <div className="pointer-events-none absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-line" />
-        {/* fill */}
         <div
-          className="pointer-events-none absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-phosphor-dim transition-all duration-200 ease-smooth"
+          className="pointer-events-none absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-phosphor-dim transition-[width] duration-200 ease-smooth"
           style={{ width: `${pct}%` }}
         />
-        {/* ticks */}
         {options.map((o, i) => (
           <span
             key={o.id}
@@ -39,9 +47,8 @@ export default function Slider({ options, value, onChange }) {
             style={{ left: `${(i / (n - 1)) * 100}%` }}
           />
         ))}
-        {/* thumb */}
         <span
-          className="pointer-events-none absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-ink shadow ring-2 ring-bg transition-all duration-200 ease-smooth peer-focus-visible:ring-signal"
+          className="pointer-events-none absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-ink shadow ring-2 ring-bg transition-[left] duration-200 ease-smooth peer-focus-visible:ring-signal"
           style={{ left: `${pct}%` }}
         />
       </div>
@@ -51,6 +58,7 @@ export default function Slider({ options, value, onChange }) {
           <button
             key={o.id}
             type="button"
+            tabIndex={-1}
             onClick={() => onChange(o.id)}
             className={`text-[10px] transition-colors duration-150 ${
               i === index ? "font-medium text-ink" : "text-ink-muted hover:text-ink"
