@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 /* Keeps a floating layer mounted for the length of its closing animation.
 
    React unmounts the moment a flag goes false, so without this a popover
-   fades in over 200ms and then vanishes between two frames - which reads as
-   a glitch rather than as the same gesture ending. */
-export function useExit(open, ms = 150) {
+   fades in and then vanishes between two frames - which reads as a glitch
+   rather than as the same gesture ending. */
+export function useExit(open: boolean, ms = 140) {
   const [mounted, setMounted] = useState(open);
 
   useEffect(() => {

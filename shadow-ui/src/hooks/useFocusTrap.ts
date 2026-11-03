@@ -1,36 +1,34 @@
-import { useEffect } from "react";
+import { useEffect, type RefObject } from "react";
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), ' +
   'textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /* Keeps keyboard focus inside a dialog while it is open, and puts it back
-   where it was when the dialog closes. Without it, Tab from the settings
-   window walked out into the blurred app behind it.
-
-   On open, focus goes to the element marked data-autofocus, or else the
-   dialog itself. */
-export default function useFocusTrap(ref, active) {
+   where it was when the dialog closes. On open, focus goes to the element
+   marked data-autofocus, or else the dialog itself. */
+export function useFocusTrap(ref: RefObject<HTMLElement | null>, active: boolean) {
   useEffect(() => {
     if (!active) return;
     const root = ref.current;
     if (!root) return;
     const before = document.activeElement;
-    (root.querySelector("[data-autofocus]") ?? root).focus({ preventScroll: true });
+    (root.querySelector<HTMLElement>("[data-autofocus]") ?? root).focus({ preventScroll: true });
 
-    function onKey(e) {
-      if (e.key !== "Tab") return;
-      const items = [...root.querySelectorAll(FOCUSABLE)].filter((el) => el.offsetParent !== null);
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "Tab" || !root) return;
+      const items = [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => el.offsetParent !== null);
       if (items.length === 0) {
         e.preventDefault();
         return;
       }
       const first = items[0];
       const last = items[items.length - 1];
-      if (e.shiftKey && (document.activeElement === first || !root.contains(document.activeElement))) {
+      const inside = root.contains(document.activeElement);
+      if (e.shiftKey && (document.activeElement === first || !inside)) {
         e.preventDefault();
         last.focus();
-      } else if (!e.shiftKey && (document.activeElement === last || !root.contains(document.activeElement))) {
+      } else if (!e.shiftKey && (document.activeElement === last || !inside)) {
         e.preventDefault();
         first.focus();
       }
@@ -43,3 +41,5 @@ export default function useFocusTrap(ref, active) {
     };
   }, [ref, active]);
 }
+
+export default useFocusTrap;
