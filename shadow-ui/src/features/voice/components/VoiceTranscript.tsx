@@ -17,7 +17,14 @@ const SIZES = {
   },
 };
 
-export default function VoiceTranscript({ size = "large", user, assistant, state }) {
+interface VoiceTranscriptProps {
+  size?: keyof typeof SIZES;
+  user: string;
+  assistant: string;
+  state: string;
+}
+
+export default function VoiceTranscript({ size = "large", user, assistant, state }: VoiceTranscriptProps) {
   const s = SIZES[size];
 
   if (!user && !assistant) {

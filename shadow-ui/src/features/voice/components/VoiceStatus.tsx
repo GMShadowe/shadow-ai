@@ -5,18 +5,20 @@
    works. While Shadow talks they just breathe. Accent only for those live
    states, signal for work in progress, per DESIGN.md. */
 
-const LABELS = {
+export type VoiceStatusState = "idle" | "listening" | "thinking" | "speaking";
+
+const LABELS: Record<VoiceStatusState, string> = {
   idle: "Not listening",
   listening: "Listening",
   thinking: "Thinking",
   speaking: "Speaking",
 };
 
-function Bars({ level }) {
+function Bars({ level }: { level?: number }) {
   // A quiet room sits near 0.01, normal speech near 0.1.
   const live = typeof level === "number";
-  const scale = live ? Math.min(1, Math.max(0.2, level * 7)) : null;
-  const heights = live ? [scale, Math.min(1, scale * 1.25), scale * 0.8] : [null, null, null];
+  const scale = live ? Math.min(1, Math.max(0.2, level * 7)) : 0;
+  const heights: (number | null)[] = live ? [scale, Math.min(1, scale * 1.25), scale * 0.8] : [null, null, null];
 
   return (
     <span
@@ -34,7 +36,7 @@ function Bars({ level }) {
   );
 }
 
-export default function VoiceStatus({ state, level }) {
+export default function VoiceStatus({ state, level }: { state: VoiceStatusState; level?: number }) {
   const label = LABELS[state] ?? LABELS.idle;
   const live = state === "listening" || state === "speaking";
 
@@ -42,7 +44,7 @@ export default function VoiceStatus({ state, level }) {
     <div
       role="status"
       aria-live="polite"
-      className="flex items-center gap-2.5 rounded-full border border-line bg-panel/70 px-3 py-1.5"
+      className="glass flex items-center gap-2.5 rounded-full px-3 py-1.5"
     >
       {live ? (
         <Bars level={state === "listening" ? (level ?? 0) : undefined} />

@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeftIcon, CloseIcon, HistoryIcon, MicIcon, StopIcon } from "../Icons.jsx";
-import VoiceStatus from "./VoiceStatus.jsx";
-import VoiceTranscript from "./VoiceTranscript.jsx";
-import HistoryPanel from "./HistoryPanel.jsx";
-import DisplayCard from "../rich/cards/DisplayCard.jsx";
-import { stagePanel } from "../rich/display.js";
-import { recordUtterance } from "../../voice/recorder.js";
-import { getSttStatus, transcribe } from "../../api.js";
+import { ArrowLeftIcon, CloseIcon, HistoryIcon, MicIcon, StopIcon } from "@/components/icons";
+import VoiceStatus from "./VoiceStatus";
+import VoiceTranscript from "./VoiceTranscript";
+import HistoryPanel from "./HistoryPanel";
+import DisplayCard from "@/features/display/cards/DisplayCard";
+import { stagePanel } from "@/features/display/panels";
+import { recordUtterance, RecorderError } from "../lib/recorder";
+import type { Message } from "@/types";
+import type { VoiceStatusState } from "./VoiceStatus";
+import { getSttStatus, transcribe } from "@/lib/api";
 
 /* Voice mode: a screen of its own, not a mode of the composer.
 
@@ -23,7 +25,9 @@ import { getSttStatus, transcribe } from "../../api.js";
    yet; that is the next task, kept separate so an audio problem can only
    be in one half at a time. */
 
-const HINT = {
+type VoiceState = "idle" | "listening" | "thinking" | "transcribing" | "speaking";
+
+const HINT: Record<VoiceState, string> = {
   idle: "Tap or press space to talk",
   listening: "Listening. Pause when you're done.",
   thinking: "Working on it. Tap to stop.",
@@ -37,7 +41,7 @@ const SUGGESTIONS = [
   "Show me pictures of the Taj Mahal",
 ];
 
-function Orb({ state, level, disabled, onClick }) {
+function Orb({ state, level, disabled, onClick }: { state: VoiceState; level: number; disabled: boolean; onClick: () => void }) {
   const listening = state === "listening";
   const ring = listening ? { transform: `scale(${1 + Math.min(level * 7, 0.55)})` } : undefined;
   const face =
@@ -62,7 +66,7 @@ function Orb({ state, level, disabled, onClick }) {
         onClick={onClick}
         disabled={disabled}
         aria-label={HINT[state]}
-        className={`relative grid h-[4.5rem] w-[4.5rem] place-items-center rounded-full transition-[transform,background-color,color] duration-200 ease-smooth active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100 ${face}`}
+        className={`relative grid h-[4.5rem] w-[4.5rem] place-items-center rounded-full transition-[scale,background-color,color] duration-200 ease-smooth enabled:active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60 ${face}`}
       >
         {state === "idle" || state === "transcribing" ? (
           <MicIcon width={24} height={24} />
@@ -74,11 +78,11 @@ function Orb({ state, level, disabled, onClick }) {
   );
 }
 
-function Welcome({ onPick }) {
+function Welcome({ onPick }: { onPick: (text: string) => void }) {
   return (
     <div className="animate-rise text-center">
-      <h2 className="text-[clamp(1.75rem,3.2vw,2.4rem)] font-medium leading-[1.1] tracking-[-0.035em] text-ink">
-        Talk to Shadow
+      <h2 className="text-[clamp(1.75rem,3.2vw,2.4rem)] font-serif font-normal leading-[1.1] tracking-[-0.02em] text-balance text-ink">
+        Talk to <span className="glow-text">Shadow</span>
       </h2>
       <p className="mx-auto mt-3 max-w-sm text-[15px] leading-relaxed text-ink-muted">
         Ask out loud. Lists, charts and pictures show up here when you ask for them.
@@ -89,7 +93,7 @@ function Welcome({ onPick }) {
             key={s}
             type="button"
             onClick={() => onPick(s)}
-            className="animate-rise rounded-xl border border-line bg-panel px-4 py-2.5 text-[13.5px] text-ink/80 transition-[color,border-color,transform] duration-150 ease-smooth hover:border-ink-muted/40 hover:text-ink active:scale-[0.98]"
+            className="glass animate-rise rounded-xl px-4 py-2.5 text-[13.5px] text-ink/80 transition-[color,border-color,scale] duration-150 ease-smooth hover:border-ink/20 hover:text-ink active:scale-[0.96]"
             style={{ animationDelay: `${120 + i * 60}ms` }}
           >
             “{s}”
@@ -100,22 +104,41 @@ function Welcome({ onPick }) {
   );
 }
 
-export default function VoiceScreen({ messages, streaming, onSend, onStop, onExit }) {
+interface VoiceScreenProps {
+  messages: Message[] | null;
+  streaming: boolean;
+  onSend: (text: string) => void;
+  onStop?: () => void;
+  onExit: () => void;
+}
+
+export default function VoiceScreen({ messages, streaming, onSend, onStop, onExit }: VoiceScreenProps) {
   // What this screen is doing, as opposed to what the brain is doing.
-  const [phase, setPhase] = useState("idle"); // idle | listening | transcribing
+  const [phase, setPhase] = useState<"idle" | "listening" | "transcribing">("idle");
   const [heard, setHeard] = useState("");
   const [level, setLevel] = useState(0);
-  const [error, setError] = useState(null);
-  const [setupHint, setSetupHint] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [setupHint, setSetupHint] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const abortRef = useRef(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Escape goes back to the chat (or closes the history sheet first).
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      if (historyOpen) setHistoryOpen(false);
+      else onExit();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [historyOpen, onExit]);
 
   // Say up front if the model isn't installed, rather than after a failed tap.
   useEffect(() => {
     let alive = true;
     getSttStatus()
       .then((s) => alive && setSetupHint(s.available ? null : s.hint))
-      .catch((e) => console.warn("[voice] couldn't check speech to text:", e.message));
+      .catch((e: Error) => console.warn("[voice] couldn't check speech to text:", e.message));
     return () => {
       alive = false;
     };
@@ -127,19 +150,19 @@ export default function VoiceScreen({ messages, streaming, onSend, onStop, onExi
   const replyText = lastReply?.content ?? "";
   const lastUser = [...turns].reverse().find((m) => m.role === "user")?.content ?? "";
 
-  const state =
+  const state: VoiceState =
     phase === "listening" ? "listening"
     : phase === "transcribing" ? "transcribing"
     : streaming ? (replyText ? "speaking" : "thinking")
     : "idle";
-  const status = state === "transcribing" ? "thinking" : state;
+  const status: VoiceStatusState = state === "transcribing" ? "thinking" : state;
 
-  const panel = state === "listening" || state === "transcribing" ? null : stagePanel(lastReply);
+  const panel = state === "listening" || state === "transcribing" ? null : stagePanel(lastReply ?? undefined);
   const userLine = state === "listening" || state === "transcribing" ? heard : heard || lastUser;
   const assistantLine = state === "listening" || state === "transcribing" ? "" : replyText;
 
   const send = useCallback(
-    (text) => {
+    (text: string) => {
       setHeard(text);
       onSend(text);
     },
@@ -161,7 +184,7 @@ export default function VoiceScreen({ messages, streaming, onSend, onStop, onExi
     } catch (e) {
       setPhase("idle");
       // Tapping stop before saying anything isn't worth a message.
-      if (!e.cancelled) setError(e.message);
+      if (!(e instanceof RecorderError && e.cancelled)) setError((e as Error).message);
     } finally {
       setLevel(0);
       abortRef.current = null;
@@ -181,9 +204,9 @@ export default function VoiceScreen({ messages, streaming, onSend, onStop, onExi
   // Space talks, like a walkie-talkie button, unless something else that
   // takes keys has focus.
   useEffect(() => {
-    const onKey = (e) => {
+    const onKey = (e: KeyboardEvent) => {
       if (e.code !== "Space" || e.repeat) return;
-      if (e.target.closest?.("input, textarea, button, a, [contenteditable]")) return;
+      if ((e.target as HTMLElement | null)?.closest?.("input, textarea, button, a, [contenteditable]")) return;
       e.preventDefault();
       onControl();
     };
@@ -200,7 +223,7 @@ export default function VoiceScreen({ messages, streaming, onSend, onStop, onExi
         <button
           type="button"
           onClick={onExit}
-          className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] text-ink-muted transition-colors duration-150 hover:bg-panel-alt hover:text-ink active:scale-95"
+          className="flex items-center gap-1.5 rounded-[10px] px-2.5 py-1.5 text-[13px] text-ink-muted transition-[background-color,color,scale] duration-150 hover:bg-ink/[0.06] hover:text-ink active:scale-[0.96]"
         >
           <ArrowLeftIcon width={15} height={15} />
           Back to chat
@@ -214,8 +237,8 @@ export default function VoiceScreen({ messages, streaming, onSend, onStop, onExi
           title="History"
           aria-label="Show conversation history"
           aria-expanded={historyOpen}
-          className={`rounded-lg p-2 transition-colors duration-150 hover:bg-panel-alt active:scale-95 ${
-            historyOpen ? "bg-panel-alt text-ink" : "text-ink-muted hover:text-ink"
+          className={`rounded-[10px] p-2 transition-[background-color,color,scale] duration-150 hover:bg-ink/[0.06] active:scale-[0.96] ${
+            historyOpen ? "bg-ink/[0.08] text-ink" : "text-ink-muted hover:text-ink"
           }`}
         >
           <HistoryIcon width={16} height={16} />

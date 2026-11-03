@@ -32,15 +32,17 @@ const MIN_THRESHOLD = 0.012;
 const MAX_THRESHOLD = 0.045;
 
 export class RecorderError extends Error {
-  constructor(message, { cancelled = false } = {}) {
+  cancelled: boolean;
+  constructor(message: string, { cancelled = false }: { cancelled?: boolean } = {}) {
     super(message);
     this.name = "RecorderError";
     this.cancelled = cancelled;
   }
 }
 
-function micError(e) {
-  const name = e?.name ?? "";
+function micError(e: unknown) {
+  const err = e as { name?: string; message?: string } | null;
+  const name = err?.name ?? "";
   if (name === "NotAllowedError" || name === "SecurityError") {
     return new RecorderError(
       "Shadow can't hear you: microphone access was blocked. Allow the microphone for this page in your browser, then tap again."
@@ -52,7 +54,7 @@ function micError(e) {
   if (name === "NotReadableError") {
     return new RecorderError("The microphone is busy in another app. Close that, then tap again.");
   }
-  return new RecorderError(`Couldn't start the microphone: ${e?.message || name || "unknown error"}`);
+  return new RecorderError(`Couldn't start the microphone: ${err?.message || name || "unknown error"}`);
 }
 
 /* An AudioWorklet that forwards every block of samples. Defined as a
@@ -68,7 +70,9 @@ class ShadowCapture extends AudioWorkletProcessor {
 registerProcessor("shadow-capture", ShadowCapture);
 `;
 
-async function captureNode(ctx, onChunk) {
+type CaptureNode = AudioWorkletNode | ScriptProcessorNode;
+
+async function captureNode(ctx: AudioContext, onChunk: (chunk: Float32Array) => void): Promise<CaptureNode> {
   // AudioWorklet runs off the main thread, so a busy UI can't drop samples.
   try {
     const url = URL.createObjectURL(new Blob([WORKLET_SOURCE], { type: "application/javascript" }));
@@ -78,7 +82,7 @@ async function captureNode(ctx, onChunk) {
       URL.revokeObjectURL(url);
     }
     const node = new AudioWorkletNode(ctx, "shadow-capture");
-    node.port.onmessage = (e) => onChunk(e.data);
+    node.port.onmessage = (e: MessageEvent<Float32Array>) => onChunk(e.data);
     return node;
   } catch {
     // Older WebKit: ScriptProcessor is deprecated but it is still here.
@@ -88,13 +92,13 @@ async function captureNode(ctx, onChunk) {
   }
 }
 
-function rms(chunk) {
+function rms(chunk: Float32Array) {
   let sum = 0;
   for (let i = 0; i < chunk.length; i++) sum += chunk[i] * chunk[i];
   return Math.sqrt(sum / (chunk.length || 1));
 }
 
-function downsample(chunks, from, to) {
+function downsample(chunks: Float32Array[], from: number, to: number) {
   const total = chunks.reduce((n, c) => n + c.length, 0);
   const joined = new Float32Array(total);
   let at = 0;
@@ -117,10 +121,10 @@ function downsample(chunks, from, to) {
 }
 
 /* 16-bit mono WAV, which the brain reads with the standard library. */
-export function encodeWav(samples, rate = TARGET_RATE) {
+export function encodeWav(samples: Float32Array, rate = TARGET_RATE) {
   const buffer = new ArrayBuffer(44 + samples.length * 2);
   const view = new DataView(buffer);
-  const text = (at, s) => {
+  const text = (at: number, s: string) => {
     for (let i = 0; i < s.length; i++) view.setUint8(at + i, s.charCodeAt(i));
   };
   text(0, "RIFF");
@@ -145,14 +149,26 @@ export function encodeWav(samples, rate = TARGET_RATE) {
 /* Records one utterance and resolves with { wav, seconds }.
    `signal` aborting means "I'm done now": whatever was said is kept, and
    if nothing was said it resolves as cancelled instead of as an error. */
-export async function recordUtterance({ signal, onLevel, onSpeechStart } = {}) {
+export interface RecordOptions {
+  signal?: AbortSignal;
+  onLevel?: (level: number) => void;
+  onSpeechStart?: () => void;
+}
+
+export interface Utterance {
+  wav: Blob;
+  seconds: number;
+  reason: string;
+}
+
+export async function recordUtterance({ signal, onLevel, onSpeechStart }: RecordOptions = {}): Promise<Utterance> {
   if (!navigator.mediaDevices?.getUserMedia) {
     throw new RecorderError(
       "This browser can't record audio here. Open Shadow at localhost rather than a network address, or use a recent Chrome, Edge or Safari."
     );
   }
 
-  let stream;
+  let stream: MediaStream;
   try {
     stream = await navigator.mediaDevices.getUserMedia({
       audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
@@ -161,24 +177,25 @@ export async function recordUtterance({ signal, onLevel, onSpeechStart } = {}) {
     throw micError(e);
   }
 
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const chunks = [];
-  let node;
-  let source;
-  let mute;
+  const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  const ctx = new Ctx();
+  const chunks: Float32Array[] = [];
+  let node: CaptureNode | undefined;
+  let source: MediaStreamAudioSourceNode | undefined;
+  let mute: GainNode | undefined;
 
   try {
     const started = Date.now();
     let floor = Infinity;
     let floorCount = 0;
     let threshold = MIN_THRESHOLD;
-    const bar = (f) => Math.min(MAX_THRESHOLD, Math.max(MIN_THRESHOLD, f * FLOOR_MULTIPLE));
+    const bar = (f: number) => Math.min(MAX_THRESHOLD, Math.max(MIN_THRESHOLD, f * FLOOR_MULTIPLE));
     let speechStart = 0;
     let lastLoud = 0;
     let loudRun = 0;
 
-    const finished = new Promise((resolve, reject) => {
-      const stop = (reason) => resolve(reason);
+    const finished = new Promise<string>((resolve, reject) => {
+      const stop = (reason: string) => resolve(reason);
 
       const onAbort = () => {
         if (speechStart) stop("tapped");
@@ -237,7 +254,7 @@ export async function recordUtterance({ signal, onLevel, onSpeechStart } = {}) {
           node.connect(mute);
           mute.connect(ctx.destination);
         })
-        .catch((e) => reject(new RecorderError(`Couldn't start recording: ${e.message}`)));
+        .catch((e: Error) => reject(new RecorderError(`Couldn't start recording: ${e.message}`)));
     });
 
     const reason = await finished;
@@ -252,12 +269,12 @@ export async function recordUtterance({ signal, onLevel, onSpeechStart } = {}) {
       source?.disconnect();
       node?.disconnect();
       mute?.disconnect();
-      if (node?.port) node.port.onmessage = null;
+      if (node instanceof AudioWorkletNode) node.port.onmessage = null;
       else if (node) node.onaudioprocess = null;
       await ctx.close();
     } catch (e) {
       // Tearing down a closed context is noisy but harmless; still say so.
-      console.warn("[voice] audio teardown:", e.message);
+      console.warn("[voice] audio teardown:", (e as Error).message);
     }
     for (const track of stream.getTracks()) track.stop();
   }
