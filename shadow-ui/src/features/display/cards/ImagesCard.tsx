@@ -1,22 +1,21 @@
 import { useState } from "react";
-import { ImageIcon } from "../../Icons.jsx";
-import { API_BASE } from "../../../api.js";
-import Lightbox from "../../ui/Lightbox.jsx";
-import { hostOf } from "../display.js";
-import Frame from "./Frame.jsx";
+import { ImageIcon } from "@/components/icons";
+import Lightbox from "@/components/ui/Lightbox";
+import { previewImage } from "@/lib/api";
+import { hostOf, type ImageItem, type Panel } from "../panels";
+import Frame from "./Frame";
 
-/* Pictures from a search. Each thumbnail comes through the brain
-   (/preview/image), never straight from the site, so looking at them
-   doesn't tell anyone who is looking. A picture that won't load is dropped
-   rather than left as a broken frame. */
+/* Pictures from a search. Each thumbnail comes through the brain, never
+   straight from the site, so looking at them doesn't tell anyone who is
+   looking. A picture that won't load is dropped rather than left broken. */
 // Rows without a gap: three pictures sit in one row, not two and a hole.
-const COLUMNS = { 1: "grid-cols-1", 2: "grid-cols-2", 3: "grid-cols-3", 4: "grid-cols-2" };
+const COLUMNS: Record<number, string> = { 1: "grid-cols-1", 2: "grid-cols-2", 3: "grid-cols-3", 4: "grid-cols-2" };
 
-export default function ImagesCard({ panel }) {
-  const [failed, setFailed] = useState(() => new Set());
-  const [open, setOpen] = useState(null);
+export default function ImagesCard({ panel }: { panel: Extract<Panel, { kind: "images" }> }) {
+  const [failed, setFailed] = useState<Set<string>>(() => new Set());
+  const [open, setOpen] = useState<ImageItem | null>(null);
   const shown = panel.images.filter((img) => !failed.has(img.thumb));
-  const src = (img) => `${API_BASE}/preview/image?u=${encodeURIComponent(img.thumb)}`;
+  const src = (img: ImageItem) => previewImage(img.thumb);
 
   if (shown.length === 0) {
     return (
@@ -39,10 +38,10 @@ export default function ImagesCard({ panel }) {
             >
               <img
                 src={src(img)}
-                alt={img.title}
+                alt={img.title ?? ""}
                 loading="lazy"
                 onError={() => setFailed((f) => new Set(f).add(img.thumb))}
-                className="h-full w-full object-cover transition-transform duration-300 ease-smooth group-hover:scale-[1.03]"
+                className="content-img h-full w-full rounded-xl object-cover transition-transform duration-300 ease-smooth group-hover:scale-[1.03]"
               />
             </button>
             <figcaption className="truncate px-1 pb-1 pt-1.5 font-mono text-[11px] text-ink-muted">

@@ -1,13 +1,18 @@
 /* web_search prints "1. title / url / snippet". This reads that back into
-   data so it can be shown as a list. Pure function, no fetching: the tool
-   result already holds everything. */
+   data so it can be shown as a list. Pure, no fetching. */
+
+export interface SearchItem {
+  title: string;
+  url: string;
+  snippet: string;
+}
 
 const ITEM = /^\s*(\d+)\.\s*(.*)$/;
 
-export function parseResults(text) {
+export function parseResults(text: unknown): SearchItem[] | null {
   if (typeof text !== "string" || !text.trim()) return null;
-  const items = [];
-  let current = null;
+  const items: SearchItem[] = [];
+  let current: SearchItem | null = null;
 
   for (const line of text.split("\n")) {
     const start = ITEM.exec(line);

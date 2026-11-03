@@ -1,18 +1,39 @@
-import { parseResults } from "./searchParse.js";
+import type { Message, ToolEntry } from "@/types";
+import { parseResults } from "./searchParse";
 
 /* Turns a finished tool call into the data a card draws, or null.
 
-   show_list and show_chart: the card is drawn from the arguments the model
-   passed - the same data the brain checked (tools/display.py) - never from
-   the reply text. show_images: from the result, whose first line is JSON
-   the brain built from the search. A call the brain refused (Error,
-   Blocked) draws nothing; the tool row says why instead. */
+   show_list and show_chart: drawn from the arguments the model passed - the
+   same data the brain checked (tools/display.py) - never from the reply
+   text. show_images: from the result, whose first line is JSON the brain
+   built. A call the brain refused draws nothing; the tool row says why. */
+
+export interface ListItem {
+  title: string;
+  detail: string;
+  href?: string;
+}
+export interface ChartPoint {
+  label: string;
+  value: number;
+}
+export interface ImageItem {
+  thumb: string;
+  title?: string;
+  page?: string;
+  source?: string;
+}
+
+export type Panel =
+  | { kind: "list"; title: string; items: ListItem[] }
+  | { kind: "chart"; chart: "line" | "bar"; title: string; unit: string; points: ChartPoint[] }
+  | { kind: "images"; title: string; images: ImageItem[] };
 
 export const DISPLAY_TOOLS = new Set(["show_list", "show_chart", "show_images"]);
 
 const REFUSED = /^(Error|Blocked|Internal error|No pictures)/;
 
-function asArray(value) {
+function asArray(value: unknown): unknown[] {
   if (Array.isArray(value)) return value;
   if (typeof value === "string") {
     try {
@@ -25,35 +46,35 @@ function asArray(value) {
   return [];
 }
 
-function asNumber(value) {
+function asNumber(value: unknown): number | null {
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
   const n = Number(String(value ?? "").replace(/[,\s%$€£₹]/g, ""));
   return Number.isFinite(n) ? n : null;
 }
 
-function clean(value) {
-  return String(value ?? "").replace(/\s+/g, " ").trim();
-}
+const clean = (value: unknown) => String(value ?? "").replace(/\s+/g, " ").trim();
 
-// Models write units out ("percent", "USD billions"); a chart label wants them short.
-function unitOf(unit) {
+// Models write units out ("percent"); a chart label wants them short.
+function unitOf(unit: unknown) {
   const u = clean(unit);
   return /^(percent(age)?|per ?cent|pct)$/i.test(u) ? "%" : u;
 }
 
-function listPanel(args) {
+function listPanel(args: Record<string, unknown>): Panel | null {
   const items = asArray(args.items)
-    .map((item) =>
-      item && typeof item === "object"
-        ? { title: clean(item.title), detail: clean(item.detail) }
-        : { title: clean(item), detail: "" }
-    )
+    .map((item) => {
+      if (item && typeof item === "object") {
+        const o = item as Record<string, unknown>;
+        return { title: clean(o.title), detail: clean(o.detail) };
+      }
+      return { title: clean(item), detail: "" };
+    })
     .filter((item) => item.title)
     .slice(0, 30);
   return items.length ? { kind: "list", title: clean(args.title) || "List", items } : null;
 }
 
-function chartPanel(args) {
+function chartPanel(args: Record<string, unknown>): Panel | null {
   const labels = asArray(args.labels);
   const values = asArray(args.values);
   if (!labels.length || labels.length !== values.length) return null;
@@ -64,13 +85,13 @@ function chartPanel(args) {
     chart: args.kind === "line" ? "line" : "bar",
     title: clean(args.title) || "Chart",
     unit: unitOf(args.unit),
-    points,
+    points: points as ChartPoint[],
   };
 }
 
-function imagesPanel(args, result) {
+function imagesPanel(args: Record<string, unknown>, result: string): Panel | null {
   try {
-    const images = JSON.parse(result.split("\n", 1)[0]).images ?? [];
+    const images: ImageItem[] = JSON.parse(result.split("\n", 1)[0]).images ?? [];
     const usable = images.filter((i) => typeof i.thumb === "string" && i.thumb.startsWith("https://"));
     return usable.length ? { kind: "images", title: clean(args.query) || "Pictures", images: usable } : null;
   } catch {
@@ -78,7 +99,7 @@ function imagesPanel(args, result) {
   }
 }
 
-export function panelFor(call) {
+export function panelFor(call: ToolEntry | undefined): Panel | null {
   if (!call || call.kind === "permission" || call.result === null || call.result === undefined) return null;
   const result = String(call.result);
   if (REFUSED.test(result)) return null;
@@ -89,28 +110,29 @@ export function panelFor(call) {
   return null;
 }
 
+export function hostOf(url: string | undefined): string {
+  try {
+    return new URL(url ?? "").hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
 /* What the voice screen puts in the middle for a reply: the last thing
    Shadow chose to show, or else the search it ran, as a list. */
-export function stagePanel(message) {
+export function stagePanel(message: Message | undefined): Panel | null {
   const tools = message?.tools ?? [];
   for (let i = tools.length - 1; i >= 0; i--) {
     const panel = panelFor(tools[i]);
     if (panel) return panel;
   }
-  const search = [...tools].reverse().find((t) => t.name === "web_search" && t.result);
-  const results = search ? parseResults(String(search.result)) : null;
+  const search = [...tools].reverse().find((t) => t.kind !== "permission" && t.name === "web_search" && t.result);
+  if (!search || search.kind === "permission") return null;
+  const results = parseResults(String(search.result));
   if (!results) return null;
   return {
     kind: "list",
     title: `Results for “${clean(search.args?.query)}”`,
     items: results.map((r) => ({ title: r.title, detail: hostOf(r.url), href: r.url })),
   };
-}
-
-export function hostOf(url) {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return "";
-  }
 }

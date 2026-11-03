@@ -1,7 +1,8 @@
+import type { SearchItem } from "./searchParse";
+
 /* The same data web_search already returned, as a list instead of the raw
    numbered text the tool prints. Nothing is fetched here. */
-
-export default function SearchResults({ items, query }) {
+export default function SearchResults({ items, query }: { items: SearchItem[]; query?: string }) {
   return (
     <div className="space-y-1.5">
       {query && (
@@ -11,7 +12,7 @@ export default function SearchResults({ items, query }) {
       )}
       <ol className="space-y-1.5">
         {items.map((item, i) => (
-          <li key={i} className="rounded-lg border border-line bg-panel/60 px-3 py-2">
+          <li key={i} className="rounded-lg border border-line bg-ink/[0.025] px-3 py-2">
             <a
               href={item.url}
               target="_blank"
@@ -21,9 +22,7 @@ export default function SearchResults({ items, query }) {
               {item.title || item.url}
             </a>
             <div className="mt-0.5 truncate font-mono text-[11px] text-ink-muted">{item.url}</div>
-            {item.snippet && (
-              <div className="mt-1 line-clamp-2 text-xs leading-relaxed text-ink-muted">{item.snippet}</div>
-            )}
+            {item.snippet && <div className="mt-1 line-clamp-2 text-xs leading-normal text-ink-muted">{item.snippet}</div>}
           </li>
         ))}
       </ol>
