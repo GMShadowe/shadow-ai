@@ -1,9 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import type { ModelInfo } from "@/types";
 
-import { getNeededModels, getSettings, updateSettings } from "../../api.js";
-import { AssistantIcon, CheckIcon } from "../Icons.jsx";
-import AssistantWizard, { BLANK } from "./AssistantWizard.jsx";
-import PullProgress from "./PullProgress.jsx";
+import { getNeededModels, getSettings, updateSettings } from "@/lib/api";
+import { AssistantIcon, CheckIcon } from "@/components/icons";
+import AssistantWizard, { BLANK, type AssistantProfile, type ToolInfo } from "./AssistantWizard";
+
+interface SetupReport {
+  models?: ModelInfo[];
+  tools?: ToolInfo[];
+  recommended_model?: string;
+  hardware?: { os?: string; machine?: string; cpu_cores?: number; ram_total_gb?: number; disk_free_gb?: number };
+}
+import PullProgress from "./PullProgress";
 
 /* First run. Four steps: what this is, who your assistant is, the download,
    and done.
@@ -14,9 +22,9 @@ import PullProgress from "./PullProgress.jsx";
    assistant the user actually named. PUT /settings writes to whichever
    assistant is active, which on first run is that one. */
 
-function Shell({ children, step, steps }) {
+function Shell({ children, step, steps }: { children: ReactNode; step: number; steps: string[] }) {
   return (
-    <div className="flex h-screen flex-col items-center overflow-y-auto bg-bg">
+    <div className="relative isolate flex h-full flex-col items-center overflow-y-auto overscroll-contain bg-bg">
       <div className="w-full max-w-xl px-6 py-14">
         <div className="mb-8 flex items-center gap-1.5">
           {steps.map((_, i) => (
@@ -34,26 +42,26 @@ function Shell({ children, step, steps }) {
   );
 }
 
-function Title({ children, sub }) {
+function Title({ children, sub }: { children: ReactNode; sub?: ReactNode }) {
   return (
     <div className="mb-6">
-      <h1 className="text-xl font-semibold tracking-tight text-ink">{children}</h1>
+      <h1 className="text-[clamp(1.75rem,3.4vw,2.4rem)] font-serif font-normal leading-[1.1] tracking-[-0.02em] text-balance text-ink">{children}</h1>
       {sub && <p className="mt-2 text-sm leading-relaxed text-ink-muted">{sub}</p>}
     </div>
   );
 }
 
-function Button({ children, onClick, disabled, variant = "primary" }) {
+function Button({ children, onClick, disabled, variant = "primary" }: { children: ReactNode; onClick: () => void; disabled?: boolean; variant?: "primary" | "quiet" }) {
   const look =
     variant === "primary"
-      ? "bg-phosphor-dim text-bg hover:bg-phosphor disabled:hover:bg-phosphor-dim"
-      : "border border-line text-ink-muted hover:text-ink disabled:hover:text-ink-muted";
+      ? "bg-ink text-bg enabled:hover:opacity-90"
+      : "glass text-ink-muted enabled:hover:text-ink";
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-md px-4 py-2 text-sm font-medium transition-all duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100 ${look}`}
+      className={`rounded-[10px] px-4 py-2 text-sm font-medium transition-[opacity,color,scale] duration-150 enabled:active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-40 ${look}`}
     >
       {children}
     </button>
@@ -62,22 +70,22 @@ function Button({ children, onClick, disabled, variant = "primary" }) {
 
 const STEPS = ["welcome", "assistant", "download", "done"];
 
-export default function Onboarding({ onFinished }) {
+export default function Onboarding({ onFinished }: { onFinished: () => void }) {
   const [step, setStep] = useState(0);
-  const [status, setStatus] = useState(null);
-  const [profile, setProfile] = useState(BLANK);
+  const [status, setStatus] = useState<SetupReport | null>(null);
+  const [profile, setProfile] = useState<AssistantProfile>(BLANK);
   const [custom, setCustom] = useState(false);
-  const [missing, setMissing] = useState(null);
-  const [error, setError] = useState(null);
+  const [missing, setMissing] = useState<string[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     getSettings()
-      .then((s) => {
+      .then((s: SetupReport) => {
         setStatus(s);
         setProfile((p) => ({ ...p, model: s.recommended_model ?? "default" }));
       })
-      .catch((e) => setError(e.message));
+      .catch((e: Error) => setError(e.message));
   }, []);
 
   const hw = status?.hardware;
@@ -103,7 +111,7 @@ export default function Onboarding({ onFinished }) {
       setMissing(needed.missing);
       setStep(needed.missing.length ? 2 : 3);
     } catch (e) {
-      setError(e.message);
+      setError((e as Error).message);
     } finally {
       setSaving(false);
     }
@@ -115,7 +123,7 @@ export default function Onboarding({ onFinished }) {
       await updateSettings({ onboarded: true });
       onFinished();
     } catch (e) {
-      setError(e.message);
+      setError((e as Error).message);
       setSaving(false);
     }
   }
@@ -130,9 +138,9 @@ export default function Onboarding({ onFinished }) {
     return (
       <Shell step={0} steps={STEPS}>
         <Title sub="Everything runs on this computer. The models, your chats, what it remembers — all of it stays here. There's no account, and nothing to sign in to.">
-          Shadow
+          <span className="glow-text">Shadow</span>
         </Title>
-        <div className="divide-y divide-line rounded-md border border-line">
+        <div className="glass divide-y divide-line rounded-2xl">
           {[
             ["Local", "The model runs in Ollama on this machine. Shadow hosts nothing."],
             ["Yours", "Chats and memory are files in a folder you can read, move or delete."],
@@ -192,7 +200,7 @@ export default function Onboarding({ onFinished }) {
             <label className="block">
               <div className="text-sm text-ink">Name</div>
               <input
-                className="mt-2 w-full rounded-md border border-line bg-panel-alt px-3 py-2 text-sm text-ink placeholder:text-ink-muted transition-colors duration-150 focus:border-signal focus:outline-none"
+                className="mt-2 w-full rounded-lg border border-line bg-panel-alt px-3 py-2 text-base sm:text-sm text-ink placeholder:text-ink-muted transition-colors duration-150 focus:border-signal focus:outline-none"
                 value={profile.name}
                 autoFocus
                 maxLength={40}
@@ -248,10 +256,10 @@ export default function Onboarding({ onFinished }) {
     <Shell step={3} steps={STEPS}>
       <div className="flex items-center gap-2 text-phosphor">
         <CheckIcon />
-        <span className="font-mono text-[11px] uppercase tracking-wider">Ready</span>
+        <span className="font-mono text-[11px] uppercase tracking-[0.05em]">Ready</span>
       </div>
       <div className="mt-4">
-        <Title sub="You can make up to three assistants, each with its own chats and memory. The switcher is at the top of the sidebar.">
+        <Title sub="You can make up to three assistants, each with its own chats and memory. Switch between them from the assistant button in the left rail.">
           {name || "Shadow"} is set up
         </Title>
       </div>

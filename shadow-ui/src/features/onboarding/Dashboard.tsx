@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import type { ModelInfo } from "@/types";
 
 import {
   activateAssistant,
@@ -7,37 +8,75 @@ import {
   getSettings,
   listAssistants,
   patchAssistant,
-} from "../../api.js";
-import { ArrowLeftIcon, PencilIcon, PlusIcon, TerminalIcon, TrashIcon } from "../Icons.jsx";
-import AssistantWizard, { BLANK } from "./AssistantWizard.jsx";
+} from "@/lib/api";
+import { ArrowLeftIcon, LogoMark, PencilIcon, PlusIcon, TrashIcon } from "@/components/icons";
+import AssistantWizard, { BLANK, type AssistantProfile, type ToolInfo } from "./AssistantWizard";
+
+interface AssistantSummary extends AssistantProfile {
+  id: string;
+  active: boolean;
+  chats: number;
+  memories: number;
+}
+
+interface AssistantList {
+  assistants: AssistantSummary[];
+  max: number;
+  active: string;
+}
+
+interface SettingsReport {
+  models?: ModelInfo[];
+  tools?: ToolInfo[];
+  recommended_model?: string;
+}
 
 /* The assistant dashboard: a full screen of its own, up to three cards, each
    one its own set of chats and memory.
 
-   Reached from the switcher at the top of the sidebar, not on launch: the
+   Reached from the assistant button in the left rail, not on launch: the
    app opens straight into the last assistant's chat, because putting a
    chooser in front of every session would tax the common case to serve the
    rare one. */
 
-const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
-const capital = (s) => (s ? s[0].toUpperCase() + s.slice(1) : "");
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+const capital = (s: string | undefined) => (s ? s[0].toUpperCase() + s.slice(1) : "");
 
 const PRIMARY =
-  "rounded-lg bg-phosphor px-3.5 py-2 text-[13px] font-medium text-bg transition-[opacity,transform] duration-150 ease-smooth hover:opacity-90 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:opacity-40 disabled:active:scale-100";
+  "rounded-[10px] bg-ink px-3.5 py-2 text-[13px] font-medium text-bg transition-[opacity,scale] duration-150 ease-smooth enabled:hover:opacity-90 enabled:active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-40";
 const SECONDARY =
-  "flex items-center gap-1.5 rounded-lg border border-line bg-panel px-3 py-2 text-[13px] text-ink-muted transition-[color,border-color,transform] duration-150 ease-smooth hover:border-ink-muted/40 hover:text-ink active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40";
+  "glass flex items-center gap-1.5 rounded-[10px] px-3 py-2 text-[13px] text-ink-muted transition-[color,border-color,scale] duration-150 ease-smooth enabled:hover:border-ink/20 enabled:hover:text-ink enabled:active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-40";
 
-function Shell({ onBack, backLabel, escapes = true, children }) {
+function Shell({
+  onBack,
+  onHome,
+  backLabel,
+  escapes = true,
+  children,
+}: {
+  onBack: () => void;
+  /** The logo: back to "/" with a fresh chat. */
+  onHome: () => void;
+  backLabel: string;
+  escapes?: boolean;
+  children: ReactNode;
+}) {
   return (
-    <div className="animate-fade flex h-screen flex-col overflow-y-auto bg-bg">
+    <div className="animate-fade flex h-full flex-col overflow-y-auto overscroll-contain bg-bg">
       <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between bg-bg/80 px-6 backdrop-blur-md">
-        <div className="flex items-center gap-2.5">
-          <span className="relative grid h-7 w-7 place-items-center rounded-[9px] bg-ink text-bg">
-            <TerminalIcon width={16} height={16} />
-            <span className="absolute -right-0.5 -top-0.5 h-[7px] w-[7px] rounded-full bg-phosphor ring-2 ring-bg" />
-          </span>
-          <span className="text-[16px] font-semibold tracking-[-0.03em] text-ink">shadow</span>
-        </div>
+        <a
+          href="/"
+          onClick={(e) => {
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; // let a new tab open
+            e.preventDefault();
+            onHome();
+          }}
+          aria-label="Shadow, home"
+          className="group -ml-2 flex items-center gap-2.5 rounded-[10px] px-2 py-1.5 transition-colors duration-100 hover:bg-ink/[0.06]"
+        >
+          <LogoMark width={20} height={20} className="text-ink transition-transform duration-300 ease-smooth group-hover:rotate-[20deg]" />
+          <span className="text-[15px] font-medium tracking-[-0.02em] text-ink">shadow</span>
+        </a>
         <button type="button" onClick={onBack} className={SECONDARY}>
           <ArrowLeftIcon width={14} height={14} />
           {backLabel}
@@ -49,7 +88,7 @@ function Shell({ onBack, backLabel, escapes = true, children }) {
   );
 }
 
-function Stat({ value, label }) {
+function Stat({ value, label }: { value: number; label: string }) {
   return (
     <div className="px-4 py-3 first:pl-0">
       <div className="text-[22px] font-medium leading-none tracking-[-0.02em] text-ink tabular-nums">{value}</div>
@@ -58,10 +97,10 @@ function Stat({ value, label }) {
   );
 }
 
-function Detail({ label, children }) {
+function Detail({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-3 py-1.5">
-      <dt className="font-mono text-[11px] uppercase tracking-wider text-ink-muted">{label}</dt>
+      <dt className="text-[13px] font-medium text-ink-faint ">{label}</dt>
       <dd className="min-w-0 truncate text-[13px] text-ink">{children}</dd>
     </div>
   );
@@ -69,7 +108,7 @@ function Detail({ label, children }) {
 
 /* Deleting takes the chats, the memory and the images with it, so the
    confirmation says the real numbers rather than asking "are you sure?". */
-function ConfirmDelete({ assistant, onCancel, onConfirm, busy }) {
+function ConfirmDelete({ assistant, onCancel, onConfirm, busy }: { assistant: AssistantSummary; onCancel: () => void; onConfirm: () => void; busy: boolean }) {
   const { name, chats, memories } = assistant;
   const nothing = !chats && !memories;
   return (
@@ -89,7 +128,7 @@ function ConfirmDelete({ assistant, onCancel, onConfirm, busy }) {
           type="button"
           onClick={onConfirm}
           disabled={busy}
-          className="rounded-lg bg-danger px-3.5 py-2 text-[13px] font-medium text-bg transition-[opacity,transform] duration-150 ease-smooth hover:opacity-90 active:scale-[0.97] disabled:opacity-40"
+          className="rounded-[10px] bg-danger px-3.5 py-2 text-[13px] font-medium text-bg transition-[opacity,scale] duration-150 ease-smooth enabled:hover:opacity-90 enabled:active:scale-[0.96] disabled:opacity-40"
         >
           {busy ? "Deleting…" : "Delete permanently"}
         </button>
@@ -101,21 +140,35 @@ function ConfirmDelete({ assistant, onCancel, onConfirm, busy }) {
   );
 }
 
-function Card({ assistant, modelLabel, onSwitch, onOpen, onEdit, onDelete, confirming, onConfirm, onCancel, canDelete, busy }) {
+interface CardProps {
+  assistant: AssistantSummary;
+  modelLabel: string;
+  onSwitch: () => void;
+  onOpen: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  confirming: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+  canDelete: boolean;
+  busy: boolean;
+}
+
+function Card({ assistant, modelLabel, onSwitch, onOpen, onEdit, onDelete, confirming, onConfirm, onCancel, canDelete, busy }: CardProps) {
   const { name, active, chats, memories, effort, tone, auto_memory, location } = assistant;
   return (
     <article
-      className={`group relative flex min-h-[22rem] flex-col rounded-2xl border bg-panel p-5 transition-[border-color,box-shadow] duration-200 ease-smooth ${
+      className={`glass group relative flex min-h-[22rem] flex-col rounded-2xl p-5 transition-[border-color,box-shadow] duration-200 ease-smooth ${
         active
-          ? "border-phosphor/40 shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-phosphor)_8%,transparent)]"
-          : "border-line hover:border-ink-muted/30"
+          ? "!border-phosphor/40 shadow-[0_0_0_4px_color-mix(in_oklab,var(--color-phosphor)_8%,transparent)]"
+          : "hover:border-ink/20"
       }`}
     >
       <div className="flex items-start gap-3">
         <span
           aria-hidden
           className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[17px] font-semibold ${
-            active ? "bg-phosphor text-bg" : "bg-panel-alt text-ink"
+            active ? "bg-gradient-to-br from-glow-a to-glow-b text-bg" : "bg-ink/[0.07] text-ink"
           }`}
         >
           {name.trim()[0]?.toUpperCase() ?? "?"}
@@ -170,7 +223,7 @@ function Card({ assistant, modelLabel, onSwitch, onOpen, onEdit, onDelete, confi
           disabled={busy || !canDelete}
           title={canDelete ? `Delete ${name}` : "The last assistant can't be deleted"}
           aria-label={`Delete ${name}`}
-          className="ml-auto rounded-lg p-2 text-ink-muted transition-[color,background-color,transform] duration-150 ease-smooth hover:bg-danger/5 hover:text-danger active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-muted disabled:active:scale-100"
+          className="ml-auto rounded-lg p-2 text-ink-muted transition-[color,background-color,scale] duration-150 ease-smooth enabled:hover:bg-danger/10 enabled:hover:text-danger enabled:active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-40"
         >
           <TrashIcon width={15} height={15} />
         </button>
@@ -181,7 +234,7 @@ function Card({ assistant, modelLabel, onSwitch, onOpen, onEdit, onDelete, confi
   );
 }
 
-function EmptySlot({ used, max, full, onCreate }) {
+function EmptySlot({ used, max, full, onCreate }: { used: number; max: number; full: boolean; onCreate: () => void }) {
   if (full) {
     return (
       <div className="flex min-h-[22rem] flex-col items-center justify-center rounded-2xl border border-dashed border-line p-6 text-center">
@@ -198,7 +251,7 @@ function EmptySlot({ used, max, full, onCreate }) {
       onClick={onCreate}
       className="group flex min-h-[22rem] flex-col items-center justify-center rounded-2xl border border-dashed border-line p-6 text-center transition-[border-color,background-color] duration-200 ease-smooth hover:border-phosphor/50 hover:bg-panel/60"
     >
-      <span className="grid h-10 w-10 place-items-center rounded-xl border border-line bg-panel text-ink-muted transition-[color,transform] duration-200 ease-smooth group-hover:scale-105 group-hover:text-phosphor">
+      <span className="grid h-10 w-10 place-items-center rounded-xl border border-line bg-panel text-ink-muted transition-colors duration-200 ease-smooth group-hover:text-phosphor">
         <PlusIcon width={16} height={16} />
       </span>
       <div className="mt-3 text-[14px] font-medium text-ink">New assistant</div>
@@ -209,15 +262,23 @@ function EmptySlot({ used, max, full, onCreate }) {
   );
 }
 
-export default function Dashboard({ onClose, onSwitched, onEdited }) {
-  const [data, setData] = useState(null);
-  const [status, setStatus] = useState(null);
-  const [error, setError] = useState(null);
+interface DashboardProps {
+  onClose: () => void;
+  /** The logo: leave the dashboard for "/" and a fresh chat. */
+  onHome: () => void;
+  onSwitched?: () => void | Promise<void>;
+  onEdited?: () => void | Promise<void>;
+}
+
+export default function Dashboard({ onClose, onHome, onSwitched, onEdited }: DashboardProps) {
+  const [data, setData] = useState<AssistantList | null>(null);
+  const [status, setStatus] = useState<SettingsReport | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [confirming, setConfirming] = useState(null);
+  const [confirming, setConfirming] = useState<string | null>(null);
   // Either "new", or the id of the assistant being edited.
-  const [editing, setEditing] = useState(null);
-  const [draft, setDraft] = useState(BLANK);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draft, setDraft] = useState<AssistantProfile>(BLANK);
 
   async function load() {
     try {
@@ -226,7 +287,7 @@ export default function Dashboard({ onClose, onSwitched, onEdited }) {
       setStatus(s);
       return list;
     } catch (e) {
-      setError(e.message);
+      setError((e as Error).message);
       return null;
     }
   }
@@ -238,7 +299,7 @@ export default function Dashboard({ onClose, onSwitched, onEdited }) {
   // Escape backs out one level: a delete prompt, then the dashboard. It does
   // nothing inside the edit form, where it would throw away what was typed.
   useEffect(() => {
-    const esc = (e) => {
+    const esc = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || editing) return;
       if (confirming) setConfirming(null);
       else onClose();
@@ -251,9 +312,9 @@ export default function Dashboard({ onClose, onSwitched, onEdited }) {
   const assistants = data?.assistants ?? [];
   const max = data?.max ?? 3;
   const full = assistants.length >= max;
-  const label = (id) => models.find((m) => m.id === id)?.label ?? id;
+  const label = (id: string) => models.find((m) => m.id === id)?.label ?? id;
 
-  async function handleSwitch(id) {
+  async function handleSwitch(id: string) {
     setBusy(true);
     setError(null);
     try {
@@ -261,12 +322,12 @@ export default function Dashboard({ onClose, onSwitched, onEdited }) {
       await onSwitched?.();
       onClose();
     } catch (e) {
-      setError(e.message);
+      setError((e as Error).message);
       setBusy(false);
     }
   }
 
-  async function handleDelete(id) {
+  async function handleDelete(id: string) {
     setBusy(true);
     setError(null);
     try {
@@ -277,7 +338,7 @@ export default function Dashboard({ onClose, onSwitched, onEdited }) {
       // this screen is now showing someone else's conversations.
       if (list) onSwitched?.();
     } catch (e) {
-      setError(e.message);
+      setError((e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -299,18 +360,19 @@ export default function Dashboard({ onClose, onSwitched, onEdited }) {
       }
       // Edits land on the named assistant whether or not it is the active
       // one, so renaming another assistant doesn't switch you into it.
+      if (!editing) return;
       await patchAssistant(editing, { ...draft, name });
       if (editing === data?.active) onEdited?.();
       setEditing(null);
       await load();
     } catch (e) {
-      setError(e.message);
+      setError((e as Error).message);
     } finally {
       setBusy(false);
     }
   }
 
-  function startEdit(assistant) {
+  function startEdit(assistant: AssistantSummary) {
     // GET /assistants carries each full profile, so an edit form starts
     // from what that assistant actually is - not from the defaults, which
     // would silently wipe its tone and instructions on save.
@@ -324,7 +386,7 @@ export default function Dashboard({ onClose, onSwitched, onEdited }) {
   }
 
   const banner = error && (
-    <div className="animate-rise mb-6 rounded-xl border border-danger/40 bg-danger/5 px-4 py-3 text-[13px] leading-relaxed text-ink">
+    <div role="alert" className="animate-rise mb-6 rounded-xl border border-danger/40 bg-danger/10 px-4 py-3 text-[13px] leading-relaxed text-ink">
       {error}
     </div>
   );
@@ -332,13 +394,13 @@ export default function Dashboard({ onClose, onSwitched, onEdited }) {
   if (editing) {
     const isNew = editing === "new";
     return (
-      <Shell onBack={() => setEditing(null)} backLabel="Back to assistants" escapes={false}>
+      <Shell onBack={() => setEditing(null)} onHome={onHome} backLabel="Back to assistants" escapes={false}>
         <main className="mx-auto w-full max-w-xl px-6 pb-16 pt-10">
           <div className="animate-rise">
-            <div className="font-mono text-[11px] uppercase tracking-wider text-ink-muted">
+            <div className="text-[13px] font-medium text-ink-faint ">
               {isNew ? "New assistant" : "Edit assistant"}
             </div>
-            <h1 className="mt-2 text-[clamp(1.75rem,3vw,2.25rem)] font-medium leading-[1.1] tracking-[-0.035em] text-ink">
+            <h1 className="mt-2 text-[clamp(1.75rem,3vw,2.25rem)] font-serif font-normal leading-[1.1] tracking-[-0.02em] text-balance text-ink">
               {isNew ? "Make a new assistant" : draft.name || "Unnamed assistant"}
             </h1>
             <p className="mt-3 text-[14px] leading-relaxed text-ink-muted">
@@ -371,15 +433,15 @@ export default function Dashboard({ onClose, onSwitched, onEdited }) {
   }
 
   return (
-    <Shell onBack={onClose} backLabel="Back to chat">
+    <Shell onBack={onClose} onHome={onHome} backLabel="Back to chat">
       <main className="mx-auto w-full max-w-5xl px-6 pb-16 pt-12 sm:px-10">
         <div className="animate-rise">
           <div className="max-w-xl">
-            <div className="font-mono text-[11px] uppercase tracking-wider text-ink-muted">
+            <div className="text-[13px] font-medium text-ink-faint ">
               {data ? `${assistants.length} of ${max}` : "Assistants"}
             </div>
-            <h1 className="mt-2 text-[clamp(2rem,4vw,2.75rem)] font-medium leading-[1.05] tracking-[-0.035em] text-ink">
-              Your assistants
+            <h1 className="mt-2 text-[clamp(2rem,4vw,2.75rem)] font-serif font-normal leading-[1.05] tracking-[-0.02em] text-ink">
+              Your <span className="glow-text">assistants</span>
             </h1>
             <p className="mt-3 text-[15px] leading-relaxed text-ink-muted">
               Each one keeps its own chats and its own memory. They share the models already downloaded, so

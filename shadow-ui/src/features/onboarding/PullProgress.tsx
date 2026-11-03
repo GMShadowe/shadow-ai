@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 
-import { pullModel } from "../../api.js";
-import { CheckIcon } from "../Icons.jsx";
+import { pullModel } from "@/lib/api";
+import { CheckIcon } from "@/components/icons";
 
 /* Models are gigabytes, and settings/format.js stops at MB because it
    measures the small files Shadow keeps. "7.6 GB" beats "7782.4 MB" when
    someone is deciding whether to wait. */
-function size(n) {
+function size(n: number | null) {
   if (!n) return "0 MB";
   const mb = n / (1024 * 1024);
   return mb >= 1024 ? `${(mb / 1024).toFixed(1)} GB` : `${Math.round(mb)} MB`;
@@ -20,7 +20,7 @@ function size(n) {
    those first moments and says which stage it is in - inventing a
    percentage there would only have to jump backwards later. */
 
-function Bar({ fraction, indeterminate }) {
+function Bar({ fraction, indeterminate }: { fraction: number; indeterminate: boolean }) {
   return (
     <div className="h-1 w-full overflow-hidden rounded-full bg-panel-alt">
       {indeterminate ? (
@@ -29,20 +29,26 @@ function Bar({ fraction, indeterminate }) {
         <div className="h-full w-full animate-pulse bg-phosphor-dim/40" />
       ) : (
         <div
-          className="h-full rounded-full bg-phosphor transition-[width] duration-200 ease-smooth"
-          style={{ width: `${Math.round(fraction * 100)}%` }}
+          className="h-full origin-left rounded-full bg-phosphor transition-transform duration-200 ease-smooth"
+          style={{ transform: `scaleX(${fraction})` }}
         />
       )}
     </div>
   );
 }
 
-export default function PullProgress({ models, onDone, onError }) {
+interface PullProgressProps {
+  models: string[];
+  onDone?: () => void;
+  onError?: (message: string) => void;
+}
+
+export default function PullProgress({ models, onDone, onError }: PullProgressProps) {
   const [index, setIndex] = useState(0);
   const [status, setStatus] = useState("");
-  const [completed, setCompleted] = useState(null);
-  const [total, setTotal] = useState(null);
-  const [failed, setFailed] = useState(null);
+  const [completed, setCompleted] = useState<number | null>(null);
+  const [total, setTotal] = useState<number | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
   const started = useRef(false);
 
   useEffect(() => {
@@ -62,22 +68,22 @@ export default function PullProgress({ models, onDone, onError }) {
         setCompleted(null);
         setTotal(null);
 
-        let streamError = null;
+        let streamError: string | null = null;
         try {
           await pullModel(models[i], (event) => {
             if (cancelled) return;
             if (event.type === "progress") {
-              setStatus(event.status ?? "");
-              setCompleted(event.completed ?? null);
-              setTotal(event.total ?? null);
+              setStatus(String(event.status ?? ""));
+              setCompleted(typeof event.completed === "number" ? event.completed : null);
+              setTotal(typeof event.total === "number" ? event.total : null);
             } else if (event.type === "error") {
               // The brain reports the reason verbatim rather than ending
               // the stream silently, so pass it straight through.
-              streamError = event.message;
+              streamError = String(event.message ?? "The download failed.");
             }
           });
         } catch (e) {
-          streamError = e.message;
+          streamError = (e as Error).message;
         }
 
         if (cancelled) return;
@@ -129,7 +135,7 @@ export default function PullProgress({ models, onDone, onError }) {
                   Done
                 </span>
               ) : current ? (
-                <span className="font-mono text-[11px] text-ink-muted">
+                <span className="font-mono text-[11px] tabular-nums text-ink-muted">
                   {completed && total
                     ? `${size(completed)} of ${size(total)}`
                     : status || "Starting…"}

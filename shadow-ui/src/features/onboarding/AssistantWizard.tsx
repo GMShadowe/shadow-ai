@@ -1,6 +1,31 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
+import type { Option } from "@/components/ui/Segmented";
+import type { ModelInfo } from "@/types";
 
-import { GroupTitle, Note, Row, Segmented, TriState, Toggle } from "../settings/controls.jsx";
+import { GroupTitle, Note, Row, Segmented, TriState, Toggle, type TriValue } from "@/features/settings/controls";
+
+export interface ToolInfo {
+  name: string;
+  description?: string;
+  group?: string;
+  danger?: string;
+  default?: TriValue;
+  state?: TriValue;
+  [key: string]: unknown;
+}
+
+export interface AssistantProfile {
+  name: string;
+  model: string;
+  effort: string;
+  tone: string;
+  response_length: string;
+  custom_instructions: string;
+  auto_memory: boolean;
+  location: string;
+  tools: Record<string, TriValue>;
+  [key: string]: unknown;
+}
 
 /* Making or editing an assistant. Shared by first-run setup and the
    dashboard, so the two can never drift apart.
@@ -11,19 +36,19 @@ import { GroupTitle, Note, Row, Segmented, TriState, Toggle } from "../settings/
    profile; it reuses the Settings controls rather than growing a second set
    that looks almost right. */
 
-const EFFORTS = [
+const EFFORTS: Option<string>[] = [
   { id: "low", label: "Low", hint: "Up to 3 steps. Fastest." },
   { id: "medium", label: "Medium", hint: "Up to 6 steps." },
   { id: "high", label: "High", hint: "Up to 12 steps. Most thorough." },
 ];
 
-const TONES = [
+const TONES: Option<string>[] = [
   { id: "friendly", label: "Friendly" },
   { id: "professional", label: "Professional" },
   { id: "casual", label: "Casual" },
 ];
 
-const LENGTHS = [
+const LENGTHS: Option<string>[] = [
   { id: "short", label: "Short" },
   { id: "balanced", label: "Balanced" },
   { id: "detailed", label: "Detailed" },
@@ -36,13 +61,13 @@ const LENGTHS = [
    older brain. Deliberately not read from the tool's reported `state`: that
    belongs to whichever assistant is active, not the one being edited here.
 */
-function defaultState(tool) {
+function defaultState(tool: ToolInfo): TriValue {
   if (tool.default) return tool.default;
   if (tool.name === "run_command" || tool.name === "open_app") return "ask";
   return tool.danger === "dangerous" ? "ask" : "on";
 }
 
-export const BLANK = {
+export const BLANK: AssistantProfile = {
   name: "",
   model: "default",
   effort: "medium",
@@ -54,7 +79,7 @@ export const BLANK = {
   tools: {},
 };
 
-function Field({ label, description, children }) {
+function Field({ label, description, children }: { label: ReactNode; description?: ReactNode; children: ReactNode }) {
   return (
     <label className="block py-3.5">
       <div className="text-sm text-ink">{label}</div>
@@ -65,7 +90,7 @@ function Field({ label, description, children }) {
 }
 
 const input =
-  "w-full rounded-md border border-line bg-panel-alt px-3 py-2 text-sm text-ink " +
+  "w-full rounded-lg border border-line bg-panel-alt px-3 py-2 text-base sm:text-sm text-ink " +
   "placeholder:text-ink-muted focus:border-signal focus:outline-none " +
   "transition-colors duration-150";
 
@@ -77,11 +102,19 @@ export default function AssistantWizard({
   recommended,
   showTools = true,
   nameError,
+}: {
+  value: AssistantProfile;
+  onChange: (next: AssistantProfile) => void;
+  models?: ModelInfo[];
+  tools?: ToolInfo[];
+  recommended?: string | null;
+  showTools?: boolean;
+  nameError?: string | null;
 }) {
   const [section, setSection] = useState("basics");
-  const set = (patch) => onChange({ ...value, ...patch });
+  const set = (patch: Partial<AssistantProfile>) => onChange({ ...value, ...patch });
 
-  const modelOptions = useMemo(
+  const modelOptions = useMemo<Option<string>[]>(
     () =>
       models.map((m) => ({
         id: m.id,
@@ -93,17 +126,18 @@ export default function AssistantWizard({
   );
 
   const groups = useMemo(() => {
-    const out = new Map();
+    const out = new Map<string, ToolInfo[]>();
     for (const t of tools) {
-      if (!out.has(t.group)) out.set(t.group, []);
-      out.get(t.group).push(t);
+      const key = t.group ?? "Other";
+      if (!out.has(key)) out.set(key, []);
+      out.get(key)!.push(t);
     }
     return [...out.entries()];
   }, [tools]);
 
   const picked = models.find((m) => m.id === value.model);
 
-  const sections = [
+  const sections: Option<string>[] = [
     { id: "basics", label: "Basics" },
     { id: "personality", label: "Personality" },
     ...(showTools ? [{ id: "tools", label: "Tools" }] : []),
@@ -213,7 +247,7 @@ export default function AssistantWizard({
             label="Remember things on its own"
             description="Saves durable facts from a conversation without being asked. Off by default; you can always say 'remember that…' instead."
           >
-            <Toggle checked={value.auto_memory} onChange={(auto_memory) => set({ auto_memory })} />
+            <Toggle label="Remember things on its own" checked={value.auto_memory} onChange={(auto_memory) => set({ auto_memory })} />
           </Row>
           <Field
             label="Location"
