@@ -1,8 +1,9 @@
 import fs from "node:fs";
+import type { IncomingMessage } from "node:http";
 import path from "node:path";
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
 
 /* The brain needs an access token on every request, and the browser never
    gets it: this dev server reads it off disk and attaches it as the request
@@ -12,11 +13,11 @@ import tailwindcss from "@tailwindcss/vite";
    Read fresh (on mtime change) rather than once at startup, so the brain can
    be started after the UI and a regenerated token doesn't need a restart. */
 
-const TOKEN_PATH = path.resolve(__dirname, "../shadow-brain/data/auth_token");
+const TOKEN_PATH = path.resolve(import.meta.dirname, "../shadow-brain/data/auth_token");
 
 let cached = { mtime: 0, value: "" };
 
-function token() {
+function token(): string {
   try {
     const { mtimeMs } = fs.statSync(TOKEN_PATH);
     if (mtimeMs !== cached.mtime) {
@@ -30,25 +31,33 @@ function token() {
   }
 }
 
+function header(req: IncomingMessage, name: string): string {
+  const value = req.headers[name];
+  return (Array.isArray(value) ? value[0] : value) ?? "";
+}
+
 /* A page on another origin can still reach this dev server, and a simple POST
    is sent without a preflight, so CORS alone wouldn't stop one. Refuse to
    attach the token to anything that didn't come from Shadow's own page. */
-function sameOrigin(req, origin) {
+function sameOrigin(req: IncomingMessage, origin: string): boolean {
   // Required: a same-origin GET has no Origin, so this is the only signal.
-  const site = (req.headers["sec-fetch-site"] || "").toLowerCase();
+  const site = header(req, "sec-fetch-site").toLowerCase();
   if (site !== "same-origin" && site !== "none") return false;
-  const from = req.headers.origin;
+  const from = header(req, "origin");
   return !from || from === origin;
 }
 
 // DNS rebinding sends the attacker's name as Host; only these are accepted.
-function localHost(req, port) {
-  const host = (req.headers.host || "").toLowerCase();
+function localHost(req: IncomingMessage, port: number | undefined): boolean {
+  const host = header(req, "host").toLowerCase();
   return host === `localhost:${port}` || host === `127.0.0.1:${port}`;
 }
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: { "@": path.resolve(import.meta.dirname, "src") },
+  },
   server: {
     port: 5173,
     // Vite otherwise answers with Access-Control-Allow-Origin: *, which would
@@ -61,15 +70,15 @@ export default defineConfig({
         target: "http://127.0.0.1:8765",
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api/, ""),
-        configure: (proxy, options) => {
+        configure: (proxy) => {
           proxy.on("proxyReq", (proxyReq, req) => {
             const port = req.socket.localPort;
             const expected = `http://localhost:${port}`;
             const alt = `http://127.0.0.1:${port}`;
-            const from = req.headers.origin;
+            const from = header(req, "origin");
             const ok =
               localHost(req, port) &&
-              (sameOrigin(req, expected) || (from && from === alt && sameOrigin(req, alt)));
+              (sameOrigin(req, expected) || (from === alt && sameOrigin(req, alt)));
 
             if (!ok) {
               // Don't forward it at all, and don't lend it the token.
