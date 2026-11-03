@@ -992,7 +992,12 @@ def conversation(cid: str):
     conv = storage.get_conversation(cid)
     if conv is None:
         raise HTTPException(status_code=404, detail="That chat doesn't exist.")
-    return conv
+    # A reply can still be running after the page that started it reloaded;
+    # the UI needs to know, or it shows the question unanswered and lets
+    # the user send into a chat that will answer 409.
+    with _sessions_lock:
+        running = cid in _busy
+    return {**conv, "running": running}
 
 
 @app.patch("/conversations/{cid}")
@@ -1137,11 +1142,15 @@ class _Partial:
         return [t["id"] for t in self.tools if t.get("kind") == "permission" and t["decision"] is None]
 
     def finished_tools(self) -> list[dict]:
+        # An approval still open when the turn stopped was denied by the stop;
+        # saved undecided, a reopened chat would offer Allow for a dead turn.
+        tools = [{**t, "decision": "deny"} if t.get("kind") == "permission" and t["decision"] is None else t
+                 for t in self.tools]
         # A tool the stream announced but never ran: the turn stops at an
         # event, so it was stopped before the call, not halfway through it.
         if self._running:
-            return self.tools + [{**self._running, "result": "Not run: the reply was stopped first."}]
-        return self.tools
+            return tools + [{**self._running, "result": "Not run: the reply was stopped first."}]
+        return tools
 
 
 # Turns that can be stopped, by conversation, guarded by _sessions_lock.
@@ -1152,15 +1161,14 @@ def _save_stopped(cid: str, text: str, images: list[str], partial: _Partial,
                   memory: ShortTermMemory | None, aid: str) -> None:
     """Keep a reply that was cut short as far as it got, marked stopped, so
     the chat on disk matches what was on screen and the next turn knows the
-    question was asked."""
+    question was asked. A reply stopped before it wrote anything is saved
+    too, empty: without it the question sits in the chat with no answer and
+    no sign that it was stopped."""
     try:
         reply = partial.text.strip()
         if memory is not None:
             memory.add("user", text, images)
         tools = partial.finished_tools()
-        if not reply and not tools:
-            print("[chat] stopped before anything was written, so there is no reply to save")
-            return
         storage.add_message(cid, "assistant", reply,
                             {**partial.meta, "tools": tools, "stopped": True}, aid=aid)
         if memory is not None:
@@ -1175,6 +1183,50 @@ def _forget_turn(cid: str, claim: object, stop: threading.Event) -> None:
         if _stops.get(cid, (None,))[0] is stop:
             del _stops[cid]
     _release(cid, claim)
+
+
+def _abandon(cid: str, stop: threading.Event, partial: _Partial, stream) -> None:
+    """Stop a turn whose browser went away. Once the server drops a stream
+    nothing asks it for another event, so the turn would sit half-done,
+    holding the chat, until garbage collection happened to close it. It is
+    run to its end here instead, which with `stop` set is one event away."""
+    with _sessions_lock:
+        running = _stops.get(cid, (None,))[0] is stop
+    if not running:
+        return
+    print(f"[chat] the browser left {cid} mid-reply, stopping the turn")
+    stop.set()
+    for pid in partial.waiting_permissions():
+        permissions.resolve(pid, "deny")
+    threading.Thread(target=_drain, args=(cid, stream), daemon=True).start()
+
+
+def _drain(cid: str, stream) -> None:
+    deadline = time.monotonic() + 15 * 60
+    while time.monotonic() < deadline:
+        try:
+            next(stream)
+        except StopIteration:
+            return
+        except ValueError as e:
+            # The thread the server gave up on is still inside next().
+            if "already executing" not in str(e):
+                print(f"[chat] couldn't finish the abandoned turn in {cid}: {e}")
+                return
+            time.sleep(0.2)
+    print(f"[chat] the abandoned turn in {cid} was still running after 15 minutes, leaving it")
+
+
+class _TurnResponse(StreamingResponse):
+    def __init__(self, content, on_gone):
+        super().__init__(content, media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
+        self._on_gone = on_gone
+
+    async def __call__(self, scope, receive, send):
+        try:
+            await super().__call__(scope, receive, send)
+        finally:
+            self._on_gone()
 
 
 def _stream_turn_response(cid: str, text: str, memory: ShortTermMemory, model, effort,
@@ -1213,8 +1265,7 @@ def _stream_turn_response(cid: str, text: str, memory: ShortTermMemory, model, e
 
     stream = events()
     weakref.finalize(stream, _forget_turn, cid, claim, stop)
-    return StreamingResponse(stream, media_type="text/event-stream",
-                             headers={"Cache-Control": "no-cache"})
+    return _TurnResponse(stream, on_gone=lambda: _abandon(cid, stop, partial, stream))
 
 
 def _claimed(cid: str, setup):
