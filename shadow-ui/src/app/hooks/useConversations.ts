@@ -23,11 +23,18 @@ export function useConversations(connected: boolean) {
     setConversations((prev) => prev.map((c) => (c.id === id ? change(c) : c)));
   }, []);
 
-  /** Re-read one chat from the brain, which assigns the stored message ids. */
+  /** Re-read one chat from the brain, which assigns the stored message ids.
+      A reply the brain is still running gets a placeholder, so the question
+      doesn't sit there unanswered; returns whether one is running. */
   const reload = useCallback(
     async (id: string) => {
       const full = await getConversation(id);
-      update(id, (c) => ({ ...c, messages: full.messages.map(fromServer) }));
+      const messages = full.messages.map(fromServer);
+      if (full.running) {
+        messages.push({ id: `resumed-${id}`, role: "assistant", content: "", tools: [], streaming: true, resumed: true });
+      }
+      update(id, (c) => ({ ...c, messages }));
+      return !!full.running;
     },
     [update],
   );
@@ -54,17 +61,19 @@ export function useConversations(connected: boolean) {
     loadList();
   }, [connected, loadList]);
 
+  /** Opens a chat; returns true if the brain is still running a reply in it. */
   async function select(id: string) {
     setActiveId(id);
     const conv = conversations.find((c) => c.id === id);
-    if (!conv || conv.messages !== null) return;
+    if (!conv || conv.messages !== null) return false;
     try {
-      await reload(id);
+      return await reload(id);
     } catch (e) {
       update(id, (c) => ({
         ...c,
         messages: [{ id: "load-error", role: "error", content: `Couldn't load this chat: ${(e as Error).message}` }],
       }));
+      return false;
     }
   }
 

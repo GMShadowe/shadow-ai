@@ -1,6 +1,7 @@
 import { useRef, useState, type Dispatch, type SetStateAction } from "react";
 import {
   editMessage,
+  getConversation,
   rateReply,
   regenerateReply,
   stopChat,
@@ -8,7 +9,7 @@ import {
   warmRouter,
   type RunOptions,
 } from "@/lib/api";
-import { applyEvent, placeholder, titleFrom, TurnError } from "@/features/chat/lib/conversation";
+import { applyEvent, fromServer, placeholder, titleFrom, TurnError } from "@/features/chat/lib/conversation";
 import type { Conversation, ImageAttachment, Message, Rating, Spend, StreamEvent } from "@/types";
 
 type Request = (onEvent: (e: StreamEvent) => void, signal: AbortSignal) => Promise<void>;
@@ -19,11 +20,12 @@ interface Deps {
   setActiveId: (id: string) => void;
   setConversations: Dispatch<SetStateAction<Conversation[]>>;
   update: (id: string, change: (c: Conversation) => Conversation) => void;
-  reload: (id: string) => Promise<void>;
+  reload: (id: string) => Promise<boolean>;
   setSpend: (spend: Spend) => void;
 }
 
 const WARM_EVERY_MS = 10_000;
+const WATCH_EVERY_MS = 1_500;
 
 function lastUserOf(messages: Message[]) {
   return [...messages].reverse().find((m) => m.role === "user");
@@ -35,6 +37,9 @@ export function useChatRunner({ active, options, setActiveId, setConversations, 
   const [pendingId, setPendingId] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const lastWarm = useRef(0);
+  // The chat whose reply is running without a stream on this page: one
+  // started before a reload, or one that outlived its Stop.
+  const watchingRef = useRef<string | null>(null);
 
   async function run(convId: string, msgId: string, request: Request) {
     setActiveId(convId);
@@ -76,14 +81,46 @@ export function useChatRunner({ active, options, setActiveId, setConversations, 
       setPendingId(null);
       // The brain assigns the real message ids, so re-read the chat once the
       // turn has landed: ratings and re-runs need the stored ids.
-      reload(convId).catch(() => {
-        // the on-screen version is still correct; ids catch up on reload
-      });
+      reload(convId)
+        .then((running) => {
+          if (running) watch(convId);
+        })
+        .catch(() => {
+          // the on-screen version is still correct; ids catch up on reload
+        });
+    }
+  }
+
+  /* A reply the brain is running with no stream here keeps the chat busy,
+     and is polled until it lands. */
+  async function watch(convId: string) {
+    if (watchingRef.current === convId) return;
+    watchingRef.current = convId;
+    setPendingId((p) => p ?? convId);
+    try {
+      while (watchingRef.current === convId) {
+        await new Promise((resolve) => setTimeout(resolve, WATCH_EVERY_MS));
+        if (watchingRef.current !== convId) return;
+        let full;
+        try {
+          full = await getConversation(convId);
+        } catch (e) {
+          console.warn("[chat] couldn't check on the running reply:", (e as Error).message);
+          continue;
+        }
+        if (!full.running) {
+          update(convId, (c) => ({ ...c, messages: full.messages.map(fromServer) }));
+          return;
+        }
+      }
+    } finally {
+      if (watchingRef.current === convId) watchingRef.current = null;
+      setPendingId((p) => (p === convId ? null : p));
     }
   }
 
   async function send(text: string, images: ImageAttachment[] = [], skill: string | null = null, voice = false) {
-    if (active.messages === null) return;
+    if (pendingId !== null || active.messages === null) return;
     const convId = active.id;
     const reply = placeholder(skill);
     const user: Message = { id: crypto.randomUUID(), role: "user", content: text, images: images.map((i) => i.dataUrl) };
@@ -138,7 +175,7 @@ export function useChatRunner({ active, options, setActiveId, setConversations, 
 
   async function stop() {
     const controller = abortRef.current;
-    if (!controller) return;
+    if (!controller && pendingId === null) return;
     // The brain ends the turn and saves what it wrote; cutting the connection
     // first would race the re-read of the chat and lose it from the screen.
     try {
@@ -146,7 +183,7 @@ export function useChatRunner({ active, options, setActiveId, setConversations, 
     } catch (e) {
       console.warn("[stop] the brain didn't confirm, dropping the connection:", (e as Error).message);
     }
-    controller.abort();
+    controller?.abort();
   }
 
   /* A rating is training signal, so it goes to the brain, which files it
@@ -175,8 +212,9 @@ export function useChatRunner({ active, options, setActiveId, setConversations, 
 
   function abortAll() {
     abortRef.current?.abort();
+    watchingRef.current = null;
     setPendingId(null);
   }
 
-  return { pendingId, send, regenerate, editLast, stop, rate, typing, abortAll };
+  return { pendingId, send, regenerate, editLast, stop, rate, typing, abortAll, watch };
 }

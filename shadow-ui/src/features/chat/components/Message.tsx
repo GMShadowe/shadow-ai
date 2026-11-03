@@ -220,7 +220,13 @@ export default function Message({
   const waiting = message.streaming && !message.content && rows.every((t) => t.kind === "permission" || t.result !== null);
   const steps = rows.filter((t) => t.kind !== "permission").length;
   const budget = message.effort ? STEP_BUDGET[message.effort] : undefined;
-  const phase = !message.route ? "Routing" : steps ? "Reading the results" : "Thinking";
+  const phase = message.resumed
+    ? "Still answering from before the page reloaded"
+    : !message.route
+      ? "Routing"
+      : steps
+        ? "Reading the results"
+        : "Thinking";
 
   return (
     <div className="group animate-rise space-y-3">

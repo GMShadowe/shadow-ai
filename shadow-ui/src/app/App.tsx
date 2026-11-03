@@ -258,7 +258,9 @@ export default function App() {
           onSettings={openSettings}
           onSelect={(id) => {
             setVoiceOpen(false);
-            chats.select(id);
+            chats.select(id).then((running) => {
+              if (running) runner.watch(id);
+            });
             if (small()) setSidebarOpen(false);
           }}
           onRename={chats.rename}
@@ -332,6 +334,11 @@ export default function App() {
                       onTyping={runner.typing}
                       streaming={runner.pendingId === active.id}
                       disabled={!connected || active.messages === null || (runner.pendingId !== null && runner.pendingId !== active.id)}
+                      disabledHint={
+                        connected && runner.pendingId !== null && runner.pendingId !== active.id
+                          ? "Shadow is still answering in another chat…"
+                          : "Waiting for Shadow…"
+                      }
                       canAttach={currentModel?.vision ?? false}
                       skills={skills}
                       offline={brain.offline}
@@ -400,7 +407,9 @@ export default function App() {
           activeId={active.id}
           onSelect={(id) => {
             setVoiceOpen(false);
-            chats.select(id);
+            chats.select(id).then((running) => {
+              if (running) runner.watch(id);
+            });
           }}
           onNew={startNew}
           onRename={chats.rename}

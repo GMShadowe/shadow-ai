@@ -12,7 +12,7 @@ export interface ConversationSummary {
 export const listConversations = () => request<ConversationSummary[]>("/conversations", "Couldn't load chats");
 
 export const getConversation = (id: string) =>
-  request<{ messages: ServerMessage[] }>(`/conversations/${enc(id)}`, "Couldn't load this chat");
+  request<{ messages: ServerMessage[]; running?: boolean }>(`/conversations/${enc(id)}`, "Couldn't load this chat");
 
 export const renameConversation = (id: string, title: string) =>
   send("PATCH", `/conversations/${enc(id)}`, { title }, "Couldn't rename this chat");

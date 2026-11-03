@@ -55,6 +55,8 @@ export interface Message {
   streaming?: boolean;
   /** When this reply started streaming, client-side; drives the elapsed timer. */
   startedAt?: number;
+  /** A placeholder for a reply the brain was already running when the chat loaded. */
+  resumed?: boolean;
   error?: Failure | null;
   rating?: Rating;
   rating_reason?: string | null;

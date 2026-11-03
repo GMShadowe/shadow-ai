@@ -37,6 +37,8 @@ interface ComposerProps {
   onValueChange?: (hasText: boolean) => void;
   streaming: boolean;
   disabled: boolean;
+  /** Why the composer is disabled, shown as its placeholder. */
+  disabledHint?: string;
   canAttach: boolean;
   skills?: Skill[];
   offline: boolean;
@@ -65,6 +67,7 @@ export default function Composer({
   onValueChange,
   streaming,
   disabled,
+  disabledHint = "Waiting for Shadow…",
   canAttach,
   skills = [],
   offline,
@@ -361,7 +364,7 @@ export default function Composer({
                 addFiles(files);
               }
             }}
-            placeholder={disabled ? "Waiting for Shadow…" : deep ? "What should Shadow dig into?" : skill ? `What should ${skill.name} work on?` : `Message ${assistantName}`}
+            placeholder={disabled ? disabledHint : deep ? "What should Shadow dig into?" : skill ? `What should ${skill.name} work on?` : `Message ${assistantName}`}
             className="block max-h-[216px] w-full resize-none bg-transparent px-2.5 pb-2 pt-2 text-base leading-6 text-ink placeholder:text-ink-faint focus:outline-none disabled:cursor-not-allowed"
           />
 
