@@ -1,0 +1,157 @@
+@import "tailwindcss";
+@import "./fonts.css";
+@import "./effects.css";
+@import "./markdown.css";
+
+/* Defaults only: the real values are set per theme by src/theme/appearance.ts
+   before the first paint, so these just keep the page sane without script. */
+@theme {
+  --color-bg: #292521;
+  --color-sidebar: #211e1b;
+  --color-panel: #322d28;
+  --color-panel-alt: #2e2924;
+  --color-composer: #2f2a25;
+  --color-bubble: #6f8fe8;
+  --color-bubble-ink: #1b1915;
+  --color-menu: #35302a;
+  --color-line: rgba(245, 237, 225, 0.09);
+  --color-ink: #f5ede1;
+  --color-ink-muted: #c9c0b3;
+  --color-ink-faint: #a49a8d;
+  --color-phosphor: #6f8fe8;
+  --color-phosphor-dim: #5574d6;
+  --color-signal: #6f8fe8;
+  --color-danger: #f0705f;
+  /* "Running locally": the one green, on status dots only. */
+  --color-ok: #3ecf8e;
+  /* The starter cards' icons: one quiet tone per route. */
+  --color-tone-cyan: #76d0eb;
+  --color-tone-violet: #b9a4ff;
+  --color-tone-yellow: #e2c541;
+  --color-tone-green: #6bcf7f;
+  --color-glow-a: #6f8fe8;
+  --color-glow-b: #b4c6f0;
+
+  /* Geist for the interface, Geist Mono for numbers and readouts, Geist
+     Serif for the few display headlines (the person's own pick). */
+  --font-sans: "Geist", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --font-serif: "Geist Serif", Georgia, serif;
+
+  /* One strong ease-out for anything entering, leaving or responding, and an
+     iOS-like curve for drawers. `ease-smooth` keeps its old name so every
+     existing utility picks up the stronger curve. */
+  --ease-smooth: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --animate-rise: rise 280ms var(--ease-smooth) both;
+  --animate-fade: fade 200ms var(--ease-smooth) both;
+  --animate-pop: pop 180ms var(--ease-smooth) both;
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes pop {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  @keyframes pop-out {
+    from { opacity: 1; transform: none; }
+    to { opacity: 0; transform: scale(0.96); }
+  }
+}
+
+:root {
+  --shadow-color: rgba(0, 0, 0, 0.45);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+/* Big monitors: the whole interface steps up in size, the way raising the
+   system's display scale would, so a 1440p or 4K screen isn't a strip of
+   small text in a sea of canvas. The app's height compensates for the zoom. */
+:root { --zoom: 1; }
+@media (min-width: 1800px) and (min-height: 900px) { :root { --zoom: 1.1; } }
+@media (min-width: 2200px) and (min-height: 1100px) { :root { --zoom: 1.25; } }
+@media (min-width: 3000px) and (min-height: 1500px) { :root { --zoom: 1.5; } }
+#root {
+  zoom: var(--zoom);
+  height: calc(100dvh / var(--zoom));
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* On the blue boxes (your messages, Regatta and wave-blue cards) a blue
+   highlight disappears, so text set in bubble-ink selects in charcoal. */
+.text-bubble-ink::selection,
+.text-bubble-ink ::selection {
+  background: var(--color-bubble-ink);
+  color: var(--color-bubble);
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-phosphor) 28%, transparent);
+}
+
+/* The keyboard focus ring for anything without one of its own. In the base
+   layer on purpose: unlayered, it beat every utility in the app - including
+   each field's focus:outline-none. Outlines follow border-radius, so the ring
+   takes each control's shape. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--color-signal) 65%, transparent);
+    outline-offset: 2px;
+  }
+
+  /* Content images get a hairline in pure black or white, never a tint. */
+  img.content-img {
+    outline: 1px solid oklch(1 0 0 / 0.1);
+    outline-offset: -1px;
+  }
+  [data-theme="light"] img.content-img {
+    outline-color: oklch(0 0 0 / 0.1);
+  }
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--color-ink-muted) 22%, transparent);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--color-ink-muted) 40%, transparent);
+  background-clip: content-box;
+}
+
+/* Reduced motion: movement goes, opacity stays. A 1ms duration keeps every
+   animation's end state (and its `both` fill) without the travel. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
