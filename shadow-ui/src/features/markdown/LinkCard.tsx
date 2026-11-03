@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { previewImage } from "../../api.js";
-import { OutboundIcon } from "../Icons.jsx";
-import { usePreview } from "./previews.js";
+import { useState, type ReactNode } from "react";
+import { OutboundIcon } from "@/components/icons";
+import { previewImage } from "@/lib/api";
+import { usePreview, type PreviewCard } from "./previewContext";
 
-/* A link on its own line becomes a card. Three states, and the third one
-   matters most: plenty of sites refuse to be read, so a failed fetch has to
-   look like a deliberate plain link rather than a broken card. */
+/* A link on its own line becomes a card. Plenty of sites refuse to be read,
+   so a failed fetch has to look like a deliberate plain link rather than a
+   broken card. */
 
-function Favicon({ icon, site }) {
+function Favicon({ icon, site }: { icon?: string; site?: string }) {
   const [failed, setFailed] = useState(false);
   if (!icon || failed) {
     return (
@@ -28,14 +28,14 @@ function Favicon({ icon, site }) {
   );
 }
 
-export function PlainLink({ href, children, note }) {
+export function PlainLink({ href, children, note }: { href: string; children: ReactNode; note?: string }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer"
       title={note || undefined}
-      className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-line bg-panel/60 px-2 py-1 align-middle text-sm text-ink no-underline transition-colors duration-150 hover:border-signal/50 hover:bg-panel-alt"
+      className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-line bg-ink/[0.03] px-2 py-1 align-middle text-sm text-ink no-underline transition-colors duration-150 hover:border-signal/50"
     >
       <OutboundIcon width={12} height={12} className="shrink-0 text-ink-muted" />
       <span className="truncate">{children}</span>
@@ -43,19 +43,17 @@ export function PlainLink({ href, children, note }) {
   );
 }
 
-function Price({ product }) {
-  if (!product?.price) {
+function Price({ product }: { product: NonNullable<PreviewCard["product"]> }) {
+  if (!product.price) {
     // Prices are usually drawn by JavaScript and aren't in the HTML at all.
-    // Saying so beats showing a number Shadow made up.
     return <span className="text-[11px] text-ink-muted">Price isn't in the page's data</span>;
   }
-  const symbol = { USD: "$", EUR: "€", GBP: "£", INR: "₹", JPY: "¥" }[product.currency];
+  const symbols: Record<string, string> = { USD: "$", EUR: "€", GBP: "£", INR: "₹", JPY: "¥" };
+  const symbol = product.currency ? symbols[product.currency] : undefined;
   const amount = Number(product.price);
-  const shown = Number.isFinite(amount)
-    ? amount.toLocaleString(undefined, { maximumFractionDigits: 2 })
-    : product.price;
+  const shown = Number.isFinite(amount) ? amount.toLocaleString(undefined, { maximumFractionDigits: 2 }) : product.price;
   return (
-    <span className="text-sm font-medium text-ink">
+    <span className="text-sm font-medium tabular-nums text-ink">
       {symbol ?? ""}
       {shown}
       {!symbol && product.currency ? ` ${product.currency}` : ""}
@@ -63,11 +61,9 @@ function Price({ product }) {
   );
 }
 
-/* `attached` means the link is already in the sentence above, so this is an
-   extra: it shows nothing at all until there is a real card to show. On its
-   own line a link is the whole block, so there it shows a loading state and
-   falls back to a plain link. */
-export default function LinkCard({ href, label, attached = false }) {
+/* `attached` means the link is already in the sentence above, so this card
+   is an extra: it shows nothing at all until there is a real card to show. */
+export default function LinkCard({ href, label, attached = false }: { href: string; label?: string; attached?: boolean }) {
   const card = usePreview(href);
   const [imageFailed, setImageFailed] = useState(false);
 
@@ -75,7 +71,7 @@ export default function LinkCard({ href, label, attached = false }) {
 
   if (!card) {
     return (
-      <span className="flex max-w-full items-center gap-2 rounded-lg border border-line bg-panel/60 px-3 py-2">
+      <span className="flex max-w-full items-center gap-2 rounded-xl border border-line bg-ink/[0.03] px-3 py-2">
         <span className="spinner shrink-0" aria-hidden="true" />
         <span className="truncate font-mono text-[11px] text-ink-muted">{label || href}</span>
       </span>
@@ -90,7 +86,7 @@ export default function LinkCard({ href, label, attached = false }) {
     );
   }
 
-  const product = card.kind === "product" ? card.product : null;
+  const product = card.kind === "product" ? card.product : undefined;
   const image = card.image && !imageFailed ? previewImage(card.image) : null;
 
   return (
@@ -98,7 +94,7 @@ export default function LinkCard({ href, label, attached = false }) {
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="animate-rise flex max-w-xl overflow-hidden rounded-lg border border-line bg-panel/60 no-underline transition-colors duration-150 hover:border-signal/50 hover:bg-panel-alt"
+      className="animate-rise flex max-w-xl overflow-hidden rounded-xl border border-line bg-ink/[0.03] no-underline transition-colors duration-150 hover:border-signal/50"
     >
       {image && (
         <span className="hidden w-28 shrink-0 bg-panel-alt sm:block">
@@ -116,25 +112,19 @@ export default function LinkCard({ href, label, attached = false }) {
           <Favicon icon={card.icon} site={card.site} />
           <span className="truncate font-mono text-[11px] text-ink-muted">{card.site}</span>
           {product && (
-            <span className="ml-auto shrink-0 rounded border border-line px-1 py-px font-mono text-[9px] uppercase tracking-wider text-ink-muted">
+            <span className="ml-auto shrink-0 rounded border border-line px-1 py-px font-mono text-[9px] uppercase tracking-[0.05em] text-ink-muted">
               product
             </span>
           )}
         </span>
-        <span className="mt-1 block truncate text-sm font-medium text-ink">
-          {product?.name || card.title}
-        </span>
+        <span className="mt-1 block truncate text-sm font-medium text-ink">{product?.name || card.title}</span>
         {card.description && (
-          <span className="mt-0.5 line-clamp-2 block text-xs leading-relaxed text-ink-muted">
-            {card.description}
-          </span>
+          <span className="mt-0.5 line-clamp-2 block text-xs leading-normal text-ink-muted">{card.description}</span>
         )}
         {product && (
           <span className="mt-1.5 flex items-baseline gap-2">
             <Price product={product} />
-            {product.availability && (
-              <span className="text-[11px] text-ink-muted">{product.availability}</span>
-            )}
+            {product.availability && <span className="text-[11px] text-ink-muted">{product.availability}</span>}
           </span>
         )}
       </span>

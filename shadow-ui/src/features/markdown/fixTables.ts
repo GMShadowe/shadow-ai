@@ -1,25 +1,21 @@
 /* Repair a table the model *nearly* got right.
 
    GFM only accepts a table if the delimiter row has one valid cell per
-   header cell — each one at least one dash, optionally colon-anchored. Miss
-   that by a character and remark doesn't render a slightly-wrong table, it
-   renders the whole thing as a paragraph of pipes. A 4B writing
-   `| :--- | :--- | :--- | : |` is enough to lose it, and that is exactly
-   what happened in testing.
+   header cell. Miss that by a character and remark renders the whole thing
+   as a paragraph of pipes. A 4B writing `| :--- | :--- | :--- | : |` is
+   enough to lose it, and that is exactly what happened in testing.
 
-   So the delimiter row is normalised before parsing: cells are rewritten to
-   a valid form, and padded or trimmed to the header's count. Nothing else
-   is touched — the repair is only ever applied to a row that is already
-   trying to be a delimiter, and a correct table passes through unchanged. */
+   So the delimiter row is normalised before parsing. Nothing else is
+   touched, and a correct table passes through unchanged. */
 
 const DELIMITER_LINE = /^[\s|:-]+$/;
 
-function cells(line) {
+function cells(line: string): string[] {
   const trimmed = line.trim().replace(/^\|/, "").replace(/\|$/, "");
   return trimmed.split("|").map((c) => c.trim());
 }
 
-function fixCell(cell) {
+function fixCell(cell: string): string {
   const left = cell.startsWith(":");
   const right = cell.endsWith(":") && cell.length > 1;
   if (left && right) return ":---:";
@@ -28,16 +24,14 @@ function fixCell(cell) {
   return "---";
 }
 
-export function repairTables(text) {
+export function repairTables(text: string): string {
   if (typeof text !== "string" || !text.includes("|")) return text;
   const lines = text.split("\n");
   let changed = false;
 
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
-    // A delimiter row: only pipes, dashes, colons and spaces, and it has to
-    // carry at least one dash or colon so a line of "|  |" isn't mistaken
-    // for one.
+    // Only pipes, dashes, colons and spaces, with at least one dash or colon.
     if (!line.includes("|") || !DELIMITER_LINE.test(line) || !/[-:]/.test(line)) continue;
     const header = lines[i - 1];
     if (!header.includes("|") || !header.trim()) continue;
