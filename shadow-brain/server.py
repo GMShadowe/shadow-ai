@@ -29,6 +29,7 @@ import feedback
 import privacy
 import skills
 import stt
+import tts
 import usage as usage_store
 from memory.short_term import ShortTermMemory
 from config import (TIER_ORDER, EFFORT_STEPS, all_tiers, get_workspace, is_placeholder,
@@ -544,6 +545,25 @@ async def speech_to_text(request: Request):
 @app.get("/stt/status")
 def speech_status():
     return stt.status()
+
+
+class SpeakRequest(BaseModel):
+    text: str
+
+
+@app.post("/tts")
+def text_to_speech(req: SpeakRequest):
+    """Text in, WAV out. Local only: after the one-time voice download,
+    nothing here reaches the network."""
+    try:
+        return Response(content=tts.speak(req.text), media_type="audio/wav")
+    except tts.TtsError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+
+@app.get("/tts/status")
+def voice_status():
+    return tts.status()
 
 
 @app.post("/preview")

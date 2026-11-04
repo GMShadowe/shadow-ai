@@ -89,6 +89,21 @@ def outbound(log_path: str) -> list[dict]:
         "active": stt_active, "reason": stt_reason, "state": None,
     })
 
+    import tts
+    if not tts.available():
+        tts_active, tts_reason = False, "Text to speech isn't installed"
+    elif tts.model_cached():
+        tts_active, tts_reason = False, "Already downloaded — never fetched again"
+    elif off:
+        tts_active, tts_reason = False, "Offline mode is on"
+    else:
+        tts_active, tts_reason = True, f"One download of the {tts.VOICE_NAME} voice, then never again"
+    rows.append({
+        "id": "voice_model", "label": "voice", "host": "huggingface.co",
+        "what": "Downloads the piper voice the first time Shadow speaks in voice mode.",
+        "active": tts_active, "reason": tts_reason, "state": None,
+    })
+
     # Downloading a model. Ollama itself is local, but a pull fetches the
     # weights from Ollama's registry, so it belongs on this list. Nothing is
     # downloaded unless the user asks for it in setup or Settings.

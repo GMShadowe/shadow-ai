@@ -6,3 +6,7 @@ psutil
 # downloaded once, like an Ollama model pull.
 faster-whisper
 silero-vad
+
+# Voice mode (speaking replies). Local too; the voice is downloaded once,
+# pinned and checked, in tts.py.
+piper-tts
