@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeftIcon, CloseIcon, HistoryIcon, MicIcon, StopIcon } from "@/components/icons";
+import { ArrowLeftIcon, CloseIcon, HistoryIcon, MicIcon, SpeakerIcon, SpeakerOffIcon, StopIcon } from "@/components/icons";
 import VoiceStatus from "./VoiceStatus";
 import VoiceTranscript from "./VoiceTranscript";
 import HistoryPanel from "./HistoryPanel";
@@ -8,7 +8,8 @@ import { stagePanel } from "@/features/display/panels";
 import { recordUtterance, RecorderError } from "../lib/recorder";
 import type { Message } from "@/types";
 import type { VoiceStatusState } from "./VoiceStatus";
-import { getSttStatus, transcribe } from "@/lib/api";
+import { getSttStatus, getTtsStatus, transcribe } from "@/lib/api";
+import { Speaker, fillerFor, takeSentences } from "../lib/speaker";
 
 /* Voice mode: a screen of its own, not a mode of the composer.
 
@@ -21,9 +22,12 @@ import { getSttStatus, transcribe } from "@/lib/api";
    chart or pictures Shadow put up, drawn from the tool call's data. When a
    reply has none, the exchange itself takes the middle, large.
 
-   "Speaking" means reply text is arriving. Nothing is spoken out loud
-   yet; that is the next task, kept separate so an audio problem can only
-   be in one half at a time. */
+   Replies are spoken out loud by a local piper voice, a sentence at a time
+   while the model is still writing (lib/speaker.ts). "Speaking" covers both
+   the text arriving and the audio still playing after it has. Only replies
+   that start while this screen is open are spoken, never older ones. */
+
+const SPEAK_KEY = "shadow.voice.speak";
 
 type VoiceState = "idle" | "listening" | "thinking" | "transcribing" | "speaking";
 
@@ -121,6 +125,35 @@ export default function VoiceScreen({ messages, streaming, onSend, onStop, onExi
   const [setupHint, setSetupHint] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const [speakOn, setSpeakOn] = useState(() => localStorage.getItem(SPEAK_KEY) !== "off");
+  const [voiceHint, setVoiceHint] = useState<string | null>(null);
+  const [talking, setTalking] = useState(false);
+  const speakerRef = useRef<Speaker | null>(null);
+  const spokenRef = useRef<{ id: string; cursor: number; saidAny: boolean; done: boolean } | null>(null);
+
+  useEffect(() => {
+    const speaker = new Speaker(setTalking, setError);
+    speakerRef.current = speaker;
+    return () => speaker.stop();
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    getTtsStatus()
+      .then((s) => alive && setVoiceHint(s.available ? null : s.hint))
+      .catch((e: Error) => console.warn("[voice] couldn't check text to speech:", e.message));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const toggleSpeak = useCallback(() => {
+    setSpeakOn((on) => {
+      localStorage.setItem(SPEAK_KEY, on ? "off" : "on");
+      if (on) speakerRef.current?.stop();
+      return !on;
+    });
+  }, []);
 
   // Escape goes back to the chat (or closes the history sheet first).
   useEffect(() => {
@@ -150,10 +183,43 @@ export default function VoiceScreen({ messages, streaming, onSend, onStop, onExi
   const replyText = lastReply?.content ?? "";
   const lastUser = [...turns].reverse().find((m) => m.role === "user")?.content ?? "";
 
+  const canSpeak = speakOn && !voiceHint;
+
+  useEffect(() => {
+    const speaker = speakerRef.current;
+    if (!lastReply || !speaker || !canSpeak) return;
+    let spoken = spokenRef.current;
+    if (!spoken || spoken.id !== lastReply.id) {
+      if (!lastReply.streaming) return;
+      spoken = spokenRef.current = { id: lastReply.id, cursor: 0, saidAny: false, done: false };
+    }
+    if (spoken.done) return;
+
+    const text = lastReply.content;
+    // A tool call clears the text written before it.
+    if (text.length < spoken.cursor) spoken.cursor = 0;
+    const tools = lastReply.tools ?? [];
+    if (tools.length && !spoken.saidAny && !text) {
+      speaker.say(fillerFor(tools[0].name));
+      spoken.saidAny = true;
+    }
+    const { ready, used } = takeSentences(text.slice(spoken.cursor), !lastReply.streaming);
+    spoken.cursor += used;
+    ready.forEach((sentence) => speaker.say(sentence));
+    if (ready.length) spoken.saidAny = true;
+    if (!lastReply.streaming) spoken.done = true;
+  }, [lastReply, canSpeak]);
+
+  const hush = useCallback(() => {
+    speakerRef.current?.stop();
+    if (spokenRef.current) spokenRef.current.done = true;
+  }, []);
+
   const state: VoiceState =
     phase === "listening" ? "listening"
     : phase === "transcribing" ? "transcribing"
-    : streaming ? (replyText ? "speaking" : "thinking")
+    : streaming ? (replyText || talking ? "speaking" : "thinking")
+    : talking ? "speaking"
     : "idle";
   const status: VoiceStatusState = state === "transcribing" ? "thinking" : state;
 
@@ -196,10 +262,14 @@ export default function VoiceScreen({ messages, streaming, onSend, onStop, onExi
     else if (state === "listening") abortRef.current?.abort();
     else if (state === "speaking") {
       // Shadow stops the moment the user wants to talk instead.
-      onStop?.();
+      hush();
+      if (streaming) onStop?.();
       listen();
-    } else if (state === "thinking") onStop?.();
-  }, [state, listen, onStop]);
+    } else if (state === "thinking") {
+      hush();
+      onStop?.();
+    }
+  }, [state, streaming, listen, onStop, hush]);
 
   // Space talks, like a walkie-talkie button, unless something else that
   // takes keys has focus.
@@ -231,6 +301,17 @@ export default function VoiceScreen({ messages, streaming, onSend, onStop, onExi
         <div className="flex min-w-0 flex-1 justify-center">
           <VoiceStatus state={status} level={state === "listening" ? level : undefined} />
         </div>
+        <button
+          type="button"
+          onClick={toggleSpeak}
+          disabled={!!voiceHint}
+          title={voiceHint ?? (speakOn ? "Replies are spoken. Click to mute." : "Replies are muted. Click to speak them.")}
+          aria-label={speakOn ? "Mute spoken replies" : "Speak replies out loud"}
+          aria-pressed={speakOn}
+          className="rounded-[10px] p-2 text-ink-muted transition-[background-color,color,scale] duration-150 hover:bg-ink/[0.06] hover:text-ink active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {canSpeak ? <SpeakerIcon width={16} height={16} /> : <SpeakerOffIcon width={16} height={16} />}
+        </button>
         <button
           type="button"
           onClick={() => setHistoryOpen((o) => !o)}

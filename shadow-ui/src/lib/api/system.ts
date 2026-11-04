@@ -43,3 +43,20 @@ export async function transcribe(wav: BodyInit) {
 }
 
 export const getSttStatus = () => request("/stt/status", "Couldn't check the speech model");
+
+/* Voice mode: text in, audio out, spoken by a local piper voice. */
+export async function speak(text: string, signal?: AbortSignal) {
+  const res = await fetch(url("/tts"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+    signal,
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new ApiError(data.detail || "Couldn't speak that reply", res.status);
+  }
+  return res.blob();
+}
+
+export const getTtsStatus = () => request("/tts/status", "Couldn't check the voice");
