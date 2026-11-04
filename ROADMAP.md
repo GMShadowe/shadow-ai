@@ -23,7 +23,10 @@ Don't reorder without asking Ayaan.
   each tool step, trims old tool results, then tool arguments, then whole
   messages, and tells the model what was dropped
 - Voice mode v1: a separate screen, AudioWorklet recording, browser-side
-  endpointing, whisper + silero-vad in `stt.py`. No TTS yet
+  endpointing, whisper + silero-vad in `stt.py`
+- Voice mode v2: replies spoken by a local piper voice (`tts.py`), a
+  sentence at a time while the model writes, with a filler line when a tool
+  starts
 - Skills: folder-based markdown, invoked only by a slash command, never
   listed to the model
 - Ratings (`feedback.py`), re-runs, markdown/JSON export, chat search
@@ -69,17 +72,15 @@ reason they don't already cover.
 
 ## Next
 
-### 1. Voice mode v2: speak out loud
-STT works; nothing is spoken yet, so "speaking" in the UI only means reply
-text is arriving. This is the piece that makes voice mode voice mode.
+### 1. Voice mode v2: what is left
+Replies are spoken now (local piper, sentence by sentence while the model
+writes, a filler line when a tool starts). Still open:
 
-- TTS: `piper`, local
-- Latency trick: start TTS on the first finished sentence while the model is
-  still generating
-- Ayaan's idea: when a tool or search is needed, say "hang on, let me look
-  that up" out loud to cover the pause
 - A multilingual whisper for Hindi-English code-switching, if real users
   need it
+- An Indian-English voice; piper doesn't ship one
+- Listening again on its own after Shadow finishes speaking, for a
+  conversation without a tap per turn
 
 Reality check: whisper + piper + the chat model + Laya + the embedder on a
 16GB Mac is tight. Expect to recommend Default for voice.
