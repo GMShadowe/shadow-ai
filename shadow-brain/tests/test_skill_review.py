@@ -71,3 +71,20 @@ def test_an_added_skill_is_framed_as_someone_elses_instructions(added):
     assert "Read the PDF" in prompt
     shipped = build_system_prompt([], [], [], skill=skills.load("summarize"), allowed=[])
     assert "Someone else wrote it" not in shipped
+
+
+def test_a_skill_sent_on_its_own_asks_the_model_to_follow_it():
+    import orchestrator
+    skill = {"name": "wait-what", "description": "Stop. That last message did not land: re-pitch it."}
+    assert orchestrator.skill_request("/wait-what", skill) == (
+        "Do what the /wait-what skill says, for the conversation so far: "
+        "Stop. That last message did not land: re-pitch it.")
+    assert orchestrator.skill_request("", {"name": "x", "description": ""}).endswith("so far.")
+    assert orchestrator.skill_request("summarise notes.md", skill) == "summarise notes.md"
+    assert orchestrator.skill_request("/wait-what", None) == "/wait-what"
+
+
+def test_the_skill_header_says_to_act_on_it_not_describe_it():
+    import orchestrator
+    for header in (orchestrator.SKILL_HEADER, orchestrator.ADDED_SKILL_HEADER):
+        assert "don't describe the skill" in header
