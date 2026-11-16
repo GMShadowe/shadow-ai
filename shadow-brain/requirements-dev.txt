@@ -1,2 +1,2 @@
-# Only needed to run the tests: .venv/bin/pytest
-pytest
+# Only needed to run the tests: .venv/bin/python -m pytest
+pytest==9.2.0
