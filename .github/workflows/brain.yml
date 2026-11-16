@@ -1,0 +1,28 @@
+name: Brain
+
+on:
+  pull_request:
+    paths: ["shadow-brain/**", ".github/workflows/brain.yml"]
+  push:
+    branches: [main]
+    paths: ["shadow-brain/**", ".github/workflows/brain.yml"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: shadow-brain
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: |
+            shadow-brain/requirements.txt
+            shadow-brain/requirements-dev.txt
+      - name: Install the CPU build of torch
+        run: pip install "$(grep '^torch==' requirements.txt)" --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: python -m pytest -q
