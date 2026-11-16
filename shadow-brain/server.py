@@ -10,6 +10,7 @@ import platform
 import threading
 import time
 import weakref
+from contextlib import asynccontextmanager
 
 import ollama
 from fastapi import Body, FastAPI, HTTPException, Request
@@ -56,7 +57,22 @@ TOOL_GROUPS = {
     "Self": ["about_me"],
 }
 
-app = FastAPI(title="Shadow Brain")
+@asynccontextmanager
+async def lifespan(app):
+    startup()
+    yield
+
+
+def startup() -> None:
+    auth.token()
+    storage.init()
+    long_term.init()
+    assistants.migrate_tiers()
+    _migrate_onboarded()
+    _maybe_load_laya()
+
+
+app = FastAPI(title="Shadow Brain", lifespan=lifespan)
 
 
 # Every request needs Shadow's token, and no request may come from another
@@ -94,13 +110,6 @@ def health():
     brain isn't running" from "the brain refused us". Exposes no state."""
     return {"ok": True, "version": VERSION}
 
-# Generate the access token before anything can ask for it, so the file is
-# there for the dev server to read the moment the brain is up.
-auth.token()
-
-storage.init()
-long_term.init()
-assistants.migrate_tiers()
 # Guarded by _sessions_lock; sync endpoints run on a threadpool.
 sessions: dict[str, ShortTermMemory] = {}
 _sessions_lock = threading.Lock()
@@ -154,8 +163,6 @@ def _migrate_onboarded() -> None:
         print(f"[setup] couldn't mark setup done: {e}")
 
 
-_migrate_onboarded()
-
 
 def _maybe_load_laya() -> None:
     if get_settings()["router"] != "laya":
@@ -175,8 +182,6 @@ def _laya_loaded() -> bool:
     except Exception:
         return False
 
-
-_maybe_load_laya()
 
 
 class ChatRequest(BaseModel):
