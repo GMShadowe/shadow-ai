@@ -104,6 +104,19 @@ def outbound(log_path: str) -> list[dict]:
         "active": tts_active, "reason": tts_reason, "state": None,
     })
 
+    from router import laya_router
+    if laya_router.model_cached():
+        laya_active, laya_reason = False, "Already downloaded — never fetched again"
+    elif off:
+        laya_active, laya_reason = False, "Offline mode is on"
+    else:
+        laya_active, laya_reason = True, "One download of the router, pinned and checked, then never again"
+    rows.append({
+        "id": "router_model", "label": "router", "host": "huggingface.co",
+        "what": "Downloads the Laya router the first time Shadow routes a message.",
+        "active": laya_active, "reason": laya_reason, "state": None,
+    })
+
     # Downloading a model. Ollama itself is local, but a pull fetches the
     # weights from Ollama's registry, so it belongs on this list. Nothing is
     # downloaded unless the user asks for it in setup or Settings.
