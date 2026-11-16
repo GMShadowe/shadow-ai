@@ -602,6 +602,7 @@ function SkillsSection({ offline }: { offline: boolean }) {
                     </span>
                     {s.broken ? <Pill tone="danger">needs fixing</Pill> : <Pill>{s.chars} chars</Pill>}
                     {s.added ? <Pill>added</Pill> : <Pill>built in</Pill>}
+                    {s.added && !s.broken && s.trusted === false && <Pill>not reviewed</Pill>}
                   </div>
                   <div className="mt-0.5 text-xs leading-relaxed text-ink-muted">{s.description}</div>
                   {s.tools?.length > 0 && (
