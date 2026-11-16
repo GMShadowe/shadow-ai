@@ -395,29 +395,95 @@ def raw_url(link: str) -> str:
     return link
 
 
-def fetch(link: str) -> tuple[str, str]:
+GITHUB_TREE_BYTES = 4_000_000
+
+
+def _download(url: str):
     import netguard
+    try:
+        return netguard.request("GET", url, headers={"Accept": "text/markdown, text/plain, */*"},
+                                max_bytes=MAX_CHARS * 4 + 1, timeout=15.0)
+    except netguard.Blocked as e:
+        raise SkillError(f"Shadow won't fetch that link: {e}.") from e
+    except Exception as e:
+        raise SkillError(f"Couldn't download that skill: {type(e).__name__}: {e}") from e
+
+
+def _github_repo(raw: str) -> tuple[str, str, str] | None:
+    m = re.match(r"https://raw\.githubusercontent\.com/([^/]+)/([^/]+)/([^/]+)/", raw)
+    return m.groups() if m else None
+
+
+def _repo_skills(owner: str, repo: str, ref: str) -> dict[str, str]:
+    """Every SKILL.md in a GitHub repo, by its folder's name. Repos nest them
+    in ways no fixed list of folders covers (skills/<category>/<name>/), so
+    when the usual places miss, GitHub is asked for the file list once."""
+    import netguard
+    url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{ref}?recursive=1"
+    try:
+        resp = netguard.request("GET", url, headers={"Accept": "application/vnd.github+json",
+                                                     "User-Agent": "Shadow"},
+                                max_bytes=GITHUB_TREE_BYTES, timeout=15.0)
+    except netguard.Blocked as e:
+        raise SkillError(f"Shadow won't fetch that link: {e}.") from e
+    except Exception as e:
+        print(f"[skills] couldn't list {owner}/{repo}: {type(e).__name__}: {e}")
+        return {}
+    if resp.status != 200 or resp.truncated:
+        print(f"[skills] couldn't list {owner}/{repo}: GitHub answered {resp.status}"
+              + (", and the list was too long" if resp.truncated else ""))
+        return {}
+    try:
+        tree = json.loads(resp.text()).get("tree", [])
+    except (json.JSONDecodeError, AttributeError) as e:
+        print(f"[skills] GitHub's file list for {owner}/{repo} didn't parse: {e}")
+        return {}
+    found: dict[str, str] = {}
+    paths = sorted((e.get("path", "") for e in tree if e.get("type") == "blob"), key=len)
+    for path in paths:
+        parts = path.split("/")
+        if len(parts) >= 2 and parts[-1] == FILENAME:
+            found.setdefault(parts[-2].lower(), f"https://raw.githubusercontent.com/{owner}/{repo}/{ref}/{path}")
+    return found
+
+
+def _listing(found: dict[str, str]) -> str:
+    if not found:
+        return ""
+    names = sorted(found)
+    shown = ", ".join(names[:30]) + (f" and {len(names) - 30} more" if len(names) > 30 else "")
+    return f" It has: {shown}."
+
+
+def fetch(link: str) -> tuple[str, str]:
     from tools.state import offline
 
     if offline():
         raise SkillError("Offline mode is on, so Shadow can't download a skill. Add it from a file instead, "
                          "or turn offline mode off in Settings - Privacy.")
     urls = candidates(link)
+    resp = None
     for url in urls:
-        try:
-            resp = netguard.request("GET", url, headers={"Accept": "text/markdown, text/plain, */*"},
-                                    max_bytes=MAX_CHARS * 4 + 1, timeout=15.0)
-        except netguard.Blocked as e:
-            raise SkillError(f"Shadow won't fetch that link: {e}.") from e
-        except Exception as e:
-            raise SkillError(f"Couldn't download that skill: {type(e).__name__}: {e}") from e
+        resp = _download(url)
         if resp.status != 404:
             break
     else:
-        if len(urls) > 1:
-            raise SkillError(f"Couldn't find that skill in the repo. Looked in: {', '.join(urls)}.")
-        raise SkillError(f"There's nothing at {urls[0]} (404). If the repo holds several skills, add "
-                         "--skill <name>, or link to the folder holding the one you want.")
+        _, skill = parse_source(link)
+        repo = _github_repo(urls[0])
+        found = _repo_skills(*repo) if repo else {}
+        if skill and skill.lower() in found:
+            url = found[skill.lower()]
+            resp = _download(url)
+        elif skill and found:
+            raise SkillError(f"Couldn't find a skill called '{skill}' in that repo." + _listing(found))
+        elif skill:
+            raise SkillError(f"Couldn't find that skill. Looked in: {', '.join(urls)}.")
+        elif found:
+            raise SkillError("That repo holds several skills, so say which one with --skill <name>."
+                             + _listing(found))
+        else:
+            raise SkillError(f"There's nothing at {urls[0]} (404). If the repo holds several skills, add "
+                             "--skill <name>, or link to the folder holding the one you want.")
     if resp.status != 200:
         raise SkillError(f"{urlsplit(url).hostname} answered {resp.status}, so nothing was added.")
     if resp.truncated:
