@@ -763,7 +763,7 @@ function PrivacySection({
       </div>
 
       <p className="pt-4 text-[11px] leading-relaxed text-ink-muted">
-        No accounts, no telemetry, no model downloads at runtime. Shadow listens on 127.0.0.1 only, so nothing on your
+        No accounts and no telemetry; a model downloads only when you ask for one. Shadow listens on 127.0.0.1 only, so nothing on your
         network can reach it either.
       </p>
     </div>
