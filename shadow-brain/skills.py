@@ -11,12 +11,13 @@ Two rules shape this whole file:
    in the composer. No list in the awareness block, no descriptions in the
    system prompt — otherwise the model invents skills it doesn't have, or
    runs one the user didn't ask for.
-2. A skill is text for the model to read. Nothing in a skill file is ever
-   executed, imported or evaluated here.
+2. Nothing in a skill is executed, imported or evaluated here. A skill added
+   from GitHub brings the files beside its SKILL.md (scripts, assets), and
+   the model may run those through run_command, which goes through the
+   user's settings like any command. The review covers every file.
 
-Skills are global rather than per assistant: they're just markdown, and
-every assistant should be able to use the same ones. One folder each, so a
-skill can carry supporting files later; the folder name is the identifier.
+Skills are global rather than per assistant, and every assistant can use the
+same ones. One folder each; the folder name is the identifier.
 
     shadow-brain/skills/<skill-name>/SKILL.md        shipped with Shadow
     shadow-brain/data/skills/<skill-name>/SKILL.md   added by the user
@@ -45,6 +46,10 @@ NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,47}$")
 # trims, so an enormous one would quietly eat the window instead of being
 # dropped. Refuse it out loud instead. Roughly 4000 tokens.
 MAX_CHARS = 16000
+
+# What a skill may bring beside its SKILL.md. build-taste is 10 files, 210 KB.
+MAX_FILES = 50
+MAX_FILES_BYTES = 2_000_000
 
 
 class SkillError(Exception):
@@ -164,11 +169,38 @@ def load(name: str) -> dict:
 
     title, description, tools, body = parse(text, name)
     origin = _origin(name)
-    sha256 = hashlib.sha256(raw).hexdigest()
+    folder = os.path.dirname(path)
+    files = _extra_files(folder)
+    sha256 = _digest(raw, folder, files)
     return {"name": name, "title": title or name, "description": description,
             "tools": tools, "content": body, "chars": len(text),
             "added": origin is not None, "source": (origin or {}).get("source"),
-            "sha256": sha256, "trusted": _trusted(origin, sha256)}
+            "sha256": sha256, "trusted": _trusted(origin, sha256),
+            "files": files, "folder": folder if files else None}
+
+
+def _extra_files(folder: str) -> list[str]:
+    out = []
+    for root, dirs, names in os.walk(folder):
+        dirs.sort()
+        for fname in sorted(names):
+            rel = os.path.relpath(os.path.join(root, fname), folder).replace(os.sep, "/")
+            if rel not in (FILENAME, ORIGIN, ORIGIN + ".tmp"):
+                out.append(rel)
+    return out
+
+
+def _digest(raw: bytes, folder: str, files: list[str]) -> str:
+    """What a review approves. A skill that is only its SKILL.md keeps the
+    file's own hash, so approvals made before skills had files still hold."""
+    own = hashlib.sha256(raw).hexdigest()
+    if not files:
+        return own
+    lines = [f"{FILENAME} {own}"]
+    for rel in files:
+        with open(os.path.join(folder, rel), "rb") as f:
+            lines.append(f"{rel} {hashlib.sha256(f.read()).hexdigest()}")
+    return hashlib.sha256("\n".join(lines).encode()).hexdigest()
 
 
 def _trusted(origin: dict | None, sha256: str) -> bool:
@@ -250,7 +282,7 @@ def list_skills() -> list[dict]:
             continue
         out.append({"name": name, "title": skill["title"], "description": skill["description"],
                     "tools": skill["tools"], "broken": False, "chars": skill["chars"],
-                    "trusted": skill["trusted"], **extra})
+                    "trusted": skill["trusted"], "files": len(skill["files"]), **extra})
     return out
 
 
@@ -287,7 +319,7 @@ def check_text(text: str, name: str) -> dict:
 
 
 def install(text: str, *, name: str | None = None, filename: str | None = None,
-            source: str, replace: bool = False) -> dict:
+            source: str, replace: bool = False, files: dict[str, bytes] | None = None) -> dict:
     name = _name_for(text, name, filename)
     check_text(text, name)
     if os.path.isfile(os.path.join(SKILLS_DIR, name, FILENAME)):
@@ -295,13 +327,43 @@ def install(text: str, *, name: str | None = None, filename: str | None = None,
     folder = _folder(ADDED_DIR, name)
     if os.path.isfile(os.path.join(folder, FILENAME)) and not replace:
         raise SkillExists(f"You already have a skill called '{name}'. Replace it, or give this one another name.")
+    files = files or {}
+    for rel in files:
+        _check_rel(rel)
 
-    os.makedirs(folder, exist_ok=True)
+    # Built beside the old one and swapped in, so a replaced skill never
+    # keeps files from its previous version.
+    os.makedirs(ADDED_DIR, exist_ok=True)
+    staging = folder + ".installing"
+    shutil.rmtree(staging, ignore_errors=True)
+    os.makedirs(staging)
     origin = {"source": source, "added": datetime.now(timezone.utc).date().isoformat()}
     for fname, content in ((FILENAME, text), (ORIGIN, json.dumps(origin, indent=2))):
-        _write(os.path.join(folder, fname), content)
-    print(f"[skills] added '{name}' from {source} ({len(text)} chars)")
+        _write(os.path.join(staging, fname), content)
+    for rel, data in files.items():
+        target = os.path.join(staging, *rel.split("/"))
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        with open(target, "wb") as f:
+            f.write(data)
+    shutil.rmtree(folder, ignore_errors=True)
+    os.replace(staging, folder)
+    extra = f" and {len(files)} files" if files else ""
+    print(f"[skills] added '{name}' from {source} ({len(text)} chars{extra})")
     return next(s for s in list_skills() if s["name"] == name)
+
+
+def _check_rel(rel: str) -> None:
+    parts = rel.split("/")
+    if (not rel or rel.startswith("/") or "\\" in rel or ":" in rel
+            or any(p in ("", ".", "..") for p in parts) or rel in (FILENAME, ORIGIN)):
+        raise SkillError(f"The skill comes with a file Shadow won't save: '{rel}'.")
+
+
+def add_from_link(link: str, name: str | None = None, replace: bool = False) -> dict:
+    text, source = fetch(link)
+    files = fetch_files(source)
+    return install(text, name=name or parse_source(link)[1], filename=source.rsplit("/", 1)[-1],
+                   source=source, replace=replace, files=files)
 
 
 def remove(name: str) -> None:
@@ -414,10 +476,7 @@ def _github_repo(raw: str) -> tuple[str, str, str] | None:
     return m.groups() if m else None
 
 
-def _repo_skills(owner: str, repo: str, ref: str) -> dict[str, str]:
-    """Every SKILL.md in a GitHub repo, by its folder's name. Repos nest them
-    in ways no fixed list of folders covers (skills/<category>/<name>/), so
-    when the usual places miss, GitHub is asked for the file list once."""
+def _repo_tree(owner: str, repo: str, ref: str) -> list[dict]:
     import netguard
     url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{ref}?recursive=1"
     try:
@@ -428,23 +487,77 @@ def _repo_skills(owner: str, repo: str, ref: str) -> dict[str, str]:
         raise SkillError(f"Shadow won't fetch that link: {e}.") from e
     except Exception as e:
         print(f"[skills] couldn't list {owner}/{repo}: {type(e).__name__}: {e}")
-        return {}
+        return []
     if resp.status != 200 or resp.truncated:
         print(f"[skills] couldn't list {owner}/{repo}: GitHub answered {resp.status}"
               + (", and the list was too long" if resp.truncated else ""))
-        return {}
+        return []
     try:
         tree = json.loads(resp.text()).get("tree", [])
     except (json.JSONDecodeError, AttributeError) as e:
         print(f"[skills] GitHub's file list for {owner}/{repo} didn't parse: {e}")
-        return {}
+        return []
+    return [e for e in tree if e.get("type") == "blob"]
+
+
+def _repo_skills(owner: str, repo: str, ref: str) -> dict[str, str]:
+    """Every SKILL.md in a GitHub repo, by its folder's name. Repos nest them
+    in ways no fixed list of folders covers (skills/<category>/<name>/), so
+    when the usual places miss, GitHub is asked for the file list once."""
+    tree = _repo_tree(owner, repo, ref)
     found: dict[str, str] = {}
-    paths = sorted((e.get("path", "") for e in tree if e.get("type") == "blob"), key=len)
+    paths = sorted((e.get("path", "") for e in tree), key=len)
     for path in paths:
         parts = path.split("/")
         if len(parts) >= 2 and parts[-1] == FILENAME:
             found.setdefault(parts[-2].lower(), f"https://raw.githubusercontent.com/{owner}/{repo}/{ref}/{path}")
     return found
+
+
+def fetch_files(source: str) -> dict[str, bytes]:
+    """The files beside a SKILL.md on GitHub, by path inside the skill's
+    folder. A folder inside it that holds its own SKILL.md is another skill
+    and is left out."""
+    m = re.match(r"https://raw\.githubusercontent\.com/([^/]+)/([^/]+)/([^/]+)/(.*)$", source or "")
+    if not m:
+        return {}
+    owner, repo, ref, path = m.groups()
+    base = path.rsplit("/", 1)[0] + "/" if "/" in path else ""
+    tree = _repo_tree(owner, repo, ref)
+    inside = [e for e in tree if e.get("path", "").startswith(base) and e["path"] != path]
+    nested = {e["path"][len(base):].rsplit("/", 1)[0] + "/" for e in inside
+              if e["path"].endswith("/" + FILENAME)}
+    wanted = []
+    for e in inside:
+        rel = e["path"][len(base):]
+        if any(rel.startswith(n) for n in nested) or any(p.startswith(".git") for p in rel.split("/")):
+            continue
+        if rel in (FILENAME, ORIGIN):
+            continue
+        wanted.append((rel, int(e.get("size") or 0)))
+    total = sum(size for _, size in wanted)
+    if len(wanted) > MAX_FILES or total > MAX_FILES_BYTES:
+        raise SkillError(f"That skill comes with {len(wanted)} files ({total / 1e6:.1f} MB), more than Shadow "
+                         f"downloads ({MAX_FILES} files, {MAX_FILES_BYTES // 1_000_000} MB).")
+    files = {}
+    for rel, size in wanted:
+        _check_rel(rel)
+        files[rel] = _download_file(f"https://raw.githubusercontent.com/{owner}/{repo}/{ref}/{base}{rel}", size)
+    return files
+
+
+def _download_file(url: str, size: int) -> bytes:
+    import netguard
+    try:
+        resp = netguard.request("GET", url, max_bytes=max(size, 1) + 1, timeout=15.0)
+    except netguard.Blocked as e:
+        raise SkillError(f"Shadow won't fetch that link: {e}.") from e
+    except Exception as e:
+        raise SkillError(f"Couldn't download {url}: {type(e).__name__}: {e}") from e
+    if resp.status != 200 or resp.truncated:
+        raise SkillError(f"Couldn't download {url}: "
+                         + ("it was bigger than GitHub said" if resp.truncated else f"answered {resp.status}"))
+    return resp.body
 
 
 def _listing(found: dict[str, str]) -> str:

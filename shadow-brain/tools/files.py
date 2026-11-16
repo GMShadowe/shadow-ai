@@ -28,6 +28,16 @@ def _inside(full: str, folder: str) -> bool:
     return full == folder or full.startswith(folder + os.sep)
 
 
+def _readable_path(path: str) -> str:
+    """For reading only: the workspace, or the folder of an added skill, so a
+    skill's own files can be read but never changed."""
+    full = os.path.realpath(os.path.join(get_workspace(), path))
+    skills = os.path.realpath(os.path.join(DATA_DIR, "skills"))
+    if _inside(full, skills) and full != skills:
+        return full
+    return _safe_path(path)
+
+
 def _safe_path(path: str) -> str:
     root = get_workspace()
     full = os.path.realpath(os.path.join(root, path))
@@ -75,7 +85,7 @@ def _prune_backups() -> None:
 
 
 def read_file(path: str) -> str:
-    full = _safe_path(path)
+    full = _readable_path(path)
     if not os.path.isfile(full):
         return f"Error: file '{path}' does not exist."
     with open(full, "r", encoding="utf-8", errors="replace") as f:
@@ -124,7 +134,7 @@ def edit_file(path: str, find: str, replace: str) -> str:
 
 
 def list_dir(path: str = ".") -> str:
-    full = _safe_path(path)
+    full = _readable_path(path)
     if not os.path.isdir(full):
         return f"Error: folder '{path}' does not exist."
     entries = sorted(os.listdir(full))

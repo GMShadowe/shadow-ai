@@ -983,15 +983,13 @@ def add_skill(req: SkillAdd):
         raise HTTPException(status_code=400, detail="Send either the skill file or a link to one.")
     try:
         if req.url:
-            text, source = skills.fetch(req.url)
-            filename = source.rsplit("/", 1)[-1]
-            req.name = req.name or skills.parse_source(req.url)[1]
+            skill = skills.add_from_link(req.url, req.name, req.replace)
         else:
             if len(req.content) > skills.MAX_CHARS * 4:
                 raise skills.SkillError(f"That file is bigger than a skill can be ({skills.MAX_CHARS} characters at most).")
-            text, filename = req.content, req.filename
             source = f"file: {os.path.basename(req.filename or 'pasted text')}"
-        skill = skills.install(text, name=req.name, filename=filename, source=source, replace=req.replace)
+            skill = skills.install(req.content, name=req.name, filename=req.filename, source=source,
+                                   replace=req.replace)
     except skills.SkillExists as e:
         raise HTTPException(status_code=409, detail=str(e)) from e
     except skills.SkillError as e:

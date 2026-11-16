@@ -42,6 +42,7 @@ test("an added skill is reviewed before its first message goes out", async ({ pa
   await expect(review).toBeVisible();
   await expect(review).toContainText("file: pdf.md");
   await expect(review).toContainText("read_file");
+  await expect(review).toContainText("scripts/extract.py");
   expect(brain.sent).toHaveLength(0);
 
   await review.getByRole("button", { name: "Cancel" }).click();
