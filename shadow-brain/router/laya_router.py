@@ -124,9 +124,7 @@ def load():
                     LAYA_REPO,
                     revision=LAYA_REVISION,
                     expected_sha256=LAYA_SHA256,
-                    device="mps" if torch.backends.mps.is_available() else (
-                        "cuda" if torch.cuda.is_available() else "cpu"
-                    ),
+                    device=_device,
                 )
 
     return _agent
