@@ -6,6 +6,13 @@ import pytest
 import settings
 
 
+@pytest.mark.skipif(os.name == "nt", reason="POSIX permissions")
+def test_the_data_folder_is_made_private(data_dir):
+    os.chmod(data_dir, 0o755)
+    settings.secure_data_dir()
+    assert stat.S_IMODE(os.stat(data_dir).st_mode) == 0o700
+
+
 def test_importing_the_server_touches_nothing(data_dir, monkeypatch):
     import sys
     sys.modules.pop("server", None)

@@ -34,6 +34,14 @@ class SettingsError(Exception):
     pass
 
 
+def secure_data_dir() -> None:
+    data = os.path.dirname(SETTINGS_PATH)
+    os.makedirs(data, mode=0o700, exist_ok=True)
+    if os.name != "nt" and os.stat(data).st_mode & 0o077:
+        os.chmod(data, 0o700)
+        print(f"[privacy] {data} was readable by other accounts; it is now yours alone (0700)")
+
+
 def get_settings() -> dict:
     settings = dict(DEFAULTS)
     try:

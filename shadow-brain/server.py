@@ -28,6 +28,7 @@ import export
 import preview
 import feedback
 import privacy
+import settings
 import skills
 import stt
 import tts
@@ -64,6 +65,7 @@ async def lifespan(app):
 
 
 def startup() -> None:
+    settings.secure_data_dir()
     auth.token()
     storage.init()
     long_term.init()
