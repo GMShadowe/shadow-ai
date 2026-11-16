@@ -756,9 +756,9 @@ function PrivacySection({
           label="Keep a copy of every turn"
           description={`Writes each message, reply and routing decision to the training log on this computer. ${
             data.log.turns
-          } turn(s) saved so far. Turning it off stops new writes; delete the file in Data.`}
+          } turn(s) saved so far. Off unless you turn it on. Deleting a chat doesn't remove its copy here; clear the log in Data.`}
         >
-          <Toggle checked={data.settings.log_turns !== false} onChange={(v) => set({ log_turns: v })} />
+          <Toggle checked={data.settings.log_turns === true} onChange={(v) => set({ log_turns: v })} />
         </Row>
       </div>
 
