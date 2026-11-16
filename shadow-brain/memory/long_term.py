@@ -8,6 +8,7 @@ import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
 
+import numpy as np
 import ollama
 
 from assistants import memory_db_path
@@ -62,15 +63,18 @@ def _pack(vec: list[float]) -> bytes:
     return struct.pack(f"{len(vec)}f", *vec)
 
 
-def _unpack(blob: bytes) -> list[float]:
-    return list(struct.unpack(f"{len(blob) // 4}f", blob))
-
-
-def _cosine(a: list[float], b: list[float]) -> float:
-    dot = sum(x * y for x, y in zip(a, b))
-    na = sum(x * x for x in a) ** 0.5
-    nb = sum(y * y for y in b) ** 0.5
-    return dot / (na * nb) if na and nb else 0.0
+def _similarities(vec: list[float], blobs: list[bytes]) -> np.ndarray:
+    query = np.asarray(vec, dtype=np.float32)
+    if not blobs:
+        return np.zeros(0, dtype=np.float32)
+    # A memory embedded by a different model has a different size; it scores 0
+    # rather than being dropped, so scores stay aligned with the rows.
+    empty = np.zeros(query.size, dtype=np.float32)
+    stored = np.stack([np.frombuffer(b, dtype=np.float32) if len(b) == query.size * 4 else empty
+                       for b in blobs])
+    norms = np.linalg.norm(stored, axis=1) * np.linalg.norm(query)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return np.where(norms > 0, stored @ query / norms, 0.0)
 
 
 def add(text: str, source: str = "user", aid: str | None = None) -> bool:
@@ -82,9 +86,9 @@ def add(text: str, source: str = "user", aid: str | None = None) -> bool:
         return False
     with _db(aid) as conn:
         # Skip near-duplicates so memory doesn't fill with the same fact.
-        for row in conn.execute("SELECT embedding FROM memories"):
-            if _cosine(vec, _unpack(row["embedding"])) > 0.95:
-                return False
+        blobs = [row["embedding"] for row in conn.execute("SELECT embedding FROM memories")]
+        if (_similarities(vec, blobs) > 0.95).any():
+            return False
         conn.execute(
             "INSERT INTO memories (id, text, embedding, source, created_at) VALUES (?, ?, ?, ?, ?)",
             (uuid.uuid4().hex, text, _pack(vec), source, _now()),
@@ -93,17 +97,16 @@ def add(text: str, source: str = "user", aid: str | None = None) -> bool:
 
 
 def search(query: str, k: int = TOP_K, aid: str | None = None) -> list[str]:
+    with _db(aid) as conn:
+        rows = conn.execute("SELECT text, embedding FROM memories").fetchall()
+    if not rows:
+        return []
     vec = _embed(query)
     if vec is None:
         return []
-    scored = []
-    with _db(aid) as conn:
-        for row in conn.execute("SELECT text, embedding FROM memories"):
-            score = _cosine(vec, _unpack(row["embedding"]))
-            if score >= MIN_SCORE:
-                scored.append((score, row["text"]))
-    scored.sort(reverse=True)
-    return [text for _, text in scored[:k]]
+    scores = _similarities(vec, [row["embedding"] for row in rows])
+    best = [i for i in np.argsort(-scores)[:k] if scores[i] >= MIN_SCORE]
+    return [rows[i]["text"] for i in best]
 
 
 def all_memories() -> list[dict]:
