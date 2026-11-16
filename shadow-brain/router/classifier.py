@@ -16,8 +16,8 @@ IMAGE_MIN = 0.40           # with an image, text-only routing needs higher confi
 EXPLICIT = {
     "research": ["look up", "look it up", "search the web", "search online", "google it",
                  "browse", "find online", "on the web", "search for",
-                 "latest", "current version", "newest", "today", "right now",
-                 "this year", "recent", "what version"],
+                 "latest version", "latest release", "latest news", "current version",
+                 "what version"],
 }
 FILE_WORDS = ["file", "folder", "directory"]
 # Anchored to the start: "I don't remember the filename" is not a memory save.
