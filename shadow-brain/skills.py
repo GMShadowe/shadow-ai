@@ -22,6 +22,7 @@ skill can carry supporting files later; the folder name is the identifier.
     shadow-brain/data/skills/<skill-name>/SKILL.md   added by the user
 """
 
+import hashlib
 import json
 import os
 import re
@@ -48,6 +49,10 @@ MAX_CHARS = 16000
 
 class SkillError(Exception):
     """Something is wrong with a named skill. The message is shown to the user."""
+
+
+class SkillUnreviewed(SkillError):
+    pass
 
 
 def _check_name(name: str) -> None:
@@ -143,9 +148,10 @@ def load(name: str) -> dict:
     message the user can act on."""
     path = _skill_path(name)
     try:
-        with open(path, "r", encoding="utf-8") as f:
-            text = f.read()
-    except OSError as e:
+        with open(path, "rb") as f:
+            raw = f.read()
+        text = raw.decode("utf-8")
+    except (OSError, UnicodeDecodeError) as e:
         raise SkillError(f"Couldn't read the '{name}' skill: {e}") from e
 
     if not text.strip():
@@ -157,8 +163,49 @@ def load(name: str) -> dict:
         )
 
     title, description, tools, body = parse(text, name)
+    origin = _origin(name)
+    sha256 = hashlib.sha256(raw).hexdigest()
     return {"name": name, "title": title or name, "description": description,
-            "tools": tools, "content": body, "chars": len(text)}
+            "tools": tools, "content": body, "chars": len(text),
+            "added": origin is not None, "source": (origin or {}).get("source"),
+            "sha256": sha256, "trusted": _trusted(origin, sha256)}
+
+
+def _trusted(origin: dict | None, sha256: str) -> bool:
+    """Shipped skills are trusted. An added one is trusted only once the user
+    has reviewed these exact bytes; replacing the file needs a new review."""
+    return origin is None or origin.get("approved_sha256") == sha256
+
+
+def load_for_turn(name: str) -> dict:
+    skill = load(name)
+    if not skill["trusted"]:
+        raise SkillUnreviewed(
+            f"The '{name}' skill came from {skill['source']} and hasn't been reviewed yet. "
+            "Pick it in the composer to see what it says and which tools it asks for, then use it.")
+    return skill
+
+
+def approve(name: str, sha256: str) -> dict:
+    skill = load(name)
+    if not skill["added"]:
+        raise SkillError(f"'{name}' is one of Shadow's own skills, so it needs no review.")
+    if skill["sha256"] != sha256:
+        raise SkillError(f"The '{name}' skill changed after you looked at it. Review it again.")
+    folder = os.path.join(ADDED_DIR, name)
+    origin = _origin(name) or {}
+    origin["approved_sha256"] = sha256
+    origin["approved"] = datetime.now(timezone.utc).date().isoformat()
+    _write(os.path.join(folder, ORIGIN), json.dumps(origin, indent=2))
+    print(f"[skills] '{name}' reviewed and approved")
+    return load(name)
+
+
+def _write(path: str, content: str) -> None:
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(content)
+    os.replace(tmp, path)
 
 
 def _origin(name: str) -> dict | None:
@@ -202,7 +249,8 @@ def list_skills() -> list[dict]:
                         "tools": [], "broken": True, "chars": 0, **extra})
             continue
         out.append({"name": name, "title": skill["title"], "description": skill["description"],
-                    "tools": skill["tools"], "broken": False, "chars": skill["chars"], **extra})
+                    "tools": skill["tools"], "broken": False, "chars": skill["chars"],
+                    "trusted": skill["trusted"], **extra})
     return out
 
 
@@ -251,11 +299,7 @@ def install(text: str, *, name: str | None = None, filename: str | None = None,
     os.makedirs(folder, exist_ok=True)
     origin = {"source": source, "added": datetime.now(timezone.utc).date().isoformat()}
     for fname, content in ((FILENAME, text), (ORIGIN, json.dumps(origin, indent=2))):
-        path = os.path.join(folder, fname)
-        tmp = path + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            f.write(content)
-        os.replace(tmp, path)
+        _write(os.path.join(folder, fname), content)
     print(f"[skills] added '{name}' from {source} ({len(text)} chars)")
     return next(s for s in list_skills() if s["name"] == name)
 

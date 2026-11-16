@@ -464,7 +464,9 @@ def _validate(req: ChatRequest) -> tuple[str, list[str], ShortTermMemory]:
         raise HTTPException(status_code=400, detail="This model can't see images. Pick a different one.")
     if req.skill:
         try:
-            skills.load(req.skill)
+            skills.load_for_turn(req.skill)
+        except skills.SkillUnreviewed as e:
+            raise HTTPException(status_code=403, detail=str(e)) from e
         except skills.SkillError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
     return text or DEFAULT_IMAGE_PROMPT, images, _memory_for(req.conversation_id)
@@ -949,6 +951,20 @@ def get_skill(name: str):
         return skills.load(name)
     except skills.SkillError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+class SkillApproval(BaseModel):
+    sha256: str
+
+
+@app.post("/skills/{name}/approve")
+def approve_skill(name: str, req: SkillApproval):
+    """The user read this exact version of an added skill in the review
+    dialog and chose to use it."""
+    try:
+        return {"skill": skills.approve(name, req.sha256)}
+    except skills.SkillError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from e
 
 
 class SkillAdd(BaseModel):
