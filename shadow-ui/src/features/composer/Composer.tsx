@@ -1,5 +1,5 @@
 import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
-import { ArrowUpIcon, CloseIcon, DeepSearchIcon, GlobeIcon, GlobeOffIcon, ImageIcon, MicIcon, SkillsIcon, StopIcon, VideoIcon } from "@/components/icons";
+import { ArrowUpIcon, CloseIcon, DeepSearchIcon, GlobeIcon, GlobeOffIcon, ImageIcon, MicIcon, SkillsIcon, StopIcon } from "@/components/icons";
 import IconButton from "@/components/ui/IconButton";
 import Tooltip from "@/components/ui/Tooltip";
 import { fileToImage } from "@/lib/images";
@@ -422,8 +422,6 @@ export default function Composer({
                     ]
                   : []),
                 { id: "voice", label: "Voice mode", hint: "Talk instead of typing", icon: MicIcon, tone: "bg-ok/15 text-ok", onPick: onOpenVoice },
-                { id: "image", label: "Create image", hint: "Needs an image model", icon: ImageIcon, tone: "", disabled: true, tag: "soon" },
-                { id: "video", label: "Create video", hint: "Needs a video model", icon: VideoIcon, tone: "", disabled: true, tag: "soon" },
               ]}
             />
 
