@@ -6,6 +6,8 @@ import platform
 import shutil
 import subprocess
 
+from tools import shell
+
 
 def _check_app_name(name) -> str | None:
     name = str(name or "").strip()
@@ -130,7 +132,16 @@ def find_targets(target) -> tuple[list[dict], str | None]:
     return found, None
 
 
+def _background_pid(target) -> int | None:
+    wanted = str(target if target is not None else "").strip()
+    return int(wanted) if wanted.isdigit() and shell.started(int(wanted)) else None
+
+
 def describe_kill(target) -> str:
+    background = _background_pid(target)
+    if background:
+        return (f"Will stop {shell.started(background)['command']!r}, which Shadow started in the "
+                "background, and everything it started.")
     found, error = find_targets(target)
     if error:
         return error.removeprefix("Error: ")
@@ -143,6 +154,9 @@ def kill_process(target: str) -> str:
     import signal
     import psutil
 
+    background = _background_pid(target)
+    if background:
+        return shell.stop(background)
     found, error = find_targets(target)
     if error:
         return error

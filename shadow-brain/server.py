@@ -40,6 +40,7 @@ from settings import SettingsError, get_settings, update_settings
 from tools.state import default_state, offline, tool_state
 from hardware import get_hardware, recommend_tier
 from adapters.registry import list_adapters
+from tools import shell
 from tools.registry import TOOLS
 
 from memory import long_term
@@ -64,6 +65,7 @@ TOOL_GROUPS = {
 async def lifespan(app):
     startup()
     yield
+    shell.stop_all()
 
 
 def startup() -> None:

@@ -52,8 +52,11 @@ TOOLS = {
         _schema("search_text", "Find which files contain some text. Returns file, line number and the line.",
                 {"query": S, "path": S}, ["query"])),
     "run_command": _tool(shell.run_command,
-        _schema("run_command", "Run a shell command in the workspace. Returns output and exit code.",
-                {"command": S}, ["command"]), "caution", preview=shell.describe),
+        _schema("run_command", "Run a shell command in the workspace. Returns output and exit code. "
+                "Set background to true for something meant to keep running, like a server: it starts, "
+                "you get its process id and what it printed in its first seconds, and it keeps running.",
+                {"command": S, "background": {"type": "boolean"}}, ["command"]), "caution",
+                preview=shell.describe),
     "kill_process": _tool(desktop.kill_process,
         _schema("kill_process", "Stop a running process by its exact name or its process id.",
                 {"target": S}, ["target"]), "dangerous", preview=desktop.describe_kill),

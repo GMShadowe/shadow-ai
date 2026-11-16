@@ -4,6 +4,8 @@ import re
 import shutil
 import signal
 import subprocess
+import tempfile
+import threading
 
 from config import get_workspace
 from settings import get_settings
@@ -45,13 +47,20 @@ def _sandboxed(command: str) -> list[str] | None:
     return ["sandbox-exec", "-p", profile, "/bin/sh", "-c", command]
 
 
-def describe(command=None) -> str:
+def describe(command=None, background=None) -> str:
     protected = ("Shadow's own data folder is walled off" if _can_sandbox()
                  else "nothing walls off Shadow's own data folder on this system")
     network = ("only this computer, since offline mode is on" if _offline() and _can_sandbox()
                else "the network")
     return ("Runs in a shell with your account's full access: it can read and change any file you "
-            f"can, and reach {network}. The blocklist is a seatbelt, not a sandbox; {protected}.")
+            f"can, and reach {network}. The blocklist is a seatbelt, not a sandbox; {protected}."
+            + _keeps_running(command, background))
+
+
+def _keeps_running(command, background) -> str:
+    if _truthy(background) or _split_background(str(command or ""))[1]:
+        return " It keeps running after this reply, until it is stopped or Shadow quits."
+    return ""
 
 
 DENYLIST = [
@@ -60,8 +69,8 @@ DENYLIST = [
 ]
 
 
-def run_command(command: str) -> str:
-    command = str(command or "")
+def run_command(command: str, background=False) -> str:
+    command, trailing = _split_background(str(command or ""))
     lowered = command.lower()
     for bad in DENYLIST:
         if bad in lowered:
@@ -77,24 +86,18 @@ def run_command(command: str) -> str:
     if _offline() and not _can_sandbox():
         return OFFLINE_BLOCKED
 
-    wrapped = _sandboxed(command)
-    proc = subprocess.Popen(
-        wrapped if wrapped else command,
-        shell=wrapped is None,
-        cwd=get_workspace(),
-        env=_env(),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        **_new_group(),
-    )
+    if trailing or _truthy(background):
+        return _start_background(command)
+
+    proc = _spawn(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     try:
         stdout, stderr = proc.communicate(timeout=TIMEOUT_S)
     except subprocess.TimeoutExpired:
         _kill_group(proc)
         proc.communicate()
         return (f"Error: command timed out after {TIMEOUT_S} seconds, and everything it started "
-                "was stopped, including anything meant to keep running, like a server.")
+                "was stopped. To start something meant to keep running, like a server, run it "
+                "again with background set to true.")
 
     output = stdout.strip()
     if stderr.strip():
@@ -103,6 +106,128 @@ def run_command(command: str) -> str:
     if len(output) > 6000:
         output = output[:6000] + "\n...[truncated]"
     return output
+
+
+def _spawn(command: str, **streams) -> subprocess.Popen:
+    wrapped = _sandboxed(command)
+    return subprocess.Popen(
+        wrapped if wrapped else command,
+        shell=wrapped is None,
+        cwd=get_workspace(),
+        env=_env(),
+        stdin=subprocess.DEVNULL,
+        text=True,
+        **streams,
+        **_new_group(),
+    )
+
+
+def _truthy(value) -> bool:
+    if isinstance(value, str):
+        return value.strip().lower() in {"true", "yes", "1"}
+    return bool(value)
+
+
+def _split_background(command: str) -> tuple[str, bool]:
+    stripped = command.rstrip()
+    if stripped.endswith("&") and not stripped.endswith("&&"):
+        return stripped[:-1].rstrip(), True
+    return command, False
+
+
+STARTUP_S = 3
+MAX_BACKGROUND = 5
+_background: dict[int, dict] = {}
+_background_lock = threading.Lock()
+
+
+def _start_background(command: str) -> str:
+    _reap()
+    with _background_lock:
+        if len(_background) >= MAX_BACKGROUND:
+            running = "; ".join(f"{pid}: {b['command']}" for pid, b in _background.items())
+            return (f"Error: {MAX_BACKGROUND} commands are already running in the background "
+                    f"({running}). Stop one with kill_process and its process id first.")
+    fd, log = tempfile.mkstemp(prefix="shadow-background-", suffix=".log")
+    with os.fdopen(fd, "w") as out:
+        proc = _spawn(command, stdout=out, stderr=subprocess.STDOUT)
+    try:
+        code = proc.wait(timeout=STARTUP_S)
+    except subprocess.TimeoutExpired:
+        code = None
+    printed = _read_log(log)
+    if code is not None:
+        _remove(log)
+        return (f"{printed}\n[it stopped within {STARTUP_S} seconds instead of staying up, "
+                f"exit code {code}]").lstrip()
+
+    with _background_lock:
+        _background[proc.pid] = {"proc": proc, "command": command, "log": log}
+    ports = _listening_ports(proc.pid)
+    listening = f" It is listening on port {', '.join(map(str, ports))}." if ports else ""
+    return (f"Started, and still running in the background as process {proc.pid}.{listening} "
+            f"It keeps running after this reply; kill_process {proc.pid} stops it and everything "
+            f"it started.\nWhat it printed in its first {STARTUP_S} seconds:\n{printed or '(nothing)'}")
+
+
+def _read_log(path: str, limit: int = 4000) -> str:
+    try:
+        with open(path, errors="replace") as f:
+            text = f.read(limit + 1).strip()
+    except OSError as e:
+        return f"(couldn't read its output: {e})"
+    return text[:limit] + "\n...[truncated]" if len(text) > limit else text
+
+
+def _listening_ports(pid: int) -> list[int]:
+    try:
+        import psutil
+        root = psutil.Process(pid)
+        ports = set()
+        for p in [root, *root.children(recursive=True)]:
+            for c in p.net_connections(kind="inet"):
+                if c.status == psutil.CONN_LISTEN:
+                    ports.add(c.laddr.port)
+        return sorted(ports)
+    except Exception as e:
+        print(f"[shell] couldn't read the ports of process {pid}: {e}")
+        return []
+
+
+def _remove(path: str) -> None:
+    try:
+        os.unlink(path)
+    except OSError as e:
+        print(f"[shell] couldn't remove {path}: {e}")
+
+
+def _reap() -> None:
+    with _background_lock:
+        done = [pid for pid, b in _background.items() if b["proc"].poll() is not None]
+        for pid in done:
+            _remove(_background.pop(pid)["log"])
+
+
+def started(pid: int) -> dict | None:
+    _reap()
+    with _background_lock:
+        return _background.get(pid)
+
+
+def stop(pid: int) -> str:
+    with _background_lock:
+        entry = _background.pop(pid, None)
+    if not entry:
+        return f"Process {pid} isn't something Shadow started in the background."
+    _kill_group(entry["proc"])
+    entry["proc"].wait()
+    _remove(entry["log"])
+    return f"Stopped {entry['command']!r} (process {pid}) and everything it started."
+
+
+def stop_all() -> None:
+    for pid in list(_background):
+        print(f"[shell] {stop(pid)}")
 
 
 def _new_group() -> dict:
