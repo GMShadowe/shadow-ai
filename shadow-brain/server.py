@@ -47,6 +47,8 @@ from memory import long_term
 VERSION = "0.1.0"
 MAX_IMAGES = 4
 MAX_IMAGE_BYTES = 8 * 1024 * 1024
+# Four images at the cap, base64-encoded, plus the message around them.
+MAX_BODY_BYTES = 48 * 1024 * 1024
 DEFAULT_IMAGE_PROMPT = "What's in this image?"
 
 TOOL_GROUPS = {
@@ -87,7 +89,17 @@ async def require_token(request: Request, call_next):
     if refusal:
         status, reason = refusal
         return JSONResponse({"detail": reason}, status_code=status)
+    if _declared_length(request) > MAX_BODY_BYTES:
+        return JSONResponse({"detail": "That request is too large. Send fewer or smaller images."},
+                            status_code=413)
     return await call_next(request)
+
+
+def _declared_length(request: Request) -> int:
+    try:
+        return int(request.headers.get("content-length", "0"))
+    except ValueError:
+        return 0
 
 
 @app.exception_handler(assistants.ProfileError)
@@ -537,9 +549,15 @@ MAX_AUDIO_BYTES = 10 * 1024 * 1024  # a minute of 16kHz mono is about 2MB
 @app.post("/stt")
 async def speech_to_text(request: Request):
     """Audio in, text out. Local only: nothing here reaches the network."""
-    data = await request.body()
-    if len(data) > MAX_AUDIO_BYTES:
-        raise HTTPException(status_code=413, detail="That recording is too large to transcribe.")
+    too_large = HTTPException(status_code=413, detail="That recording is too large to transcribe. Keep it under a minute.")
+    if _declared_length(request) > MAX_AUDIO_BYTES:
+        raise too_large
+    data = bytearray()
+    async for chunk in request.stream():
+        data += chunk
+        if len(data) > MAX_AUDIO_BYTES:
+            raise too_large
+    data = bytes(data)
     try:
         return stt.transcribe(data)
     except stt.NoSpeech as e:
