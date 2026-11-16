@@ -48,6 +48,10 @@ IMAGES_RE = re.compile(
 )
 
 
+SKILL_RE = re.compile(r"\b(add|install|get|download|find|search\s+(?:up|for)|look\s+up)\b.{0,60}\bskills?\b",
+                      re.IGNORECASE)
+
+
 def display_tools(text: str, has_images: bool = False) -> list[str]:
     """The on-screen tools this message asks for, if any."""
     text = text or ""
@@ -62,6 +66,8 @@ def display_tools(text: str, has_images: bool = False) -> list[str]:
     # With a picture attached, "image" is about that picture.
     if not has_images and IMAGES_RE.search(text):
         wanted.append("show_images")
+    if SKILL_RE.search(text):
+        wanted += ["web_search", "add_skill"]
     return wanted
 
 

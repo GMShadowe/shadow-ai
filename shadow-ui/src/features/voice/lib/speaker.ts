@@ -35,7 +35,7 @@ export function takeSentences(text: string, final: boolean): { ready: string[]; 
   return { ready, used: start };
 }
 
-const WEB = new Set(["web_search", "fetch_url", "http_request", "show_images"]);
+const WEB = new Set(["web_search", "fetch_url", "http_request", "show_images", "add_skill"]);
 const FILES = new Set(["read_file", "list_dir", "find_files", "search_text"]);
 
 /** What to say while a tool runs and nothing has been said yet, so the
