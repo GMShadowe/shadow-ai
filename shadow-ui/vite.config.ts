@@ -55,6 +55,21 @@ function localHost(req: IncomingMessage, port: number | undefined): boolean {
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            { name: "react", test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/ },
+            {
+              name: "markdown",
+              test: /node_modules[\\/](react-markdown|remark-[^\\/]+|micromark[^\\/]*|mdast-[^\\/]+|hast-util-[^\\/]+|unist-[^\\/]+|unified|vfile[^\\/]*|property-information|space-separated-tokens|comma-separated-tokens|decode-named-character-reference|character-entities[^\\/]*|html-url-attributes|devlop|bail|trough|is-plain-obj|extend|zwitch|longest-streak|markdown-table|ccount|escape-string-regexp|trim-lines|inline-style-parser|style-to-[^\\/]+|estree-util-is-identifier-name|comma-separated-tokens)[\\/]/,
+            },
+          ],
+        },
+      },
+    },
+  },
   resolve: {
     alias: { "@": path.resolve(import.meta.dirname, "src") },
   },
