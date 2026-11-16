@@ -13,9 +13,9 @@ DEFAULTS = {
     # Offline mode blocks every outbound call: the web tools refuse, and the
     # weather lookup is skipped. Nothing at all leaves this computer.
     "offline": False,
-    # The training log is the one file that keeps a copy of every turn, so it
-    # can be turned off without turning off anything else.
-    "log_turns": True,
+    # The training log keeps a copy of every turn that deleting a chat doesn't
+    # remove, so it is something to opt into, not out of.
+    "log_turns": False,
     # False until first-run setup finishes. It describes the install, not an
     # assistant, which is why it is here and not in a profile.
     "onboarded": False,

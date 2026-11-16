@@ -468,7 +468,7 @@ def log_turn(user_input: str, route: str, decision: dict, reply: str, image_coun
              skill: str | None = None) -> None:
     # The log is the only file that keeps a copy of every turn. When the user
     # turns it off in Settings, nothing is written at all.
-    if not get_settings().get("log_turns", True):
+    if not get_settings().get("log_turns", False):
         return
     os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
     with open(LOG_PATH, "a", encoding="utf-8") as f:
