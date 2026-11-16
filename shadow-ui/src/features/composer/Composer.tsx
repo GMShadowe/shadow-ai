@@ -6,6 +6,7 @@ import { fileToImage } from "@/lib/images";
 import type { ImageAttachment, Skill } from "@/types";
 import PlusMenu from "./PlusMenu";
 import SkillMenu from "./SkillMenu";
+import SkillReview from "./SkillReview";
 
 const MAX_IMAGES = 4;
 const MAX_HEIGHT = 216; // nine lines, then it scrolls
@@ -84,6 +85,8 @@ export default function Composer({
   const [dragging, setDragging] = useState(false);
   // The skill picked for the next message; cleared on send.
   const [skill, setSkill] = useState<Skill | null>(null);
+  // A message waiting on the review of an added skill nobody has read yet.
+  const [review, setReview] = useState<{ name: string; text: string } | null>(null);
   const [menuIndex, setMenuIndex] = useState(0);
   const [menuClosed, setMenuClosed] = useState(false);
   // Deep search: the next message goes out as a thorough, cited web search.
@@ -179,18 +182,26 @@ export default function Composer({
     if (!canSend) return;
     // "/summarize notes.md" typed straight through counts as picking it.
     let text = value.trim();
-    let name = skill?.name ?? null;
+    let chosen = skill;
     const typed = TYPED_SKILL.exec(text);
     if (typed) {
       const found = skills.find((s) => s.name.toLowerCase() === typed[1].toLowerCase());
       if (found) {
-        name = found.name;
+        chosen = found;
         text = text.slice(typed[0].length).trim();
       }
     }
     if (!text && images.length === 0) return;
     // Worded so the router sends it to research, and the model reads widely.
     if (deep) text = `Search the web thoroughly for this, read several sources and cite each one: ${text}`;
+    if (chosen && chosen.trusted === false) {
+      setReview({ name: chosen.name, text });
+      return;
+    }
+    finishSend(text, chosen?.name ?? null);
+  }
+
+  function finishSend(text: string, name: string | null) {
     onSend(text, images, name);
     change("");
     setImages([]);
@@ -223,6 +234,16 @@ export default function Composer({
           }}
           className={`composer-shell relative rounded-2xl bg-composer p-2 ${disabled ? "opacity-60" : ""}`}
         >
+          {review && (
+            <SkillReview
+              name={review.name}
+              onCancel={() => setReview(null)}
+              onApproved={() => {
+                setReview(null);
+                finishSend(review.text, review.name);
+              }}
+            />
+          )}
           {menuOpen && <SkillMenu skills={matches} index={index} query={query} onPick={pickSkill} onHover={setMenuIndex} />}
 
           {dragging && (
