@@ -11,6 +11,7 @@ def test_load_pins_a_commit_and_verifies_every_file(monkeypatch):
     fake.load = lambda repo, **kw: calls.append((repo, kw)) or object()
     monkeypatch.setitem(sys.modules, "laya", fake)
     monkeypatch.setattr(laya_router, "_agent", None)
+    monkeypatch.setattr(laya_router, "cached_snapshot", lambda: None)
 
     laya_router.load()
 

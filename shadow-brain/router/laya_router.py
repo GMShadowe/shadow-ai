@@ -20,6 +20,8 @@ LAYA_SHA256 = {
     "tokenizer/tokenizer.json": "6c8aaa9a542084f2457eab775d4eeb51f92a70c0fd9de28d5edb0ddec3c08d30",
 }
 
+LAYA_FILES = ["rl_agent_config.json", "model.safetensors", "tokenizer/*", "encoder/*"]
+
 _agent = None
 _device = None
 _load_lock = threading.Lock()
@@ -100,6 +102,19 @@ def _configure_cpu(torch) -> int:
     return threads
 
 
+def cached_snapshot() -> str | None:
+    from huggingface_hub import snapshot_download
+    try:
+        return snapshot_download(LAYA_REPO, revision=LAYA_REVISION, allow_patterns=LAYA_FILES,
+                                 local_files_only=True)
+    except Exception:
+        return None
+
+
+def model_cached() -> bool:
+    return cached_snapshot() is not None
+
+
 def load():
     """Load Laya once and reuse the same agent."""
     global _agent, _device
@@ -118,10 +133,18 @@ def load():
                 else:
                     print(f"[Laya] Device: {_device}")
 
+                source = cached_snapshot()
+                if source is None:
+                    from settings import get_settings
+                    if get_settings().get("offline"):
+                        raise RuntimeError(
+                            "The Laya router hasn't been downloaded yet and offline mode is on, so "
+                            "routing uses keywords. Turn offline mode off once to download it.")
+
                 import laya
 
                 _agent = laya.load(
-                    LAYA_REPO,
+                    source or LAYA_REPO,
                     revision=LAYA_REVISION,
                     expected_sha256=LAYA_SHA256,
                     device=_device,
