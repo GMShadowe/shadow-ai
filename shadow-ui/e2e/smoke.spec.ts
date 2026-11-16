@@ -55,6 +55,18 @@ test("an added skill is reviewed before its first message goes out", async ({ pa
   expect(brain.sent[0]).toMatchObject({ skill: "pdf-helper", message: "summarise report.pdf" });
 });
 
+test("a skill can be sent on its own", async ({ page }) => {
+  const brain = await fakeBrain(page);
+  await page.goto("/");
+
+  await page.getByLabel("Message").fill("/summarize");
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Enter");
+
+  await expect.poll(() => brain.sent.length).toBe(1);
+  expect(brain.sent[0]).toMatchObject({ skill: "summarize", message: "/summarize" });
+});
+
 test("the sidebar can be kept open or closed, and remembers it", async ({ page }) => {
   await fakeBrain(page);
   await page.goto("/");
