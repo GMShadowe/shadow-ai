@@ -17,6 +17,7 @@ from assistants import active_id, get_profile
 from tools.state import WEB_TOOLS, offline, tool_state
 from settings import get_settings
 
+import permissions
 import skills
 from awareness import compact
 
@@ -459,7 +460,9 @@ def handle_turn(user_input: str, memory: ShortTermMemory,
                 aid: str | None = None, voice: bool = False) -> dict:
     result = {}
     for event in stream_turn(user_input, memory, tier, effort, images, skill_name, aid, voice):
-        if event["type"] == "done":
+        if event["type"] == "permission":
+            permissions.resolve(event["id"], "unattended")
+        elif event["type"] == "done":
             result = event
     return result
 

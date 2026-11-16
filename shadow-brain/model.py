@@ -53,6 +53,10 @@ DENIED = (
     "The user denied permission to use {name}. Don't try it again. "
     "Tell the user what you were going to do, and ask how they'd like to continue."
 )
+UNATTENDED = (
+    "{name} needs the user's approval, and this request had no way to ask for it, so it was "
+    "skipped. Tell the user what you were going to do, and that approving it needs the Shadow app."
+)
 TIMED_OUT = (
     "The user didn't answer the permission request for {name}, so it was skipped. "
     "Tell the user what you were going to do."
@@ -224,7 +228,7 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
                         print(f"[permissions] couldn't save 'always allow' for {name}: {e}")
                     ask.discard(name)
                 elif decision != "allow":
-                    note = (TIMED_OUT if decision == "timeout" else DENIED).format(name=name)
+                    note = {"timeout": TIMED_OUT, "unattended": UNATTENDED}.get(decision, DENIED).format(name=name)
                     messages.append({"role": "tool", "tool_name": name, "content": note})
                     continue
 
