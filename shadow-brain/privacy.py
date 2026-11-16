@@ -280,7 +280,7 @@ def report(log_path: str) -> dict:
     total, files = _dir_size(data_dir)
     return {
         "offline": bool(settings.get("offline")),
-        "log_turns": bool(settings.get("log_turns", True)),
+        "log_turns": bool(settings.get("log_turns", False)),
         "location": (get_profile().get("location") or "").strip(),
         "outbound": outbound(log_path),
         "storage": storage(log_path),
