@@ -27,6 +27,8 @@ CHOICES = {
 
 BOOLEANS = ["offline", "log_turns", "onboarded"]
 
+PROTECTED_HOME_FOLDERS = {"Library", "AppData"}
+
 
 class SettingsError(Exception):
     pass
@@ -84,6 +86,14 @@ def _check_workspace(path) -> str:
         raise ValueError("The workspace can't be your whole disk.")
     if full == home:
         raise ValueError("Pick a folder inside your home folder, not the home folder itself.")
+    if os.path.commonpath([full, home]) != home:
+        raise ValueError(f"Pick a folder inside your home folder. {full} is outside it.")
+    parts = os.path.relpath(full, home).split(os.sep)
+    hidden = next((p for p in parts if p.startswith(".")), None)
+    if hidden:
+        raise ValueError(f"{hidden} is a hidden settings folder, and Shadow's tools could change what's in it. Pick an ordinary folder.")
+    if parts[0] in PROTECTED_HOME_FOLDERS:
+        raise ValueError(f"~/{parts[0]} holds app data, mail and keychains. Pick an ordinary folder.")
     if not os.path.isdir(full):
         raise ValueError(f"That folder doesn't exist: {full}")
     return full
