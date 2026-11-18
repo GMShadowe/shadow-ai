@@ -206,7 +206,8 @@ class ChatRequest(BaseModel):
     model: str | None = None
     effort: str | None = None
     images: list[str] = []
-    # Set only when the user picked a skill with a slash command.
+    # Set when the user picked a skill in the composer; otherwise skills.named_in
+    # may find one the message names ("run the build-taste skill").
     skill: str | None = None
     # Sent from the voice screen: short spoken replies, the fewest steps.
     voice: bool = False
@@ -464,6 +465,8 @@ def _validate(req: ChatRequest) -> tuple[str, list[str], ShortTermMemory]:
         raise HTTPException(status_code=400, detail="Message is empty.")
     if images and not load_tier_config(req.model).get("vision", False):
         raise HTTPException(status_code=400, detail="This model can't see images. Pick a different one.")
+    if not req.skill and text:
+        req.skill = skills.named_in(text, storage.last_skill(req.conversation_id))
     if req.skill:
         try:
             skills.load_for_turn(req.skill)

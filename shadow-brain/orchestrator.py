@@ -324,8 +324,8 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     aid = aid or active_id()
     profile = get_profile(aid)
     tier = tier or profile["model"]
-    # Only ever set because the user typed a slash command. The model is never
-    # told which skills exist, so it cannot ask for one.
+    # Set by the user (a slash command, or a message naming the skill), never
+    # by the model: it is not told which skills exist, so it cannot ask for one.
     skill = skills.load_for_turn(skill_name) if skill_name else None
     tier_cfg = load_tier_config(tier)
     effort = effort if effort in EFFORT_STEPS else (

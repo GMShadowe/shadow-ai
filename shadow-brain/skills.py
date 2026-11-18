@@ -214,7 +214,7 @@ def load_for_turn(name: str) -> dict:
     if not skill["trusted"]:
         raise SkillUnreviewed(
             f"The '{name}' skill came from {skill['source']} and hasn't been reviewed yet. "
-            "Pick it in the composer to see what it says and which tools it asks for, then use it.")
+            f"Type /{name} in the composer to see what it says and which tools it asks for, then use it.")
     return skill
 
 
@@ -605,3 +605,26 @@ def fetch(link: str) -> tuple[str, str]:
         raise SkillError("That link is a web page, not a skill file. Link to the raw SKILL.md "
                          "(on GitHub, the folder or the file both work).")
     return resp.text(), resp.url
+
+
+SKILL_BACK = re.compile(r"\b(the|this|that|same|your)\s+skill\b", re.I)
+MANAGING = re.compile(r"\b(add|install|get|download|find|search|look\s+up|remove|delete|uninstall|replace|update|review)\b"
+                      r".{0,60}\bskills?\b", re.I)
+
+
+def named_in(text: str, previous: str | None = None) -> str | None:
+    """The skill a message asks for in words rather than with the composer:
+    "/build-taste" mid-sentence, "run the build-taste skill", or "use the
+    skill" right after one was used. The word "skill" is required, so
+    "review my code" never loads the review skill."""
+    text = text or ""
+    if MANAGING.search(text):
+        return None
+    for name in _names():
+        spelled = r"[\s_-]+".join(re.escape(p) for p in re.split(r"[_-]", name))
+        if re.search(rf"(?<![\w/])/{re.escape(name)}\b", text, re.I) or re.search(
+                rf"\b{spelled}\s+skills?\b|\bskills?\s+(called\s+|named\s+)?{spelled}\b", text, re.I):
+            return name
+    if previous and previous in _names() and SKILL_BACK.search(text):
+        return previous
+    return None
