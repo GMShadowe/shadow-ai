@@ -588,15 +588,6 @@ export function SparkleIcon(props: IconProps) {
   );
 }
 
-export function VideoIcon(props: IconProps) {
-  return (
-    <svg {...base} {...props}>
-      <rect x="3" y="6" width="13" height="12" rx="2.5" />
-      <path d="m16 10.5 5-3v9l-5-3" />
-    </svg>
-  );
-}
-
 /* Deep search: a magnifier with a spark in it. */
 export function DeepSearchIcon(props: IconProps) {
   return (

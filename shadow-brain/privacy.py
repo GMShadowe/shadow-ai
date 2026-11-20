@@ -130,9 +130,20 @@ def outbound(log_path: str) -> list[dict]:
 
     rows.append({
         "id": "skill_download", "label": "skill downloads", "host": "the link you paste",
-        "what": "Downloads one skill file when you add a skill from a link. Sends no conversation.",
+        "what": ("Downloads a skill and the files beside it when you add one from a link, or when you ask "
+                 "Shadow to add one (it asks first). For a GitHub repo it asks api.github.com for the "
+                 "file list. Sends no conversation."),
         "active": not off,
-        "reason": "Offline mode is on" if off else "Only when you add a skill from a link",
+        "reason": "Offline mode is on" if off else "Only when a skill is added from a link",
+        "state": None,
+    })
+
+    rows.append({
+        "id": "open_url", "label": "links Shadow opens", "host": "the site in the link",
+        "what": ("Opens a link in your browser when Shadow uses open_url, so your browser contacts that "
+                 "site. On a turn that read web content it asks first."),
+        "active": not off,
+        "reason": "Offline mode is on: only links on this computer open" if off else "Only when Shadow opens a link",
         "state": None,
     })
 

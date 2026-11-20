@@ -115,7 +115,23 @@ export interface Skill {
   name: string;
   description?: string;
   broken?: boolean;
+  /** False for an added skill nobody has reviewed yet, or one whose file changed since. */
+  trusted?: boolean;
   [key: string]: unknown;
+}
+
+export interface SkillDetail {
+  name: string;
+  title: string;
+  description: string;
+  tools: string[];
+  content: string;
+  added: boolean;
+  source: string | null;
+  sha256: string;
+  trusted: boolean;
+  /** Files that came with it, beside its SKILL.md. */
+  files: string[];
 }
 
 export interface ImageAttachment {
