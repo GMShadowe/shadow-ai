@@ -1,17 +1,32 @@
 {
   "version": 1,
   "name": "My taste",
-  "written": "2026-11-01T18:39:53.882Z",
+  "written": "2026-11-20T19:51:29.925Z",
   "groups": [],
   "things": [
     {
-      "id": "f530271c-c18b-4044-8070-4ebc91573a16",
+      "id": "b92d3bfe-2722-4fd2-bea8-0faf783a6b43",
       "kind": "image",
-      "file": "images/7d93ffd3-157b-4493-b825-f94380143098.png",
+      "file": "images/81018a80-709c-4627-8068-abf475326460.png",
       "name": "image",
-      "why": "design",
+      "why": "it will look good with animation of ufo",
       "group": "",
-      "added": "2026-10-30",
+      "added": "2026-11-20",
+      "place": {
+        "x": 686,
+        "y": -242,
+        "w": 320,
+        "h": 180
+      }
+    },
+    {
+      "id": "f4f46b73-63cf-4f78-b4da-5da8ea7c2c11",
+      "kind": "image",
+      "file": "images/a72a53c3-9657-425c-b98c-d6ec47efb524.png",
+      "name": "image",
+      "why": "",
+      "group": "",
+      "added": "2026-11-20",
       "place": {
         "x": -89,
         "y": -184,
@@ -20,85 +35,91 @@
       }
     },
     {
-      "id": "6d7b732a-a4b7-4247-a56e-36933e5148e4",
+      "id": "41c5d2cd-a71e-452e-a2c4-77e742319a41",
       "kind": "image",
-      "file": "images/a5b927fb-faf2-42ab-93d7-0319151c2c94.png",
+      "file": "images/54c7c637-1798-437f-b50e-fcdc0b002846.png",
       "name": "image",
-      "why": "color palette",
+      "why": "this will look good with sick on hover animation",
       "group": "",
-      "added": "2026-10-30",
+      "added": "2026-11-20",
       "place": {
-        "x": 190,
-        "y": -286,
-        "w": 240,
+        "x": 196,
+        "y": -536,
+        "w": 320,
+        "h": 232
+      }
+    },
+    {
+      "id": "fc011eb2-5d68-4a75-a04a-488f0be2321a",
+      "kind": "image",
+      "file": "images/1c3a2923-f793-477f-b4c6-bd21e979eac3.png",
+      "name": "image",
+      "why": "the contract and typography",
+      "group": "",
+      "added": "2026-11-20",
+      "place": {
+        "x": -576,
+        "y": -104,
+        "w": 320,
+        "h": 227
+      }
+    },
+    {
+      "id": "ed4fbf54-1cbd-42c6-bc6e-4215b2b2cd62",
+      "kind": "image",
+      "file": "images/65358724-52e9-47f7-8719-ee20914af8b2.png",
+      "name": "image",
+      "why": "creative design",
+      "group": "",
+      "added": "2026-11-20",
+      "place": {
+        "x": 288,
+        "y": -161,
+        "w": 320,
+        "h": 200
+      }
+    },
+    {
+      "id": "f3219441-68ee-4b92-8b05-9e49792c7464",
+      "kind": "image",
+      "file": "images/735fca53-8d36-4602-a7f2-7385ff03fd97.png",
+      "name": "image",
+      "why": "perfect use of asset",
+      "group": "",
+      "added": "2026-11-20",
+      "place": {
+        "x": -51,
+        "y": 204,
+        "w": 260,
         "h": 320
       }
     },
     {
-      "id": "29d1d2ea-7e5a-4396-95e8-d547e7ce086c",
-      "kind": "note",
-      "text": "controlled gradient not everywhere",
-      "group": "",
-      "added": "2026-10-30",
-      "place": {
-        "x": 455,
-        "y": -175,
-        "w": 220,
-        "h": 56
-      }
-    },
-    {
-      "id": "ed323cbb-4162-471f-9967-f75f9b8b50b3",
-      "kind": "note",
-      "text": "blur effect for background so the colors blend",
-      "group": "",
-      "added": "2026-10-30",
-      "place": {
-        "x": 455,
-        "y": -60,
-        "w": 220,
-        "h": 84
-      }
-    },
-    {
-      "id": "c54913ea-720f-41b1-a502-227deb93e150",
+      "id": "ddf02c6e-0e13-4529-b060-a5517d005f19",
       "kind": "image",
-      "file": "images/6143ef54-467e-4cd4-b3f5-2b3261675e38.png",
+      "file": "images/9bb31d32-6408-4aeb-b3b8-9072a62b56ca.png",
       "name": "image",
       "why": "",
       "group": "",
-      "added": "2026-10-30",
+      "added": "2026-11-20",
       "place": {
-        "x": -199,
-        "y": -96,
-        "w": 72,
+        "x": -99,
+        "y": -586,
+        "w": 176,
         "h": 320
       }
     },
     {
-      "id": "b91cc47f-d990-4642-9e24-90b40792a257",
+      "id": "d0303108-0d5c-407c-97b5-fd8878be2cf3",
       "kind": "note",
-      "text": "use new vercel serif font , https://vercel.com/font?type=serif",
+      "text": "use creative direction wise ux frndly animations everywhere , on hover and micro animaitons too and scroll animations",
       "group": "",
-      "added": "2026-11-01",
+      "added": "2026-11-20",
       "place": {
-        "x": 121,
-        "y": 111,
+        "x": -443,
+        "y": -328,
         "w": 220,
-        "h": 84
-      }
-    },
-    {
-      "id": "d82c1f20-90f7-4272-9c05-663791a0bf56",
-      "kind": "note",
-      "text": "clean ui and detailed ui with detailed micro ui components and micro animations very detaild",
-      "group": "",
-      "added": "2026-11-01",
-      "place": {
-        "x": 483,
-        "y": 114,
-        "w": 220,
-        "h": 112
+        "h": 225
       }
     }
   ]
