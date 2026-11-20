@@ -15,14 +15,13 @@ shadow-brain/data/
 *.log
 
 # Not part of this open-source push yet:
-# shadow-web is a separate frontend with its own nested git repo, coming later.
 # laya-fine-tune is experimental training scratch space (datasets, a venv,
 # generated/labeled data) — not ready to publish.
-shadow-web/
 laya-fine-tune/
 
 # AI-tooling artifacts, not Shadow's product code:
 CLAUDE.md
 AGENT.md
+AGENTS.md
 shadow-brain/.claude/
 shadow-brain/.agents/

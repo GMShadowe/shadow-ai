@@ -1,0 +1,267 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --sidebar: #ece2d3;
+  --bg: #f5ede1;
+  --panel: #fbf7f0;
+  --panel-alt: #efe6d8;
+  --menu: #fffaf3;
+  --line: rgba(41, 37, 33, 0.1);
+  --line-strong: rgba(41, 37, 33, 0.55);
+  --ink: #292521;
+  --ink-muted: #5f574e;
+  --ink-faint: #73695e;
+  --signal: #3f5fcf;
+  --bubble: #6f8fe8;
+  --bubble-ink: #1b1915;
+  --glow-b: #b4c6f0;
+  --cream: #f5ede1;
+  --charcoal: #292521;
+  --danger: #c4382b;
+  --ok: #3ecf8e;
+
+  --background: var(--bg);
+  --foreground: var(--ink);
+  --card: var(--panel);
+  --card-foreground: var(--ink);
+  --popover: var(--menu);
+  --popover-foreground: var(--ink);
+  --primary: var(--bubble);
+  --primary-foreground: var(--bubble-ink);
+  --secondary: var(--panel);
+  --secondary-foreground: var(--ink);
+  --muted: var(--panel-alt);
+  --muted-foreground: var(--ink-muted);
+  --accent: rgba(41, 37, 33, 0.06);
+  --accent-foreground: var(--ink);
+  --destructive: var(--danger);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--signal);
+  --radius: 10px;
+
+  --ease-smooth: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-panel-alt: var(--panel-alt);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-signal: var(--signal);
+  --color-bubble: var(--bubble);
+  --color-bubble-ink: var(--bubble-ink);
+  --color-glow-b: var(--glow-b);
+  --color-cream: var(--cream);
+  --color-charcoal: var(--charcoal);
+  --color-danger: var(--danger);
+  --color-ok: var(--ok);
+
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --font-serif: var(--font-geist-serif), Georgia, serif;
+  --font-heading: var(--font-serif);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: 16px;
+  --radius-3xl: 24px;
+  --radius-4xl: 9999px;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  ::selection {
+    background: var(--bubble);
+    color: var(--bubble-ink);
+  }
+}
+
+.dot-grid {
+  background-image: radial-gradient(rgba(41, 37, 33, 0.16) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+.rise {
+  animation: rise 300ms var(--ease-smooth) both;
+  animation-delay: var(--d, 0ms);
+}
+
+.fig .face {
+  stroke: var(--ink);
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+  transition: fill 150ms var(--ease-smooth);
+}
+.fig .top { fill: var(--panel); }
+.fig .left { fill: var(--panel-alt); }
+.fig .right { fill: var(--sidebar); }
+.fig .slab .top { fill: var(--bg); }
+.fig .grid path { stroke: var(--line); stroke-width: 1; fill: none; }
+.fig .route { stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 3 4; fill: none; }
+.fig .pulse { fill: var(--bubble); }
+.fig .ink { stroke: var(--ink); stroke-width: 1.1; stroke-linecap: round; fill: none; }
+.fig .mark { fill: none; stroke: var(--signal); stroke-width: 1.6; stroke-linecap: round; }
+.fig .mark * { vector-effect: non-scaling-stroke; }
+.fig .part { transition: transform 250ms var(--ease-smooth); cursor: default; }
+.fig .cue .top { animation: cue 10s var(--d, 0s) infinite; }
+@keyframes cue {
+  0%, 15% { fill: var(--bubble); }
+  20%, 100% { fill: var(--panel); }
+}
+@media (hover: hover) and (pointer: fine) {
+  .fig .part:hover { transform: translateY(-4px); }
+  .fig .part:hover .top { fill: var(--glow-b); animation: none; }
+}
+.fig text { font-family: var(--font-mono); font-size: 9.5px; fill: var(--ink-muted); }
+.fig .t1 { font-family: var(--font-sans); font-size: 12px; font-weight: 600; fill: var(--ink); }
+.fig .leader {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 1;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  transition: stroke 150ms;
+}
+.fig .tick { fill: var(--bg); stroke: var(--ink); stroke-width: 1; }
+.fig .cross path { stroke: var(--line-strong); stroke-width: 1; }
+.fig:has(.p-message:hover) .c-message .leader,
+.fig:has(.p-router:hover) .c-router .leader,
+.fig:has(.p-adapters:hover) .c-adapters .leader,
+.fig:has(.p-model:hover) .c-model .leader,
+.fig:has(.p-memory:hover) .c-memory .leader { stroke: var(--signal); }
+.fig:has(.p-message:hover) .c-message .tick,
+.fig:has(.p-router:hover) .c-router .tick,
+.fig:has(.p-adapters:hover) .c-adapters .tick,
+.fig:has(.p-model:hover) .c-model .tick,
+.fig:has(.p-memory:hover) .c-memory .tick,
+.fig:has(.p-default:hover) .c-default .tick,
+.fig:has(.p-plus:hover) .c-plus .tick,
+.fig:has(.p-primal:hover) .c-primal .tick { fill: var(--bubble); }
+.fig:has(.p-default:hover) .c-default .leader,
+.fig:has(.p-plus:hover) .c-plus .leader,
+.fig:has(.p-primal:hover) .c-primal .leader { stroke: var(--signal); }
+.fig .screen { fill: var(--bubble); stroke: var(--ink); stroke-width: 1.1; stroke-linejoin: round; }
+@media (max-width: 639px) {
+  .fig .callouts { display: none; }
+}
+
+.caret {
+  display: inline-block;
+  width: 3px;
+  height: 0.9em;
+  margin-left: 0.08em;
+  vertical-align: -0.08em;
+  background: var(--signal);
+  animation: blink 1.1s steps(1) infinite;
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+.hud-line { fill: none; stroke: var(--ink); stroke-width: 1; stroke-dasharray: 1; opacity: 0.7; }
+.orbit { transform-origin: 50px 50px; animation: orbit 14s linear infinite; }
+@keyframes orbit { to { transform: rotate(360deg); } }
+
+/* shadcn's --foreground and --border resolve at :root, so each reality must override them too. */
+.reality { transition: background-color 400ms var(--ease-smooth), color 400ms var(--ease-smooth); }
+[data-reality="blueprint"] {
+  --ink: #2c47b0;
+  --ink-muted: #3b54b2;
+  --ink-faint: #4a60b0;
+  --line: rgba(63, 95, 207, 0.16);
+  --line-strong: rgba(63, 95, 207, 0.6);
+  --foreground: #2c47b0;
+  --border: rgba(63, 95, 207, 0.3);
+}
+[data-reality="night"] {
+  --bg: #292521;
+  --panel: #322d28;
+  --menu: #35302a;
+  --ink: #f5ede1;
+  --ink-muted: #c9c0b3;
+  --ink-faint: #a49a8d;
+  --line: rgba(245, 237, 225, 0.1);
+  --line-strong: rgba(245, 237, 225, 0.5);
+  --signal: #6f8fe8;
+  --foreground: #f5ede1;
+  --border: rgba(245, 237, 225, 0.2);
+  --accent: rgba(245, 237, 225, 0.08);
+}
+
+.pop-in { animation: pop-in 320ms var(--ease-smooth) both; }
+@keyframes pop-in { from { opacity: 0; transform: translateY(6px) scale(0.98); } }
+
+.halftone {
+  color: transparent;
+  background-image: radial-gradient(circle, var(--ink) 0 1.6px, transparent 2px);
+  background-size: 6px 6px;
+  -webkit-background-clip: text;
+  background-clip: text;
+  transition: color 200ms var(--ease-smooth);
+}
+.fw-shadow { color: transparent; -webkit-text-stroke: 1.5px var(--bubble); }
+.fw-up { color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .fig .cue .top,
+  .caret,
+  .orbit { animation: none; }
+  .pop-in { animation: none; }
+  .fig .pulse { display: none; }
+  .fig .part:hover { transform: none; }
+  @keyframes rise {
+    from {
+      opacity: 0;
+    }
+  }
+}
