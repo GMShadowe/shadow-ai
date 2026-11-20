@@ -100,7 +100,7 @@ export async function fakeBrain(page: Page): Promise<FakeBrain> {
     if (method === "GET" && oneSkill) {
       const skill = skills.find((s) => s.name === oneSkill[1]);
       if (!skill) return json(route, { detail: "No such skill" }, 404);
-      return json(route, { ...skill, content: "Read the PDF and summarise it in three bullets.", sha256: "a".repeat(64) });
+      return json(route, { ...skill, content: "Read the PDF and summarise it in three bullets.", sha256: "a".repeat(64), files: ["scripts/extract.py"] });
     }
     if (method === "GET" && path === "/skills") return json(route, { skills });
 

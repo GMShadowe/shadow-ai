@@ -175,7 +175,7 @@ export default function Composer({
     textRef.current?.focus();
   }
 
-  const hasContent = value.trim().length > 0 || images.length > 0;
+  const hasContent = value.trim().length > 0 || images.length > 0 || skill !== null;
   const canSend = !disabled && !streaming && hasContent;
 
   function submit() {
@@ -191,7 +191,10 @@ export default function Composer({
         text = text.slice(typed[0].length).trim();
       }
     }
-    if (!text && images.length === 0) return;
+    if (!text && images.length === 0) {
+      if (!chosen) return;
+      text = `/${chosen.name}`;
+    }
     // Worded so the router sends it to research, and the model reads widely.
     if (deep) text = `Search the web thoroughly for this, read several sources and cite each one: ${text}`;
     if (chosen && chosen.trusted === false) {

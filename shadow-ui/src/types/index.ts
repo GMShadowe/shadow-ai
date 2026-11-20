@@ -130,6 +130,8 @@ export interface SkillDetail {
   source: string | null;
   sha256: string;
   trusted: boolean;
+  /** Files that came with it, beside its SKILL.md. */
+  files: string[];
 }
 
 export interface ImageAttachment {

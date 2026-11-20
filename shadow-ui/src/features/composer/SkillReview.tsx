@@ -20,6 +20,7 @@ export default function SkillReview({ name, onApproved, onCancel }: SkillReviewP
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   useFocusTrap(ref, true);
+  const hasFiles = (skill?.files?.length ?? 0) > 0;
 
   useEffect(() => {
     let live = true;
@@ -67,7 +68,7 @@ export default function SkillReview({ name, onApproved, onCancel }: SkillReviewP
           </h2>
           <p className="text-xs leading-relaxed text-ink-muted">
             Someone else wrote this skill, and it becomes part of Shadow's instructions for this message. Read it
-            once; you'll be asked again only if the file changes.
+            once; you'll be asked again only if it changes.
           </p>
         </div>
 
@@ -80,11 +81,21 @@ export default function SkillReview({ name, onApproved, onCancel }: SkillReviewP
               </dd>
               <dt className="text-ink-muted">Asks for</dt>
               <dd className="font-mono text-[11px] text-ink">
-                {skill.tools.length ? skill.tools.join(", ") : "no tools"}
+                {skill.tools.length ? skill.tools.join(", ") : hasFiles ? "commands and files" : "no tools"}
               </dd>
+              {hasFiles && (
+                <>
+                  <dt className="text-ink-muted">Comes with</dt>
+                  <dd className="max-h-20 overflow-y-auto font-mono text-[11px] leading-relaxed text-ink">
+                    {skill.files.join(", ")}
+                  </dd>
+                </>
+              )}
             </dl>
-            {skill.tools.length > 0 && (
+            {(skill.tools.length > 0 || hasFiles) && (
               <p className="-mt-2 text-[11px] leading-relaxed text-ink-muted">
+                {hasFiles &&
+                  "It comes with files, and Shadow may run its scripts on your computer to follow it. "}
                 Your settings still decide: a tool you turned off stays off, and one set to Ask still asks.
               </p>
             )}

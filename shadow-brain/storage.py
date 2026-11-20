@@ -174,6 +174,15 @@ def recent_history(cid: str, limit: int = 20) -> list[dict]:
         ).fetchall()
     return [dict(r) for r in reversed(rows)]
 
+def last_skill(cid: str, within: int = 6) -> str | None:
+    """The skill used most recently in this chat, if it was a few messages ago."""
+    for message in reversed(recent_history(cid, within)):
+        skill = json.loads(message["meta"] or "{}").get("skill")
+        if skill:
+            return skill
+    return None
+
+
 def get_message(mid: str) -> dict | None:
     with _db() as conn:
         row = conn.execute(
