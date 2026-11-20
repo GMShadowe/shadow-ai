@@ -18,6 +18,9 @@ EXPLICIT = {
                  "browse", "find online", "on the web", "search for",
                  "latest version", "latest release", "latest news", "current version",
                  "what version"],
+    "health": ["my steps", "steps today", "heart rate", "resting hr", "my hrv", "my sleep", "slept",
+               "how did i sleep", "sleep score", "fitbit", "my band", "spo2", "blood oxygen",
+               "calories burned", "zone minutes", "my workout", "my workouts", "breathing rate"],
 }
 FILE_WORDS = ["file", "folder", "directory"]
 # Anchored to the start: "I don't remember the filename" is not a memory save.

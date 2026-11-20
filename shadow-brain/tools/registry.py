@@ -1,7 +1,7 @@
 """Every tool Shadow has, in one place. Each entry has the function
 to run and the schema the model sees. Adapters pick a subset."""
 
-from tools import files, shell, web, desktop, meta, display, skill_tools
+from tools import files, shell, web, desktop, meta, display, skill_tools, health
 
 
 def _schema(name: str, description: str, props: dict, required: list[str]) -> dict:
@@ -92,6 +92,23 @@ TOOLS = {
     "show_images": _tool(display.show_images,
         _schema("show_images", "Search the web for pictures and put them on the user's screen.",
                 {"query": S, "count": {"type": "integer"}}, ["query"])),
+    "health_today": _tool(health.health_today,
+        _schema("health_today", "Get the user's live Fitbit Air data for today so far: steps, distance, calories, "
+                "active minutes, heart rate, resting heart rate, last night's sleep, HRV, SpO2, breathing rate, "
+                "and the band's battery and last sync.", {}, [])),
+    "health_days": _tool(health.health_days,
+        _schema("health_days", "Get the user's daily Fitbit metrics for each day from start_date to end_date "
+                "(inclusive, at most 90 days). Dates are YYYY-MM-DD, 'today' or 'yesterday'; end_date defaults to today.",
+                {"start_date": S, "end_date": S}, ["start_date"])),
+    "health_hourly": _tool(health.health_hourly,
+        _schema("health_hourly", "Get the user's steps, heart rate (min/avg/max bpm) and calories for each hour "
+                "over the last N hours.", {"hours": {"type": "integer"}}, [])),
+    "health_sleep": _tool(health.health_sleep,
+        _schema("health_sleep", "Get the user's sleep sessions for the last N nights: bed and wake times, minutes "
+                "asleep and awake, and deep, REM and light sleep minutes.", {"days": {"type": "integer"}}, [])),
+    "health_workouts": _tool(health.health_workouts,
+        _schema("health_workouts", "Get the user's recorded workouts for the last N days: type, minutes, calories, "
+                "steps, distance and average heart rate.", {"days": {"type": "integer"}}, [])),
     "about_me": _tool(meta.about_me,
         _schema("about_me", "Get full details about yourself: your model, settings, every tool and its state, memory count and limits. Use this when the user asks what you can do.", {}, [])),
 }
