@@ -11,9 +11,11 @@ Built by [shadow](https://github.com/GMShadowe).
 - `shadow-brain/` — Python (FastAPI) backend. Router → adapters → tools →
   model, streamed over SSE.
 - `shadow-ui/` — React + Vite + Tailwind frontend.
+- `shadow-web/` — the landing page. Next.js, Tailwind, shadcn/ui, three.js
+  and GSAP.
 
-`shadow-web/` (a separate frontend) and `laya-fine-tune/` (training
-scratch space for the router) are not part of this release yet.
+`laya-fine-tune/` (training scratch space for the router) is not part of
+this release yet.
 
 ## Running it
 
