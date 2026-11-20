@@ -238,6 +238,17 @@
 .pop-in { animation: pop-in 320ms var(--ease-smooth) both; }
 @keyframes pop-in { from { opacity: 0; transform: translateY(6px) scale(0.98); } }
 
+.halftone {
+  color: transparent;
+  background-image: radial-gradient(circle, var(--ink) 0 1.6px, transparent 2px);
+  background-size: 6px 6px;
+  -webkit-background-clip: text;
+  background-clip: text;
+  transition: color 200ms var(--ease-smooth);
+}
+.fw-shadow { color: transparent; -webkit-text-stroke: 1.5px var(--bubble); }
+.fw-up { color: var(--ink); }
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
