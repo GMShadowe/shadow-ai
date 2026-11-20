@@ -1,0 +1,426 @@
+{
+  "/status": {
+    "models": [
+      {
+        "id": "default",
+        "label": "Default",
+        "description": "Balanced speed and quality. The floor Shadow is tuned for.",
+        "model": "qwen3.5:4b",
+        "vision": true,
+        "tools": true,
+        "kind": "builtin",
+        "custom": false,
+        "sends_data": false,
+        "host": "",
+        "available": true,
+        "reason": null
+      },
+      {
+        "id": "plus",
+        "label": "Plus",
+        "description": "Better quality, slower. Needs a stronger computer.",
+        "model": "qwen3.5:9b",
+        "vision": true,
+        "tools": true,
+        "kind": "builtin",
+        "custom": false,
+        "sends_data": false,
+        "host": "",
+        "available": true,
+        "reason": null
+      },
+      {
+        "id": "primal",
+        "label": "Primal",
+        "description": "Strongest tier. Needs a stronger computer, and reads images.",
+        "model": "gemma4:12b",
+        "vision": true,
+        "tools": true,
+        "kind": "builtin",
+        "custom": false,
+        "sends_data": false,
+        "host": "",
+        "available": false,
+        "reason": "Not downloaded. Run: ollama pull gemma4:12b"
+      }
+    ],
+    "default_model": "default",
+    "efforts": [
+      "low",
+      "medium",
+      "high",
+      "extra",
+      "ultra"
+    ],
+    "default_effort": "medium",
+    "router": "keywords",
+    "workspace": "/home/you/shadow_workspace",
+    "assistant": {
+      "id": "default",
+      "name": "Shadow"
+    },
+    "onboarded": true,
+    "usage": null,
+    "adapters": [
+      "coding",
+      "files",
+      "research",
+      "system"
+    ],
+    "tools": [
+      "about_me",
+      "delete_dir",
+      "delete_file",
+      "edit_file",
+      "fetch_url",
+      "find_files",
+      "http_request",
+      "kill_process",
+      "list_dir",
+      "move_file",
+      "open_app",
+      "read_file",
+      "run_command",
+      "search_text",
+      "show_chart",
+      "show_images",
+      "show_list",
+      "system_info",
+      "web_search",
+      "write_file"
+    ],
+    "feedback_reasons": [
+      {
+        "code": "wrong_tool",
+        "label": "Used the wrong tool"
+      },
+      {
+        "code": "claimed",
+        "label": "Claimed something it didn't do"
+      },
+      {
+        "code": "ignored",
+        "label": "Didn't follow the instruction"
+      },
+      {
+        "code": "slow",
+        "label": "Too slow"
+      },
+      {
+        "code": "wrong_info",
+        "label": "Wrong information"
+      },
+      {
+        "code": "formatting",
+        "label": "Bad formatting"
+      }
+    ]
+  },
+  "/conversations": [],
+  "/greetings": {
+    "greetings": [
+      "What's on your mind?",
+      "What are you working on?",
+      "Ready when you are.",
+      "Where should we start?",
+      "What are we building?",
+      "What can I do for you?"
+    ]
+  },
+  "/skills": {
+    "skills": [
+      {
+        "name": "pdf-helper",
+        "title": "Pdf Helper",
+        "description": "Works with PDFs.",
+        "tools": [
+          "read_file"
+        ],
+        "broken": false,
+        "chars": 120,
+        "trusted": false,
+        "added": true,
+        "source": "file: pdf.md"
+      },
+      {
+        "name": "review",
+        "title": "Review code",
+        "description": "Find reproducible correctness bugs before style issues. Verify findings against the code and recommend the smallest safe fixes.",
+        "tools": [
+          "read_file",
+          "list_dir",
+          "run_command"
+        ],
+        "broken": false,
+        "chars": 2827,
+        "trusted": true,
+        "added": false,
+        "source": null
+      },
+      {
+        "name": "summarize",
+        "title": "Summarize a document",
+        "description": "Read a whole file and summarize it properly \u2014 what it is, what it actually says, and what it leaves out.",
+        "tools": [
+          "read_file",
+          "list_dir",
+          "find_files"
+        ],
+        "broken": false,
+        "chars": 2562,
+        "trusted": true,
+        "added": false,
+        "source": null
+      }
+    ]
+  },
+  "/settings": {
+    "version": "0.1.0",
+    "settings": {
+      "workspace": "~/shadow_workspace",
+      "router": "keywords",
+      "offline": false,
+      "log_turns": false,
+      "onboarded": true
+    },
+    "profile": {
+      "name": "Shadow",
+      "model": "default",
+      "effort": "medium",
+      "tone": "friendly",
+      "response_length": "balanced",
+      "custom_instructions": "",
+      "auto_memory": false,
+      "location": "",
+      "tools": {
+        "run_command": "ask"
+      },
+      "id": "default"
+    },
+    "models": [
+      {
+        "id": "default",
+        "label": "Default",
+        "description": "Balanced speed and quality. The floor Shadow is tuned for.",
+        "model": "qwen3.5:4b",
+        "vision": true,
+        "tools": true,
+        "kind": "builtin",
+        "custom": false,
+        "sends_data": false,
+        "host": "",
+        "available": true,
+        "reason": null
+      },
+      {
+        "id": "plus",
+        "label": "Plus",
+        "description": "Better quality, slower. Needs a stronger computer.",
+        "model": "qwen3.5:9b",
+        "vision": true,
+        "tools": true,
+        "kind": "builtin",
+        "custom": false,
+        "sends_data": false,
+        "host": "",
+        "available": true,
+        "reason": null
+      },
+      {
+        "id": "primal",
+        "label": "Primal",
+        "description": "Strongest tier. Needs a stronger computer, and reads images.",
+        "model": "gemma4:12b",
+        "vision": true,
+        "tools": true,
+        "kind": "builtin",
+        "custom": false,
+        "sends_data": false,
+        "host": "",
+        "available": false,
+        "reason": "Not downloaded. Run: ollama pull gemma4:12b"
+      }
+    ],
+    "custom_models": [],
+    "usage": {},
+    "hardware": {
+      "os": "macOS 26.5",
+      "machine": "arm64",
+      "cpu_cores": 10,
+      "ram_total_gb": 17.2,
+      "ram_free_gb": 2.4,
+      "disk_free_gb": 148.3,
+      "disk_total_gb": 494.3
+    },
+    "recommended_model": "plus",
+    "tools": [
+      {
+        "name": "read_file",
+        "group": "Files",
+        "danger": "safe",
+        "description": "Read a text file inside the workspace.",
+        "state": "on",
+        "default": "on"
+      },
+      {
+        "name": "write_file",
+        "group": "Files",
+        "danger": "caution",
+        "description": "Create a new file or fully overwrite one. For small changes use edit_file instead.",
+        "state": "on",
+        "default": "on"
+      },
+      {
+        "name": "edit_file",
+        "group": "Files",
+        "danger": "caution",
+        "description": "Replace one exact piece of text in a file. 'find' must match exactly and only once.",
+        "state": "on",
+        "default": "on"
+      },
+      {
+        "name": "move_file",
+        "group": "Files",
+        "danger": "caution",
+        "description": "Rename or move a file inside the workspace.",
+        "state": "on",
+        "default": "on"
+      },
+      {
+        "name": "delete_file",
+        "group": "Files",
+        "danger": "dangerous",
+        "description": "Permanently delete one file inside the workspace.",
+        "state": "ask",
+        "default": "ask"
+      },
+      {
+        "name": "delete_dir",
+        "group": "Files",
+        "danger": "dangerous",
+        "description": "Permanently delete a folder and everything inside it, inside the workspace.",
+        "state": "ask",
+        "default": "ask"
+      },
+      {
+        "name": "list_dir",
+        "group": "Files",
+        "danger": "safe",
+        "description": "List files and folders in a workspace folder. Use '.' for the root.",
+        "state": "on",
+        "default": "on"
+      },
+      {
+        "name": "find_files",
+        "group": "Files",
+        "danger": "safe",
+        "description": "Find files by name anywhere in the workspace. Supports wildcards like '*.py'.",
+        "state": "on",
+        "default": "on"
+      },
+      {
+        "name": "search_text",
+        "group": "Files",
+        "danger": "safe",
+        "description": "Find which files contain some text. Returns file, line number and the line.",
+        "state": "on",
+        "default": "on"
+      },
+      {
+        "name": "run_command",
+        "group": "Computer",
+        "danger": "caution",
+        "description": "Run a shell command in the workspace. Returns output and exit code.",
+        "state": "ask",
+        "default": "ask"
+      },
+      {
+        "name": "kill_process",
+        "group": "Computer",
+        "danger": "dangerous",
+        "description": "Stop a running process by its exact name or its process id.",
+        "state": "ask",
+        "default": "ask"
+      },
+      {
+        "name": "open_app",
+        "group": "Computer",
+        "danger": "caution",
+        "description": "Open an installed application on the user's computer by its name, e.g. 'Safari'. Not for files or paths.",
+        "state": "ask",
+        "default": "ask"
+      },
+      {
+        "name": "system_info",
+        "group": "Computer",
+        "danger": "safe",
+        "description": "Get OS, CPU, RAM and disk information about this computer.",
+        "state": "on",
+        "default": "on"
+      },
+      {
+        "name": "web_search",
+        "group": "Web",
+        "danger": "safe",
+        "description": "Search the web. Returns the top 5 results with titles, links and snippets.",
+        "state": "on",
+        "default": "on"
+      },
+      {
+        "name": "fetch_url",
+        "group": "Web",
+        "danger": "safe",
+        "description": "Download a web page and return its readable text (read-only GET).",
+        "state": "on",
+        "default": "on"
+      },
+      {
+        "name": "http_request",
+        "group": "Web",
+        "danger": "dangerous",
+        "description": "Make an HTTP request to a URL. Can POST/PUT/DELETE, so it can change things on the server.",
+        "state": "ask",
+        "default": "ask"
+      },
+      {
+        "name": "show_images",
+        "group": "Web",
+        "danger": "safe",
+        "description": "Search the web for pictures and put them on the user's screen.",
+        "state": "on",
+        "default": "on"
+      },
+      {
+        "name": "show_list",
+        "group": "Screen",
+        "danger": "safe",
+        "description": "Put a list on the user's screen. Use it when they ask for a list. Each item has a short title and a one-line detail. Only real items you know or got from a tool.",
+        "state": "on",
+        "default": "on"
+      },
+      {
+        "name": "show_chart",
+        "group": "Screen",
+        "danger": "safe",
+        "description": "Put a chart on the user's screen. labels and values must be the same length. kind is 'bar' to compare things or 'line' for change over time. Only real numbers.",
+        "state": "on",
+        "default": "on"
+      },
+      {
+        "name": "about_me",
+        "group": "Self",
+        "danger": "safe",
+        "description": "Get full details about yourself: your model, settings, every tool and its state, memory count and limits. Use this when the user asks what you can do.",
+        "state": "on",
+        "default": "on"
+      }
+    ],
+    "laya_loaded": false,
+    "log": {
+      "turns": 0
+    },
+    "memory": {
+      "count": 0
+    }
+  }
+}

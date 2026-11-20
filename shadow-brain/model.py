@@ -2,6 +2,7 @@
 tokens of text, tool starts and results, and permission requests."""
 
 import json
+import re
 
 import context
 import permissions
@@ -23,6 +24,27 @@ EMPTY_NUDGE = (
     "Your last reply was empty. Continue the task: use a tool if you still need to, "
     "otherwise give the user your answer now."
 )
+# A reply that says it did something, in a turn where no tool ran. Small
+# models write "I've created the file" without calling write_file; the
+# nudge makes them either do it or say they didn't (CLAUDE.md, Honesty).
+CLAIMED_ACTION = re.compile(
+    r"\bI(?:'ve| have)? (?:just )?(?:created|wrote|written|saved|made|deleted|removed|moved|renamed|"
+    r"ran|run|executed|opened|installed|updated|edited|fixed|killed|stopped)\b"
+    r"|\b(?:has|have) been (?:created|saved|written|deleted|removed|moved|renamed|updated|opened)\b"
+    r"|\bis now open\b",
+    re.I,
+)
+HONESTY_NUDGE = (
+    "No tool ran in this reply, but your answer says you did something. If you meant something "
+    "from an earlier reply, say that plainly. Otherwise do it now with a tool, or tell the user "
+    "honestly that you haven't done it."
+)
+
+
+def claims_action(text: str) -> bool:
+    return bool(CLAIMED_ACTION.search(text or ""))
+
+
 EMPTY_FALLBACK = (
     "Sorry, I couldn't come up with an answer for that. "
     "Try rephrasing it, or use higher effort."
@@ -30,6 +52,10 @@ EMPTY_FALLBACK = (
 DENIED = (
     "The user denied permission to use {name}. Don't try it again. "
     "Tell the user what you were going to do, and ask how they'd like to continue."
+)
+UNATTENDED = (
+    "{name} needs the user's approval, and this request had no way to ask for it, so it was "
+    "skipped. Tell the user what you were going to do, and that approving it needs the Shadow app."
 )
 TIMED_OUT = (
     "The user didn't answer the permission request for {name}, so it was skipped. "
@@ -103,6 +129,8 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
     ask = set(ask_tools or [])
     schemas = get_schemas(tool_names) if tool_names else None
     nudged = False
+    honesty_checked = False
+    ran_tool = False
     # The user's question for this turn. Pinned so the compressor can never
     # drop it, however many tool results pile up behind it.
     question = question if question is not None else (messages[-1] if messages else None)
@@ -136,6 +164,15 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
                        "host": provider.get("host", "")}
 
         if not tool_calls:
+            if content.strip() and not ran_tool and not honesty_checked and claims_action(content):
+                honesty_checked = True
+                print(f"[model] reply claims an action but no tool ran, asking again: {content[:120]!r}")
+                yield {"type": "tool_start", "name": "honesty_check", "args": {}}
+                yield {"type": "tool_end", "name": "honesty_check",
+                       "result": "The reply said it did something, but no tool ran. Asked the model again."}
+                messages.append({"role": "assistant", "content": content})
+                messages.append({"role": "user", "content": HONESTY_NUDGE})
+                continue
             if content.strip():
                 messages.append({"role": "assistant", "content": content})
                 yield {"type": "final", "text": content}
@@ -149,6 +186,7 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
             return
 
         messages.append({"role": "assistant", "content": content, "tool_calls": tool_calls})
+        ran_tool = True
         for call in tool_calls:
             name = call.function.name
             args, bad_args = parse_arguments(call.function.arguments)
@@ -190,7 +228,7 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
                         print(f"[permissions] couldn't save 'always allow' for {name}: {e}")
                     ask.discard(name)
                 elif decision != "allow":
-                    note = (TIMED_OUT if decision == "timeout" else DENIED).format(name=name)
+                    note = {"timeout": TIMED_OUT, "unattended": UNATTENDED}.get(decision, DENIED).format(name=name)
                     messages.append({"role": "tool", "tool_name": name, "content": note})
                     continue
 

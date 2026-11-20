@@ -168,11 +168,20 @@ def delete_all_conversations() -> int:
 def recent_history(cid: str, limit: int = 20) -> list[dict]:
     with _db() as conn:
         rows = conn.execute(
-            "SELECT role, content FROM messages WHERE conversation_id = ? "
+            "SELECT role, content, meta FROM messages WHERE conversation_id = ? "
             "AND role IN ('user', 'assistant') ORDER BY seq DESC LIMIT ?",
             (cid, limit),
         ).fetchall()
     return [dict(r) for r in reversed(rows)]
+
+def last_skill(cid: str, within: int = 6) -> str | None:
+    """The skill used most recently in this chat, if it was a few messages ago."""
+    for message in reversed(recent_history(cid, within)):
+        skill = json.loads(message["meta"] or "{}").get("skill")
+        if skill:
+            return skill
+    return None
+
 
 def get_message(mid: str) -> dict | None:
     with _db() as conn:
@@ -294,7 +303,7 @@ def history_before(cid: str, seq: int, limit: int = 20) -> list[dict]:
     turn is re-run: the message being re-run must not appear twice."""
     with _db() as conn:
         rows = conn.execute(
-            "SELECT role, content FROM messages WHERE conversation_id = ? AND seq < ? "
+            "SELECT role, content, meta FROM messages WHERE conversation_id = ? AND seq < ? "
             "AND role IN ('user', 'assistant') ORDER BY seq DESC LIMIT ?",
             (cid, seq, limit),
         ).fetchall()

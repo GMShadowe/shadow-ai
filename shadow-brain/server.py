@@ -10,6 +10,7 @@ import platform
 import threading
 import time
 import weakref
+from contextlib import asynccontextmanager
 
 import ollama
 from fastapi import Body, FastAPI, HTTPException, Request
@@ -27,8 +28,10 @@ import export
 import preview
 import feedback
 import privacy
+import settings
 import skills
 import stt
+import tts
 import usage as usage_store
 from memory.short_term import ShortTermMemory
 from config import (TIER_ORDER, EFFORT_STEPS, all_tiers, get_workspace, is_placeholder,
@@ -37,6 +40,7 @@ from settings import SettingsError, get_settings, update_settings
 from tools.state import default_state, offline, tool_state
 from hardware import get_hardware, recommend_tier
 from adapters.registry import list_adapters
+from tools import shell
 from tools.registry import TOOLS
 
 from memory import long_term
@@ -44,6 +48,8 @@ from memory import long_term
 VERSION = "0.1.0"
 MAX_IMAGES = 4
 MAX_IMAGE_BYTES = 8 * 1024 * 1024
+# Four images at the cap, base64-encoded, plus the message around them.
+MAX_BODY_BYTES = 48 * 1024 * 1024
 DEFAULT_IMAGE_PROMPT = "What's in this image?"
 
 TOOL_GROUPS = {
@@ -55,7 +61,24 @@ TOOL_GROUPS = {
     "Self": ["about_me"],
 }
 
-app = FastAPI(title="Shadow Brain")
+@asynccontextmanager
+async def lifespan(app):
+    startup()
+    yield
+    shell.stop_all()
+
+
+def startup() -> None:
+    settings.secure_data_dir()
+    auth.token()
+    storage.init()
+    long_term.init()
+    assistants.migrate_tiers()
+    _migrate_onboarded()
+    _maybe_load_laya()
+
+
+app = FastAPI(title="Shadow Brain", lifespan=lifespan)
 
 
 # Every request needs Shadow's token, and no request may come from another
@@ -68,7 +91,17 @@ async def require_token(request: Request, call_next):
     if refusal:
         status, reason = refusal
         return JSONResponse({"detail": reason}, status_code=status)
+    if _declared_length(request) > MAX_BODY_BYTES:
+        return JSONResponse({"detail": "That request is too large. Send fewer or smaller images."},
+                            status_code=413)
     return await call_next(request)
+
+
+def _declared_length(request: Request) -> int:
+    try:
+        return int(request.headers.get("content-length", "0"))
+    except ValueError:
+        return 0
 
 
 @app.exception_handler(assistants.ProfileError)
@@ -93,13 +126,6 @@ def health():
     brain isn't running" from "the brain refused us". Exposes no state."""
     return {"ok": True, "version": VERSION}
 
-# Generate the access token before anything can ask for it, so the file is
-# there for the dev server to read the moment the brain is up.
-auth.token()
-
-storage.init()
-long_term.init()
-assistants.migrate_tiers()
 # Guarded by _sessions_lock; sync endpoints run on a threadpool.
 sessions: dict[str, ShortTermMemory] = {}
 _sessions_lock = threading.Lock()
@@ -153,8 +179,6 @@ def _migrate_onboarded() -> None:
         print(f"[setup] couldn't mark setup done: {e}")
 
 
-_migrate_onboarded()
-
 
 def _maybe_load_laya() -> None:
     if get_settings()["router"] != "laya":
@@ -175,8 +199,6 @@ def _laya_loaded() -> bool:
         return False
 
 
-_maybe_load_laya()
-
 
 class ChatRequest(BaseModel):
     conversation_id: str
@@ -184,7 +206,8 @@ class ChatRequest(BaseModel):
     model: str | None = None
     effort: str | None = None
     images: list[str] = []
-    # Set only when the user picked a skill with a slash command.
+    # Set when the user picked a skill in the composer; otherwise skills.named_in
+    # may find one the message names ("run the build-taste skill").
     skill: str | None = None
     # Sent from the voice screen: short spoken replies, the fewest steps.
     voice: bool = False
@@ -365,12 +388,28 @@ def _settings_payload() -> dict:
     }
 
 
+def _route_adapters(route: str | None) -> list[str]:
+    """"coding+research" -> ["coding", "research"]; chat and no route -> []."""
+    return [r for r in (route or "").split("+") if r and r != "chat"]
+
+
+def _remember(memory: ShortTermMemory, m: dict) -> None:
+    """Put a saved message back into short-term memory, with the adapters
+    its reply ran with, so sticky tools survive a restart."""
+    try:
+        meta = json.loads(m.get("meta") or "{}")
+    except json.JSONDecodeError as e:
+        print(f"[memory] a saved message has unreadable meta, rebuilding it without adapters: {e}")
+        meta = {}
+    memory.add(m["role"], m["content"], adapters=_route_adapters(meta.get("route")))
+
+
 def _memory_for(cid: str) -> ShortTermMemory:
     with _sessions_lock:
         if cid not in sessions:
             memory = ShortTermMemory()
             for m in storage.recent_history(cid, memory.max_turns * 2):
-                memory.add(m["role"], m["content"])
+                _remember(memory, m)
             sessions[cid] = memory
         return sessions[cid]
 
@@ -426,9 +465,13 @@ def _validate(req: ChatRequest) -> tuple[str, list[str], ShortTermMemory]:
         raise HTTPException(status_code=400, detail="Message is empty.")
     if images and not load_tier_config(req.model).get("vision", False):
         raise HTTPException(status_code=400, detail="This model can't see images. Pick a different one.")
+    if not req.skill and text:
+        req.skill = skills.named_in(text, storage.last_skill(req.conversation_id))
     if req.skill:
         try:
-            skills.load(req.skill)
+            skills.load_for_turn(req.skill)
+        except skills.SkillUnreviewed as e:
+            raise HTTPException(status_code=403, detail=str(e)) from e
         except skills.SkillError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
     return text or DEFAULT_IMAGE_PROMPT, images, _memory_for(req.conversation_id)
@@ -513,9 +556,15 @@ MAX_AUDIO_BYTES = 10 * 1024 * 1024  # a minute of 16kHz mono is about 2MB
 @app.post("/stt")
 async def speech_to_text(request: Request):
     """Audio in, text out. Local only: nothing here reaches the network."""
-    data = await request.body()
-    if len(data) > MAX_AUDIO_BYTES:
-        raise HTTPException(status_code=413, detail="That recording is too large to transcribe.")
+    too_large = HTTPException(status_code=413, detail="That recording is too large to transcribe. Keep it under a minute.")
+    if _declared_length(request) > MAX_AUDIO_BYTES:
+        raise too_large
+    data = bytearray()
+    async for chunk in request.stream():
+        data += chunk
+        if len(data) > MAX_AUDIO_BYTES:
+            raise too_large
+    data = bytes(data)
     try:
         return stt.transcribe(data)
     except stt.NoSpeech as e:
@@ -528,6 +577,25 @@ async def speech_to_text(request: Request):
 @app.get("/stt/status")
 def speech_status():
     return stt.status()
+
+
+class SpeakRequest(BaseModel):
+    text: str
+
+
+@app.post("/tts")
+def text_to_speech(req: SpeakRequest):
+    """Text in, WAV out. Local only: after the one-time voice download,
+    nothing here reaches the network."""
+    try:
+        return Response(content=tts.speak(req.text), media_type="audio/wav")
+    except tts.TtsError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+
+@app.get("/tts/status")
+def voice_status():
+    return tts.status()
 
 
 @app.post("/preview")
@@ -890,6 +958,20 @@ def get_skill(name: str):
         raise HTTPException(status_code=404, detail=str(e)) from e
 
 
+class SkillApproval(BaseModel):
+    sha256: str
+
+
+@app.post("/skills/{name}/approve")
+def approve_skill(name: str, req: SkillApproval):
+    """The user read this exact version of an added skill in the review
+    dialog and chose to use it."""
+    try:
+        return {"skill": skills.approve(name, req.sha256)}
+    except skills.SkillError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from e
+
+
 class SkillAdd(BaseModel):
     content: str | None = None
     url: str | None = None
@@ -904,15 +986,13 @@ def add_skill(req: SkillAdd):
         raise HTTPException(status_code=400, detail="Send either the skill file or a link to one.")
     try:
         if req.url:
-            text, source = skills.fetch(req.url)
-            filename = source.rsplit("/", 1)[-1]
-            req.name = req.name or skills.parse_source(req.url)[1]
+            skill = skills.add_from_link(req.url, req.name, req.replace)
         else:
             if len(req.content) > skills.MAX_CHARS * 4:
                 raise skills.SkillError(f"That file is bigger than a skill can be ({skills.MAX_CHARS} characters at most).")
-            text, filename = req.content, req.filename
             source = f"file: {os.path.basename(req.filename or 'pasted text')}"
-        skill = skills.install(text, name=req.name, filename=filename, source=source, replace=req.replace)
+            skill = skills.install(req.content, name=req.name, filename=req.filename, source=source,
+                                   replace=req.replace)
     except skills.SkillExists as e:
         raise HTTPException(status_code=409, detail=str(e)) from e
     except skills.SkillError as e:
@@ -976,7 +1056,12 @@ def conversation(cid: str):
     conv = storage.get_conversation(cid)
     if conv is None:
         raise HTTPException(status_code=404, detail="That chat doesn't exist.")
-    return conv
+    # A reply can still be running after the page that started it reloaded;
+    # the UI needs to know, or it shows the question unanswered and lets
+    # the user send into a chat that will answer 409.
+    with _sessions_lock:
+        running = cid in _busy
+    return {**conv, "running": running}
 
 
 @app.patch("/conversations/{cid}")
@@ -1057,7 +1142,7 @@ def _rerun_setup(req: RerunRequest, new_text: str | None) -> tuple[str, list[str
 
     memory = ShortTermMemory()
     for m in storage.history_before(cid, user["seq"], memory.max_turns * 2):
-        memory.add(m["role"], m["content"])
+        _remember(memory, m)
     with _sessions_lock:
         sessions[cid] = memory
 
@@ -1121,11 +1206,15 @@ class _Partial:
         return [t["id"] for t in self.tools if t.get("kind") == "permission" and t["decision"] is None]
 
     def finished_tools(self) -> list[dict]:
+        # An approval still open when the turn stopped was denied by the stop;
+        # saved undecided, a reopened chat would offer Allow for a dead turn.
+        tools = [{**t, "decision": "deny"} if t.get("kind") == "permission" and t["decision"] is None else t
+                 for t in self.tools]
         # A tool the stream announced but never ran: the turn stops at an
         # event, so it was stopped before the call, not halfway through it.
         if self._running:
-            return self.tools + [{**self._running, "result": "Not run: the reply was stopped first."}]
-        return self.tools
+            return tools + [{**self._running, "result": "Not run: the reply was stopped first."}]
+        return tools
 
 
 # Turns that can be stopped, by conversation, guarded by _sessions_lock.
@@ -1136,19 +1225,18 @@ def _save_stopped(cid: str, text: str, images: list[str], partial: _Partial,
                   memory: ShortTermMemory | None, aid: str) -> None:
     """Keep a reply that was cut short as far as it got, marked stopped, so
     the chat on disk matches what was on screen and the next turn knows the
-    question was asked."""
+    question was asked. A reply stopped before it wrote anything is saved
+    too, empty: without it the question sits in the chat with no answer and
+    no sign that it was stopped."""
     try:
         reply = partial.text.strip()
         if memory is not None:
             memory.add("user", text, images)
         tools = partial.finished_tools()
-        if not reply and not tools:
-            print("[chat] stopped before anything was written, so there is no reply to save")
-            return
         storage.add_message(cid, "assistant", reply,
                             {**partial.meta, "tools": tools, "stopped": True}, aid=aid)
         if memory is not None:
-            memory.add("assistant", reply)
+            memory.add("assistant", reply, adapters=_route_adapters(partial.meta.get("route")))
         print(f"[chat] stopped, saved {len(reply)} characters and {len(tools)} tool calls")
     except Exception as e:
         print(f"[chat] couldn't save the stopped reply: {e}")
@@ -1159,6 +1247,50 @@ def _forget_turn(cid: str, claim: object, stop: threading.Event) -> None:
         if _stops.get(cid, (None,))[0] is stop:
             del _stops[cid]
     _release(cid, claim)
+
+
+def _abandon(cid: str, stop: threading.Event, partial: _Partial, stream) -> None:
+    """Stop a turn whose browser went away. Once the server drops a stream
+    nothing asks it for another event, so the turn would sit half-done,
+    holding the chat, until garbage collection happened to close it. It is
+    run to its end here instead, which with `stop` set is one event away."""
+    with _sessions_lock:
+        running = _stops.get(cid, (None,))[0] is stop
+    if not running:
+        return
+    print(f"[chat] the browser left {cid} mid-reply, stopping the turn")
+    stop.set()
+    for pid in partial.waiting_permissions():
+        permissions.resolve(pid, "deny")
+    threading.Thread(target=_drain, args=(cid, stream), daemon=True).start()
+
+
+def _drain(cid: str, stream) -> None:
+    deadline = time.monotonic() + 15 * 60
+    while time.monotonic() < deadline:
+        try:
+            next(stream)
+        except StopIteration:
+            return
+        except ValueError as e:
+            # The thread the server gave up on is still inside next().
+            if "already executing" not in str(e):
+                print(f"[chat] couldn't finish the abandoned turn in {cid}: {e}")
+                return
+            time.sleep(0.2)
+    print(f"[chat] the abandoned turn in {cid} was still running after 15 minutes, leaving it")
+
+
+class _TurnResponse(StreamingResponse):
+    def __init__(self, content, on_gone):
+        super().__init__(content, media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
+        self._on_gone = on_gone
+
+    async def __call__(self, scope, receive, send):
+        try:
+            await super().__call__(scope, receive, send)
+        finally:
+            self._on_gone()
 
 
 def _stream_turn_response(cid: str, text: str, memory: ShortTermMemory, model, effort,
@@ -1197,8 +1329,7 @@ def _stream_turn_response(cid: str, text: str, memory: ShortTermMemory, model, e
 
     stream = events()
     weakref.finalize(stream, _forget_turn, cid, claim, stop)
-    return StreamingResponse(stream, media_type="text/event-stream",
-                             headers={"Cache-Control": "no-cache"})
+    return _TurnResponse(stream, on_gone=lambda: _abandon(cid, stop, partial, stream))
 
 
 def _claimed(cid: str, setup):

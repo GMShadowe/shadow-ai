@@ -1,7 +1,7 @@
 {
   "version": 1,
   "name": "My taste",
-  "written": "2026-10-30T13:07:17.977Z",
+  "written": "2026-11-01T18:39:53.882Z",
   "groups": [],
   "things": [
     {
@@ -61,19 +61,6 @@
       }
     },
     {
-      "id": "5e31b223-5a55-4747-a081-0795a610e107",
-      "kind": "note",
-      "text": "Plus Jakarta Sans font",
-      "group": "",
-      "added": "2026-10-30",
-      "place": {
-        "x": 247,
-        "y": 194,
-        "w": 220,
-        "h": 28
-      }
-    },
-    {
       "id": "c54913ea-720f-41b1-a502-227deb93e150",
       "kind": "image",
       "file": "images/6143ef54-467e-4cd4-b3f5-2b3261675e38.png",
@@ -86,6 +73,32 @@
         "y": -96,
         "w": 72,
         "h": 320
+      }
+    },
+    {
+      "id": "b91cc47f-d990-4642-9e24-90b40792a257",
+      "kind": "note",
+      "text": "use new vercel serif font , https://vercel.com/font?type=serif",
+      "group": "",
+      "added": "2026-11-01",
+      "place": {
+        "x": 121,
+        "y": 111,
+        "w": 220,
+        "h": 84
+      }
+    },
+    {
+      "id": "d82c1f20-90f7-4272-9c05-663791a0bf56",
+      "kind": "note",
+      "text": "clean ui and detailed ui with detailed micro ui components and micro animations very detaild",
+      "group": "",
+      "added": "2026-11-01",
+      "place": {
+        "x": 483,
+        "y": 114,
+        "w": 220,
+        "h": 112
       }
     }
   ]

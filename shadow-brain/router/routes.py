@@ -6,6 +6,7 @@ ROUTES = {
     "coding": "programs and scripts: writing, running, testing, debugging or changing code",
         "files": "files and folders on this computer: finding, reading, organizing, or creating documents, lists, JSON or CSV data that are not programs",
     "system": "this computer itself: opening apps, running terminal commands, or checking RAM, CPU, disk or battery",
+    "health": "the user's own body and fitness data from their Fitbit band: steps, heart rate, sleep, calories, workouts, HRV, blood oxygen, or how active or rested they have been",
     "research": "anything the user asks to search or look up, current information, news, prices, documentation, or facts about a specific named product, model or person",
 }
 

@@ -1,8 +1,27 @@
-ollama
-ddgs
-psutil
+# Pinned to the versions Shadow is tested with (Python 3.14).
+
+# The server
+fastapi==0.159.1
+uvicorn==0.54.0
+pydantic==2.14.1
+httpx==0.28.1
+
+# Models, the router and memory
+ollama==0.6.3
+laya==0.4.13
+torch==2.14.1
+huggingface_hub==2.2.0
+numpy==2.5.4
+
+# Tools
+ddgs==9.16.0
+psutil==7.2.2
 
 # Voice mode (speech to text). Both run locally; the whisper weights are
 # downloaded once, like an Ollama model pull.
-faster-whisper
-silero-vad
+faster-whisper==1.2.1
+silero-vad==6.2.3
+
+# Voice mode (speaking replies). Local too; the voice is downloaded once,
+# pinned and checked, in tts.py.
+piper-tts==1.8.0

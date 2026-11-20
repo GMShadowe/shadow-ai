@@ -60,7 +60,7 @@ def test_stop_keeps_what_was_written(client, monkeypatch):
 def test_a_dropped_connection_saves_it_too(client, monkeypatch):
     server = _server()
     monkeypatch.setattr(server, "stream_turn", _turn_until_stopped(server, "c2"))
-    monkeypatch.setattr(server, "StreamingResponse", lambda stream, **kwargs: stream)
+    monkeypatch.setattr(server, "_TurnResponse", lambda stream, **kwargs: stream)
     storage.ensure_conversation("c2", "hi", aid="default")
 
     claim = server._claim("c2")
@@ -76,7 +76,7 @@ def test_a_dropped_connection_saves_it_too(client, monkeypatch):
 
 def test_a_tool_that_never_ran_says_so(client, monkeypatch):
     server = _server()
-    monkeypatch.setattr(server, "StreamingResponse", lambda stream, **kwargs: stream)
+    monkeypatch.setattr(server, "_TurnResponse", lambda stream, **kwargs: stream)
 
     def fake(*args, **kwargs):
         yield {"type": "token", "text": "Let me look"}
@@ -98,11 +98,11 @@ def test_a_tool_that_never_ran_says_so(client, monkeypatch):
     assert reply["tools"][1]["result"].startswith("Not run")
 
 
-def test_stopping_before_anything_was_written_saves_nothing(client, monkeypatch):
+def test_stopping_before_anything_was_written_still_says_stopped(client, monkeypatch):
     server = _server()
-    monkeypatch.setattr(server, "StreamingResponse", lambda stream, **kwargs: stream)
+    monkeypatch.setattr(server, "_TurnResponse", lambda stream, **kwargs: stream)
     def fake(*args, **kwargs):
-        yield {"type": "route", "route": "chat"}
+        yield {"type": "route", "route": "coding"}
         yield {"type": "token", "text": "x"}
 
     monkeypatch.setattr(server, "stream_turn", fake)
@@ -111,7 +111,80 @@ def test_stopping_before_anything_was_written_saves_nothing(client, monkeypatch)
                                           server._claim("c4"))
     next(stream)
     stream.close()
-    assert _assistant_messages("c4") == []
+    [reply] = _assistant_messages("c4")
+    assert reply["content"] == "" and reply["stopped"] is True
+    assert reply["route"] == "coding" and reply["tools"] == []
+
+
+def test_a_browser_that_leaves_mid_approval_ends_the_turn_and_frees_the_chat(client, monkeypatch):
+    import permissions
+    server = _server()
+    left = {}
+    monkeypatch.setattr(server, "_TurnResponse",
+                        lambda stream, on_gone: left.update(on_gone=on_gone) or stream)
+
+    def fake(*args, **kwargs):
+        yield {"type": "route", "route": "coding"}
+        pid = permissions.create()
+        yield {"type": "permission", "id": pid, "name": "write_file", "args": {"path": "snake.py"}}
+        decision = permissions.wait(pid)
+        yield {"type": "permission_result", "id": pid, "decision": decision}
+        yield {"type": "token", "text": "never reached"}
+
+    monkeypatch.setattr(server, "stream_turn", fake)
+    storage.ensure_conversation("c5", "yes", aid="default")
+    stream = server._stream_turn_response("c5", "yes", None, None, None, [], None, "default",
+                                          server._claim("c5"))
+    next(stream)
+    next(stream)
+
+    left["on_gone"]()
+
+    deadline = time.monotonic() + 10
+    while "c5" in server._busy:
+        assert time.monotonic() < deadline, "the abandoned turn never let go of the chat"
+        time.sleep(0.01)
+    [reply] = _assistant_messages("c5")
+    assert reply["stopped"] is True
+    assert reply["tools"][0]["name"] == "write_file" and reply["tools"][0]["decision"] == "deny"
+
+
+def test_leaving_after_the_turn_ended_changes_nothing(client):
+    server = _server()
+    stop = threading.Event()
+    server._abandon("c6", stop, server._Partial(), iter([]))
+    assert not stop.is_set()
+
+
+def test_the_response_reports_a_browser_that_went_away():
+    import asyncio
+    server = _server()
+    gone = []
+
+    async def receive():
+        return {"type": "http.disconnect"}
+
+    async def send(message):
+        if message["type"] == "http.response.body":
+            raise OSError("the browser went away")
+
+    response = server._TurnResponse(iter(["data: x\n\n"]), on_gone=lambda: gone.append(True))
+    scope = {"type": "http", "asgi": {"spec_version": "2.4"}}
+    try:
+        asyncio.run(response(scope, receive, send))
+    except Exception:
+        pass
+    assert gone == [True]
+
+
+def test_a_chat_says_when_a_reply_is_still_running(client):
+    server = _server()
+    storage.ensure_conversation("c7", "hi", aid="default")
+    assert client.get("/conversations/c7").json()["running"] is False
+    claim = server._claim("c7")
+    assert client.get("/conversations/c7").json()["running"] is True
+    server._release("c7", claim)
+    assert client.get("/conversations/c7").json()["running"] is False
 
 
 def test_stop_with_no_turn_running(client):
