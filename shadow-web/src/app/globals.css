@@ -133,10 +133,72 @@
   animation-delay: var(--d, 0ms);
 }
 
+.fig .face {
+  stroke: var(--ink);
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+  transition: fill 150ms var(--ease-smooth);
+}
+.fig .top { fill: var(--panel); }
+.fig .left { fill: var(--panel-alt); }
+.fig .right { fill: var(--sidebar); }
+.fig .slab .top { fill: var(--bg); }
+.fig .grid path { stroke: var(--line); stroke-width: 1; fill: none; }
+.fig .route { stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 3 4; fill: none; }
+.fig .pulse { fill: var(--bubble); }
+.fig .ink { stroke: var(--ink); stroke-width: 1.1; stroke-linecap: round; fill: none; }
+.fig .mark { fill: none; stroke: var(--signal); stroke-width: 1.6; stroke-linecap: round; }
+.fig .mark * { vector-effect: non-scaling-stroke; }
+.fig .part { transition: transform 250ms var(--ease-smooth); cursor: default; }
+.fig .cue .top { animation: cue 10s var(--d, 0s) infinite; }
+@keyframes cue {
+  0%, 15% { fill: var(--bubble); }
+  20%, 100% { fill: var(--panel); }
+}
+@media (hover: hover) and (pointer: fine) {
+  .fig .part:hover { transform: translateY(-4px); }
+  .fig .part:hover .top { fill: var(--glow-b); animation: none; }
+}
+.fig text { font-family: var(--font-mono); font-size: 9.5px; fill: var(--ink-muted); }
+.fig .t1 { font-family: var(--font-sans); font-size: 12px; font-weight: 600; fill: var(--ink); }
+.fig .leader {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 1;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  transition: stroke 150ms;
+}
+.fig .tick { fill: var(--bg); stroke: var(--ink); stroke-width: 1; }
+.fig .cross path { stroke: var(--line-strong); stroke-width: 1; }
+.fig:has(.p-message:hover) .c-message .leader,
+.fig:has(.p-router:hover) .c-router .leader,
+.fig:has(.p-adapters:hover) .c-adapters .leader,
+.fig:has(.p-model:hover) .c-model .leader,
+.fig:has(.p-memory:hover) .c-memory .leader { stroke: var(--signal); }
+.fig:has(.p-message:hover) .c-message .tick,
+.fig:has(.p-router:hover) .c-router .tick,
+.fig:has(.p-adapters:hover) .c-adapters .tick,
+.fig:has(.p-model:hover) .c-model .tick,
+.fig:has(.p-memory:hover) .c-memory .tick,
+.fig:has(.p-default:hover) .c-default .tick,
+.fig:has(.p-plus:hover) .c-plus .tick,
+.fig:has(.p-primal:hover) .c-primal .tick { fill: var(--bubble); }
+.fig:has(.p-default:hover) .c-default .leader,
+.fig:has(.p-plus:hover) .c-plus .leader,
+.fig:has(.p-primal:hover) .c-primal .leader { stroke: var(--signal); }
+.fig .screen { fill: var(--bubble); stroke: var(--ink); stroke-width: 1.1; stroke-linejoin: round; }
+@media (max-width: 639px) {
+  .fig .callouts { display: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
+  .fig .cue .top { animation: none; }
+  .fig .pulse { display: none; }
+  .fig .part:hover { transform: none; }
   @keyframes rise {
     from {
       opacity: 0;
