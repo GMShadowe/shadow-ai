@@ -40,11 +40,17 @@ def _can_sandbox() -> bool:
 def _sandboxed(command: str) -> list[str] | None:
     if not _can_sandbox():
         return None
-    data = os.path.realpath(DATA_DIR).replace("\\", "\\\\").replace('"', '\\"')
-    profile = f'(version 1)(allow default)(deny file-read* file-write* (subpath "{data}"))'
+    data, skills = (_quoted(os.path.realpath(p)) for p in (DATA_DIR, os.path.join(DATA_DIR, "skills")))
+    # Added skills' scripts can be read and run, never changed.
+    profile = (f'(version 1)(allow default)(deny file-read* file-write* (subpath "{data}"))'
+               f'(allow file-read* (subpath "{skills}"))(allow file-read-metadata (literal "{data}"))')
     if _offline():
         profile += '(deny network-outbound (remote ip))(allow network-outbound (remote ip "localhost:*"))'
     return ["sandbox-exec", "-p", profile, "/bin/sh", "-c", command]
+
+
+def _quoted(path: str) -> str:
+    return path.replace("\\", "\\\\").replace('"', '\\"')
 
 
 def describe(command=None, background=None) -> str:

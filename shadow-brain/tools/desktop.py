@@ -175,3 +175,29 @@ def kill_process(target: str) -> str:
     if failed:
         out.append("Couldn't stop: " + ", ".join(failed[:10]))
     return "\n".join(out) or "Those processes had already exited."
+
+
+LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
+
+
+def open_url(url) -> str:
+    import webbrowser
+    from urllib.parse import urlsplit
+
+    from tools.state import offline
+
+    url = str(url or "").strip()
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        parts = None
+    if not parts or parts.scheme not in ("http", "https") or not parts.hostname:
+        return "Error: open_url opens http:// and https:// links only, like http://localhost:3000."
+    if offline() and parts.hostname.lower() not in LOCAL_HOSTS:
+        return (f"Blocked: offline mode is on, and opening that link would make the browser contact "
+                f"{parts.hostname}. Links on this computer (localhost) still open.")
+    try:
+        opened = webbrowser.open(url)
+    except Exception as e:
+        return f"Error opening {url}: {type(e).__name__}: {e}"
+    return f"Opened {url} in the browser." if opened else f"Error: no browser was found to open {url}."
