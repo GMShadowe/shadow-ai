@@ -10,6 +10,7 @@ import platform
 import threading
 import time
 import weakref
+from contextlib import asynccontextmanager
 
 import ollama
 from fastapi import Body, FastAPI, HTTPException, Request
@@ -27,6 +28,7 @@ import export
 import preview
 import feedback
 import privacy
+import settings
 import skills
 import stt
 import tts
@@ -38,6 +40,7 @@ from settings import SettingsError, get_settings, update_settings
 from tools.state import default_state, offline, tool_state
 from hardware import get_hardware, recommend_tier
 from adapters.registry import list_adapters
+from tools import shell
 from tools.registry import TOOLS
 
 from memory import long_term
@@ -45,6 +48,8 @@ from memory import long_term
 VERSION = "0.1.0"
 MAX_IMAGES = 4
 MAX_IMAGE_BYTES = 8 * 1024 * 1024
+# Four images at the cap, base64-encoded, plus the message around them.
+MAX_BODY_BYTES = 48 * 1024 * 1024
 DEFAULT_IMAGE_PROMPT = "What's in this image?"
 
 TOOL_GROUPS = {
@@ -56,7 +61,24 @@ TOOL_GROUPS = {
     "Self": ["about_me"],
 }
 
-app = FastAPI(title="Shadow Brain")
+@asynccontextmanager
+async def lifespan(app):
+    startup()
+    yield
+    shell.stop_all()
+
+
+def startup() -> None:
+    settings.secure_data_dir()
+    auth.token()
+    storage.init()
+    long_term.init()
+    assistants.migrate_tiers()
+    _migrate_onboarded()
+    _maybe_load_laya()
+
+
+app = FastAPI(title="Shadow Brain", lifespan=lifespan)
 
 
 # Every request needs Shadow's token, and no request may come from another
@@ -69,7 +91,17 @@ async def require_token(request: Request, call_next):
     if refusal:
         status, reason = refusal
         return JSONResponse({"detail": reason}, status_code=status)
+    if _declared_length(request) > MAX_BODY_BYTES:
+        return JSONResponse({"detail": "That request is too large. Send fewer or smaller images."},
+                            status_code=413)
     return await call_next(request)
+
+
+def _declared_length(request: Request) -> int:
+    try:
+        return int(request.headers.get("content-length", "0"))
+    except ValueError:
+        return 0
 
 
 @app.exception_handler(assistants.ProfileError)
@@ -94,13 +126,6 @@ def health():
     brain isn't running" from "the brain refused us". Exposes no state."""
     return {"ok": True, "version": VERSION}
 
-# Generate the access token before anything can ask for it, so the file is
-# there for the dev server to read the moment the brain is up.
-auth.token()
-
-storage.init()
-long_term.init()
-assistants.migrate_tiers()
 # Guarded by _sessions_lock; sync endpoints run on a threadpool.
 sessions: dict[str, ShortTermMemory] = {}
 _sessions_lock = threading.Lock()
@@ -154,8 +179,6 @@ def _migrate_onboarded() -> None:
         print(f"[setup] couldn't mark setup done: {e}")
 
 
-_migrate_onboarded()
-
 
 def _maybe_load_laya() -> None:
     if get_settings()["router"] != "laya":
@@ -176,8 +199,6 @@ def _laya_loaded() -> bool:
         return False
 
 
-_maybe_load_laya()
-
 
 class ChatRequest(BaseModel):
     conversation_id: str
@@ -185,7 +206,8 @@ class ChatRequest(BaseModel):
     model: str | None = None
     effort: str | None = None
     images: list[str] = []
-    # Set only when the user picked a skill with a slash command.
+    # Set when the user picked a skill in the composer; otherwise skills.named_in
+    # may find one the message names ("run the build-taste skill").
     skill: str | None = None
     # Sent from the voice screen: short spoken replies, the fewest steps.
     voice: bool = False
@@ -443,9 +465,13 @@ def _validate(req: ChatRequest) -> tuple[str, list[str], ShortTermMemory]:
         raise HTTPException(status_code=400, detail="Message is empty.")
     if images and not load_tier_config(req.model).get("vision", False):
         raise HTTPException(status_code=400, detail="This model can't see images. Pick a different one.")
+    if not req.skill and text:
+        req.skill = skills.named_in(text, storage.last_skill(req.conversation_id))
     if req.skill:
         try:
-            skills.load(req.skill)
+            skills.load_for_turn(req.skill)
+        except skills.SkillUnreviewed as e:
+            raise HTTPException(status_code=403, detail=str(e)) from e
         except skills.SkillError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
     return text or DEFAULT_IMAGE_PROMPT, images, _memory_for(req.conversation_id)
@@ -530,9 +556,15 @@ MAX_AUDIO_BYTES = 10 * 1024 * 1024  # a minute of 16kHz mono is about 2MB
 @app.post("/stt")
 async def speech_to_text(request: Request):
     """Audio in, text out. Local only: nothing here reaches the network."""
-    data = await request.body()
-    if len(data) > MAX_AUDIO_BYTES:
-        raise HTTPException(status_code=413, detail="That recording is too large to transcribe.")
+    too_large = HTTPException(status_code=413, detail="That recording is too large to transcribe. Keep it under a minute.")
+    if _declared_length(request) > MAX_AUDIO_BYTES:
+        raise too_large
+    data = bytearray()
+    async for chunk in request.stream():
+        data += chunk
+        if len(data) > MAX_AUDIO_BYTES:
+            raise too_large
+    data = bytes(data)
     try:
         return stt.transcribe(data)
     except stt.NoSpeech as e:
@@ -926,6 +958,20 @@ def get_skill(name: str):
         raise HTTPException(status_code=404, detail=str(e)) from e
 
 
+class SkillApproval(BaseModel):
+    sha256: str
+
+
+@app.post("/skills/{name}/approve")
+def approve_skill(name: str, req: SkillApproval):
+    """The user read this exact version of an added skill in the review
+    dialog and chose to use it."""
+    try:
+        return {"skill": skills.approve(name, req.sha256)}
+    except skills.SkillError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from e
+
+
 class SkillAdd(BaseModel):
     content: str | None = None
     url: str | None = None
@@ -940,15 +986,13 @@ def add_skill(req: SkillAdd):
         raise HTTPException(status_code=400, detail="Send either the skill file or a link to one.")
     try:
         if req.url:
-            text, source = skills.fetch(req.url)
-            filename = source.rsplit("/", 1)[-1]
-            req.name = req.name or skills.parse_source(req.url)[1]
+            skill = skills.add_from_link(req.url, req.name, req.replace)
         else:
             if len(req.content) > skills.MAX_CHARS * 4:
                 raise skills.SkillError(f"That file is bigger than a skill can be ({skills.MAX_CHARS} characters at most).")
-            text, filename = req.content, req.filename
             source = f"file: {os.path.basename(req.filename or 'pasted text')}"
-        skill = skills.install(text, name=req.name, filename=filename, source=source, replace=req.replace)
+            skill = skills.install(req.content, name=req.name, filename=req.filename, source=source,
+                                   replace=req.replace)
     except skills.SkillExists as e:
         raise HTTPException(status_code=409, detail=str(e)) from e
     except skills.SkillError as e:

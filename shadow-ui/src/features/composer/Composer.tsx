@@ -1,11 +1,12 @@
 import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
-import { ArrowUpIcon, CloseIcon, DeepSearchIcon, GlobeIcon, GlobeOffIcon, ImageIcon, MicIcon, SkillsIcon, StopIcon, VideoIcon } from "@/components/icons";
+import { ArrowUpIcon, CloseIcon, DeepSearchIcon, GlobeIcon, GlobeOffIcon, ImageIcon, MicIcon, SkillsIcon, StopIcon } from "@/components/icons";
 import IconButton from "@/components/ui/IconButton";
 import Tooltip from "@/components/ui/Tooltip";
 import { fileToImage } from "@/lib/images";
 import type { ImageAttachment, Skill } from "@/types";
 import PlusMenu from "./PlusMenu";
 import SkillMenu from "./SkillMenu";
+import SkillReview from "./SkillReview";
 
 const MAX_IMAGES = 4;
 const MAX_HEIGHT = 216; // nine lines, then it scrolls
@@ -84,6 +85,8 @@ export default function Composer({
   const [dragging, setDragging] = useState(false);
   // The skill picked for the next message; cleared on send.
   const [skill, setSkill] = useState<Skill | null>(null);
+  // A message waiting on the review of an added skill nobody has read yet.
+  const [review, setReview] = useState<{ name: string; text: string } | null>(null);
   const [menuIndex, setMenuIndex] = useState(0);
   const [menuClosed, setMenuClosed] = useState(false);
   // Deep search: the next message goes out as a thorough, cited web search.
@@ -172,25 +175,36 @@ export default function Composer({
     textRef.current?.focus();
   }
 
-  const hasContent = value.trim().length > 0 || images.length > 0;
+  const hasContent = value.trim().length > 0 || images.length > 0 || skill !== null;
   const canSend = !disabled && !streaming && hasContent;
 
   function submit() {
     if (!canSend) return;
     // "/summarize notes.md" typed straight through counts as picking it.
     let text = value.trim();
-    let name = skill?.name ?? null;
+    let chosen = skill;
     const typed = TYPED_SKILL.exec(text);
     if (typed) {
       const found = skills.find((s) => s.name.toLowerCase() === typed[1].toLowerCase());
       if (found) {
-        name = found.name;
+        chosen = found;
         text = text.slice(typed[0].length).trim();
       }
     }
-    if (!text && images.length === 0) return;
+    if (!text && images.length === 0) {
+      if (!chosen) return;
+      text = `/${chosen.name}`;
+    }
     // Worded so the router sends it to research, and the model reads widely.
     if (deep) text = `Search the web thoroughly for this, read several sources and cite each one: ${text}`;
+    if (chosen && chosen.trusted === false) {
+      setReview({ name: chosen.name, text });
+      return;
+    }
+    finishSend(text, chosen?.name ?? null);
+  }
+
+  function finishSend(text: string, name: string | null) {
     onSend(text, images, name);
     change("");
     setImages([]);
@@ -223,6 +237,16 @@ export default function Composer({
           }}
           className={`composer-shell relative rounded-2xl bg-composer p-2 ${disabled ? "opacity-60" : ""}`}
         >
+          {review && (
+            <SkillReview
+              name={review.name}
+              onCancel={() => setReview(null)}
+              onApproved={() => {
+                setReview(null);
+                finishSend(review.text, review.name);
+              }}
+            />
+          )}
           {menuOpen && <SkillMenu skills={matches} index={index} query={query} onPick={pickSkill} onHover={setMenuIndex} />}
 
           {dragging && (
@@ -422,8 +446,6 @@ export default function Composer({
                     ]
                   : []),
                 { id: "voice", label: "Voice mode", hint: "Talk instead of typing", icon: MicIcon, tone: "bg-ok/15 text-ok", onPick: onOpenVoice },
-                { id: "image", label: "Create image", hint: "Needs an image model", icon: ImageIcon, tone: "", disabled: true, tag: "soon" },
-                { id: "video", label: "Create video", hint: "Needs a video model", icon: VideoIcon, tone: "", disabled: true, tag: "soon" },
               ]}
             />
 

@@ -1,10 +1,10 @@
 import { Children, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
-import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
 import CodeBlock from "./CodeBlock";
 import DataTable from "./DataTable";
 import FileChip from "./FileChip";
+import { hasCodeBlock, useHighlighter } from "./highlighter";
 import { repairTables } from "./fixTables";
 import LinkCard from "./LinkCard";
 
@@ -99,6 +99,7 @@ interface MarkdownProps {
 }
 
 export default function Markdown({ text, files = new Map() }: MarkdownProps) {
+  const rehypePlugins = useHighlighter(hasCodeBlock(text));
   const components: Components = {
     pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
     table: ({ children }) => <DataTable>{children}</DataTable>,
@@ -144,7 +145,7 @@ export default function Markdown({ text, files = new Map() }: MarkdownProps) {
 
   return (
     <div className="md">
-      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[[rehypeHighlight, { detect: true }]]} components={components}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={rehypePlugins} components={components}>
         {repairTables(text)}
       </ReactMarkdown>
     </div>

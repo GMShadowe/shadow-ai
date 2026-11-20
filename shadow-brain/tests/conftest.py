@@ -26,6 +26,7 @@ def data_dir(tmp_path, monkeypatch):
     import usage
     from tools import files
 
+    monkeypatch.setenv("HOME", str(tmp_path.parent))
     data = tmp_path / "data"
     data.mkdir()
     monkeypatch.setattr(assistants, "ASSISTANTS_DIR", str(data / "assistants"))

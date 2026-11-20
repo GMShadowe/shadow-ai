@@ -16,8 +16,11 @@ IMAGE_MIN = 0.40           # with an image, text-only routing needs higher confi
 EXPLICIT = {
     "research": ["look up", "look it up", "search the web", "search online", "google it",
                  "browse", "find online", "on the web", "search for",
-                 "latest", "current version", "newest", "today", "right now",
-                 "this year", "recent", "what version"],
+                 "latest version", "latest release", "latest news", "current version",
+                 "what version"],
+    "health": ["my steps", "steps today", "heart rate", "resting hr", "my hrv", "my sleep", "slept",
+               "how did i sleep", "sleep score", "fitbit", "my band", "spo2", "blood oxygen",
+               "calories burned", "zone minutes", "my workout", "my workouts", "breathing rate"],
 }
 FILE_WORDS = ["file", "folder", "directory"]
 # Anchored to the start: "I don't remember the filename" is not a memory save.
@@ -48,6 +51,10 @@ IMAGES_RE = re.compile(
 )
 
 
+SKILL_RE = re.compile(r"\b(add|install|get|download|find|search\s+(?:up|for)|look\s+up)\b.{0,60}\bskills?\b",
+                      re.IGNORECASE)
+
+
 def display_tools(text: str, has_images: bool = False) -> list[str]:
     """The on-screen tools this message asks for, if any."""
     text = text or ""
@@ -62,6 +69,8 @@ def display_tools(text: str, has_images: bool = False) -> list[str]:
     # With a picture attached, "image" is about that picture.
     if not has_images and IMAGES_RE.search(text):
         wanted.append("show_images")
+    if SKILL_RE.search(text):
+        wanted += ["web_search", "add_skill"]
     return wanted
 
 

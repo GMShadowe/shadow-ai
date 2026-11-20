@@ -18,7 +18,7 @@ def create() -> str:
 
 
 def wait(pid: str) -> str:
-    """Blocks until answered. Returns 'allow', 'deny', 'always' or 'timeout'."""
+    """Blocks until answered. Returns 'allow', 'deny', 'always', 'unattended' or 'timeout'."""
     with _lock:
         entry = _pending.get(pid)
     if entry is None:

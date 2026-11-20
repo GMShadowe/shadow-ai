@@ -1,5 +1,5 @@
 import type { Skill } from "@/types";
-import { ApiError, enc, jsonInit, request, url } from "./client";
+import { ApiError, enc, jsonInit, request, send, url } from "./client";
 
 /* Skills. Only the UI reads these: the brain never puts the list in a
    prompt, so Shadow can't offer or invent a skill the user didn't invoke. */
@@ -19,6 +19,9 @@ export async function addSkill(body: unknown) {
   }
   return data;
 }
+
+export const approveSkill = (name: string, sha256: string) =>
+  send("POST", `/skills/${enc(name)}/approve`, { sha256 }, "Couldn't approve that skill");
 
 export const deleteSkill = (name: string) =>
   request(`/skills/${enc(name)}`, "Couldn't remove that skill", { method: "DELETE" });

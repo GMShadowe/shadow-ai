@@ -1,0 +1,35 @@
+name: UI
+
+on:
+  pull_request:
+    paths: ["shadow-ui/**", ".github/workflows/ui.yml"]
+  push:
+    branches: [main]
+    paths: ["shadow-ui/**", ".github/workflows/ui.yml"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: shadow-ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: shadow-ui/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - run: npx vite build
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: shadow-ui/test-results
+          retention-days: 7

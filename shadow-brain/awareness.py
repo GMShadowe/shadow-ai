@@ -2,6 +2,7 @@
 A compact version goes into every prompt; the full version is a tool."""
 
 import platform
+import threading
 import time
 from datetime import datetime
 
@@ -18,29 +19,47 @@ NO_TOOLS = (
     "(like \"read notes.txt\") so the right tools load. Never pretend you did it."
 )
 
-_weather_cache = {"at": 0, "text": None}
-WEATHER_TTL = 3600  # one hour
+WEATHER_TTL = 3600
+WEATHER_RETRY = 300
+
+_weather_cache: dict[str, dict] = {}
+_weather_lock = threading.Lock()
+_weather_fetching: set[str] = set()
 
 
 def _weather(location: str) -> str | None:
-    """Fetched lazily and cached. Uses wttr.in, which needs no API key."""
+    """Never waits on the network: returns what is cached and refreshes it in
+    the background, so a slow wttr.in can't hold up a reply."""
     if not location or offline():
         return None
-    if _weather_cache["text"] and time.time() - _weather_cache["at"] < WEATHER_TTL:
-        return _weather_cache["text"]
+    with _weather_lock:
+        entry = _weather_cache.get(location)
+        ttl = WEATHER_TTL if entry and entry["text"] else WEATHER_RETRY
+        stale = entry is None or time.time() - entry["at"] >= ttl
+        if stale and location not in _weather_fetching:
+            _weather_fetching.add(location)
+            threading.Thread(target=_fetch_weather, args=(location,), daemon=True).start()
+    return entry["text"] if entry else None
+
+
+def _fetch_weather(location: str) -> None:
+    text = None
     try:
         import urllib.parse
         import urllib.request
         url = f"https://wttr.in/{urllib.parse.quote(location)}?format=%C+%t"
         req = urllib.request.Request(url, headers={"User-Agent": "curl/8"})
         with urllib.request.urlopen(req, timeout=5) as resp:
-            text = resp.read().decode("utf-8").strip()
-        if text and len(text) < 60:
-            _weather_cache.update({"at": time.time(), "text": text})
-            return text
-    except Exception:
-        pass
-    return None
+            body = resp.read(200).decode("utf-8").strip()
+        if body and len(body) < 60:
+            text = body
+        else:
+            print(f"[weather] unexpected answer for {location!r}, trying again in {WEATHER_RETRY}s")
+    except Exception as e:
+        print(f"[weather] lookup for {location!r} failed, trying again in {WEATHER_RETRY}s: {e}")
+    with _weather_lock:
+        _weather_cache[location] = {"at": time.time(), "text": text}
+        _weather_fetching.discard(location)
 
 
 def compact(tier: str | None = None, effort: str | None = None,

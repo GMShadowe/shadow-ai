@@ -13,9 +13,9 @@ DEFAULTS = {
     # Offline mode blocks every outbound call: the web tools refuse, and the
     # weather lookup is skipped. Nothing at all leaves this computer.
     "offline": False,
-    # The training log is the one file that keeps a copy of every turn, so it
-    # can be turned off without turning off anything else.
-    "log_turns": True,
+    # The training log keeps a copy of every turn that deleting a chat doesn't
+    # remove, so it is something to opt into, not out of.
+    "log_turns": False,
     # False until first-run setup finishes. It describes the install, not an
     # assistant, which is why it is here and not in a profile.
     "onboarded": False,
@@ -27,9 +27,19 @@ CHOICES = {
 
 BOOLEANS = ["offline", "log_turns", "onboarded"]
 
+PROTECTED_HOME_FOLDERS = {"Library", "AppData"}
+
 
 class SettingsError(Exception):
     pass
+
+
+def secure_data_dir() -> None:
+    data = os.path.dirname(SETTINGS_PATH)
+    os.makedirs(data, mode=0o700, exist_ok=True)
+    if os.name != "nt" and os.stat(data).st_mode & 0o077:
+        os.chmod(data, 0o700)
+        print(f"[privacy] {data} was readable by other accounts; it is now yours alone (0700)")
 
 
 def get_settings() -> dict:
@@ -84,6 +94,14 @@ def _check_workspace(path) -> str:
         raise ValueError("The workspace can't be your whole disk.")
     if full == home:
         raise ValueError("Pick a folder inside your home folder, not the home folder itself.")
+    if os.path.commonpath([full, home]) != home:
+        raise ValueError(f"Pick a folder inside your home folder. {full} is outside it.")
+    parts = os.path.relpath(full, home).split(os.sep)
+    hidden = next((p for p in parts if p.startswith(".")), None)
+    if hidden:
+        raise ValueError(f"{hidden} is a hidden settings folder, and Shadow's tools could change what's in it. Pick an ordinary folder.")
+    if parts[0] in PROTECTED_HOME_FOLDERS:
+        raise ValueError(f"~/{parts[0]} holds app data, mail and keychains. Pick an ordinary folder.")
     if not os.path.isdir(full):
         raise ValueError(f"That folder doesn't exist: {full}")
     return full

@@ -104,6 +104,19 @@ def outbound(log_path: str) -> list[dict]:
         "active": tts_active, "reason": tts_reason, "state": None,
     })
 
+    from router import laya_router
+    if laya_router.model_cached():
+        laya_active, laya_reason = False, "Already downloaded — never fetched again"
+    elif off:
+        laya_active, laya_reason = False, "Offline mode is on"
+    else:
+        laya_active, laya_reason = True, "One download of the router, pinned and checked, then never again"
+    rows.append({
+        "id": "router_model", "label": "router", "host": "huggingface.co",
+        "what": "Downloads the Laya router the first time Shadow routes a message.",
+        "active": laya_active, "reason": laya_reason, "state": None,
+    })
+
     # Downloading a model. Ollama itself is local, but a pull fetches the
     # weights from Ollama's registry, so it belongs on this list. Nothing is
     # downloaded unless the user asks for it in setup or Settings.
@@ -117,9 +130,20 @@ def outbound(log_path: str) -> list[dict]:
 
     rows.append({
         "id": "skill_download", "label": "skill downloads", "host": "the link you paste",
-        "what": "Downloads one skill file when you add a skill from a link. Sends no conversation.",
+        "what": ("Downloads a skill and the files beside it when you add one from a link, or when you ask "
+                 "Shadow to add one (it asks first). For a GitHub repo it asks api.github.com for the "
+                 "file list. Sends no conversation."),
         "active": not off,
-        "reason": "Offline mode is on" if off else "Only when you add a skill from a link",
+        "reason": "Offline mode is on" if off else "Only when a skill is added from a link",
+        "state": None,
+    })
+
+    rows.append({
+        "id": "open_url", "label": "links Shadow opens", "host": "the site in the link",
+        "what": ("Opens a link in your browser when Shadow uses open_url, so your browser contacts that "
+                 "site. On a turn that read web content it asks first."),
+        "active": not off,
+        "reason": "Offline mode is on: only links on this computer open" if off else "Only when Shadow opens a link",
         "state": None,
     })
 
@@ -267,7 +291,7 @@ def report(log_path: str) -> dict:
     total, files = _dir_size(data_dir)
     return {
         "offline": bool(settings.get("offline")),
-        "log_turns": bool(settings.get("log_turns", True)),
+        "log_turns": bool(settings.get("log_turns", False)),
         "location": (get_profile().get("location") or "").strip(),
         "outbound": outbound(log_path),
         "storage": storage(log_path),
