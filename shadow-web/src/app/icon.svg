@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Shadow's mark on a Blue Regatta tile: a cream form, the charcoal
+       shadow it casts down and to the right, and the brand sparkle. Shapes
+       fill most of the tile so all three still read at 16px in a tab. -->
+  <rect width="32" height="32" rx="8" fill="#6F8FE8"/>
+  <circle cx="17" cy="18" r="9.25" fill="#292521"/>
+  <circle cx="13" cy="14" r="9.25" fill="#F5EDE1"/>
+  <path d="M25.5 1.75c.5 3.45 1.8 4.75 5.25 5.25-3.45.5-4.75 1.8-5.25 5.25-.5-3.45-1.8-4.75-5.25-5.25 3.45-.5 4.75-1.8 5.25-5.25z" fill="#F5EDE1" stroke="#6F8FE8" stroke-width="1.5" stroke-linejoin="round" paint-order="stroke"/>
+</svg>
