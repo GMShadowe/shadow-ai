@@ -1,0 +1,532 @@
+/* First-run setup. The preview's tokens, mapped onto whichever theme the app
+   is in, so the drawing follows Charcoal, Cream or any other look. */
+.onb {
+  --bg: var(--color-bg);
+  --panel: var(--color-panel);
+  --panel-alt: var(--color-panel-alt);
+  --line: var(--color-line);
+  --ink: var(--color-ink);
+  --ink-muted: var(--color-ink-muted);
+  --ink-faint: var(--color-ink-faint);
+  --accent: var(--color-signal);
+  --accent-ink: var(--color-bubble-ink);
+  --accent-text: color-mix(in oklab, var(--color-signal) 75%, var(--color-ink));
+  --glow: var(--color-signal);
+  --figure-line: color-mix(in oklab, var(--color-ink) 72%, transparent);
+  --figure-face: color-mix(in oklab, var(--color-panel) 60%, var(--color-bg));
+  --figure-face-2: var(--color-panel-alt);
+}
+[data-theme="light"] .onb {
+  --figure-line: color-mix(in oklab, var(--color-ink) 78%, transparent);
+}
+
+@keyframes onb-rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes onb-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes onb-pop {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+.onb .dot-field {
+  background-image: radial-gradient(color-mix(in oklab, var(--ink) 16%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+  background-position: center;
+  mask-image: radial-gradient(ellipse 60% 55% at 50% 50%, #000 10%, transparent 75%);
+}
+
+.onb .glow-field {
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--glow) 38%, transparent), transparent);
+  filter: blur(40px);
+  opacity: 0.55;
+}
+[data-theme="light"] .onb .glow-field {
+  opacity: 0.45;
+}
+
+/* Lines draw themselves in. Every drawn element carries pathLength="1". */
+.onb .draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: onb-draw var(--draw-ms, 1100ms) var(--ease-smooth) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+@keyframes onb-draw {
+  to { stroke-dashoffset: 0; }
+}
+.onb .fill-in {
+  opacity: 0;
+  animation: onb-fade 500ms var(--ease-smooth) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+.onb .callout {
+  opacity: 0;
+  animation: onb-fade 360ms var(--ease-smooth) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+/* The headline's highlight wipes in from the left, then a caret blinks. */
+.onb .highlight {
+  position: relative;
+  z-index: 0;
+  padding: 0 0.12em;
+  margin: 0 -0.04em;
+}
+.onb .highlight::before {
+  content: "";
+  position: absolute;
+  inset: 0.08em 0 0.02em;
+  z-index: -1;
+  background: var(--accent);
+  transform-origin: left;
+  transform: scaleX(0);
+  animation: onb-wipe 700ms var(--ease-smooth) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+.onb .highlight.on-accent {
+  color: var(--accent-ink);
+  transition: color 300ms var(--ease-smooth);
+  transition-delay: var(--delay, 0ms);
+}
+@keyframes onb-wipe {
+  to { transform: scaleX(1); }
+}
+.onb .caret {
+  display: inline-block;
+  width: 0.06em;
+  height: 0.9em;
+  margin-left: 0.08em;
+  vertical-align: -0.08em;
+  background: currentColor;
+  animation: onb-blink 1.1s steps(1) infinite;
+}
+@keyframes onb-blink {
+  50% { opacity: 0; }
+}
+
+.onb .press {
+  transition: scale 150ms var(--ease-smooth), opacity 150ms var(--ease-smooth),
+    background-color 150ms var(--ease-smooth), color 150ms var(--ease-smooth),
+    border-color 150ms var(--ease-smooth);
+}
+.onb .press:enabled:active {
+  scale: 0.96;
+}
+
+/* A part of the computer lifts a little when its callout is pointed at. */
+.onb .part {
+  transition: translate 280ms var(--ease-smooth);
+}
+.onb .part.lifted {
+  translate: 0 -6px;
+}
+.onb .part .part-face {
+  transition: fill 200ms var(--ease-smooth);
+}
+.onb .part.lifted .part-face {
+  fill: color-mix(in oklab, var(--accent) 30%, var(--figure-face));
+}
+
+.onb .scan-line {
+  animation: onb-scan 1.8s var(--ease-smooth) infinite;
+}
+@keyframes onb-scan {
+  from { transform: translateY(0); opacity: 0.9; }
+  to { transform: translateY(var(--scan-h, 150px)); opacity: 0; }
+}
+
+.onb .pulse-soft {
+  animation: onb-pulse-soft 1.4s ease-in-out infinite;
+}
+@keyframes onb-pulse-soft {
+  50% { opacity: 0.45; }
+}
+
+.onb .promise {
+  animation: onb-rise 380ms var(--ease-smooth) both;
+}
+
+.onb .burst {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: onb-burst 900ms var(--ease-smooth) forwards;
+}
+@keyframes onb-burst {
+  from { opacity: 0.8; transform: scale(0.4); }
+  to { opacity: 0; transform: scale(2.4); }
+}
+
+/* Parts rise out of the middle of the keyboard to where they float. */
+.onb .part-rise {
+  animation: onb-part-rise 900ms var(--ease-smooth) both;
+  animation-delay: var(--delay, 0ms);
+}
+@keyframes onb-part-rise {
+  from { opacity: 0; transform: translate(var(--fx), var(--fy)) scale(0.4); }
+  40% { opacity: 1; }
+  to { opacity: 1; transform: none; }
+}
+
+/* Once drawn, a wave runs across the keys, as if someone just sat down. */
+.onb .key-wave {
+  animation: onb-draw var(--draw-ms, 500ms) var(--ease-smooth) forwards, onb-key-glow 520ms ease-out var(--wave) 1 both;
+  animation-delay: var(--delay, 0ms), var(--wave);
+}
+@keyframes onb-key-glow {
+  0% { fill-opacity: 0; stroke-dashoffset: 0; }
+  35% { fill-opacity: 0.75; stroke-dashoffset: 0; }
+  100% { fill-opacity: 0; stroke-dashoffset: 0; }
+}
+.onb .key-flash {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: onb-key-flash 420ms var(--ease-smooth) forwards;
+}
+@keyframes onb-key-flash {
+  from { opacity: 1; transform: scale(0.82); }
+  to { opacity: 0; transform: scale(1); }
+}
+
+.onb .cpu-core {
+  animation: onb-pulse-soft 1.6s ease-in-out infinite;
+}
+.onb .mem-cell {
+  animation: onb-mem 2.4s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 160ms);
+}
+@keyframes onb-mem {
+  0%, 70%, 100% { fill: transparent; }
+  20% { fill: color-mix(in oklab, var(--accent) 55%, transparent); }
+}
+.onb .disk-fill {
+  transition: width 320ms var(--ease-smooth);
+}
+
+.onb .scan-bar {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: left;
+  animation: onb-bar-in 520ms var(--ease-smooth) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+@keyframes onb-bar-in {
+  from { opacity: 0; transform: scaleX(0.2); }
+  to { opacity: 1; transform: none; }
+}
+
+.onb .screen {
+  transition: stroke 200ms var(--ease-smooth);
+}
+.onb .screen-hot {
+  stroke: var(--accent);
+}
+.onb .screen-swap {
+  opacity: 0;
+  animation: onb-screen-swap 420ms var(--ease-smooth) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+@keyframes onb-screen-swap {
+  from { opacity: 0; filter: blur(4px); }
+  to { opacity: 1; filter: none; }
+}
+.onb .name-swap {
+  animation: onb-name-swap 240ms var(--ease-smooth) both;
+}
+@keyframes onb-name-swap {
+  from { opacity: 0.4; filter: blur(2px); }
+  to { opacity: 1; filter: none; }
+}
+.onb .detail-swap {
+  animation: onb-fade 220ms var(--ease-smooth) both;
+}
+.onb .live-dot {
+  animation: onb-pulse-soft 1.6s ease-in-out infinite;
+}
+.onb .screen-on {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: onb-screen-on 620ms var(--ease-smooth) both;
+}
+@keyframes onb-screen-on {
+  0% { opacity: 0; transform: scaleY(0.02); }
+  45% { opacity: 1; transform: scaleY(0.04); }
+  100% { opacity: 1; transform: none; }
+}
+
+.onb .leader {
+  transition: stroke 180ms var(--ease-smooth), stroke-opacity 180ms var(--ease-smooth);
+}
+.onb .label-box rect {
+  transition: stroke 180ms var(--ease-smooth), stroke-opacity 180ms var(--ease-smooth);
+}
+.onb .dot {
+  transition: r 180ms var(--ease-smooth), fill 180ms var(--ease-smooth);
+}
+
+.onb .cube-bob {
+  animation: onb-bob 1.2s ease-in-out infinite;
+}
+@keyframes onb-bob {
+  50% { transform: translateY(-3px); }
+}
+.onb .origin-ping {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: onb-ping 1.6s var(--ease-smooth) infinite;
+}
+@keyframes onb-ping {
+  0% { opacity: 1; transform: scale(1); }
+  70% { opacity: 0.2; transform: scale(2.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.onb .spark {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: onb-spark 1100ms var(--ease-smooth) forwards;
+  animation-delay: calc(300ms + var(--delay, 0ms));
+}
+@keyframes onb-spark {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.2) rotate(0deg); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1) rotate(140deg); }
+}
+
+/* The drawing leans a little toward the pointer. */
+.onb .tilt {
+  transition: transform 600ms var(--ease-smooth);
+  will-change: transform;
+}
+
+/* Each step's words arrive one piece after another. */
+.onb .stagger > *:not(.callout) {
+  animation: onb-rise 460ms var(--ease-smooth) both;
+}
+.onb .stagger > *:nth-child(2):not(.callout) { animation-delay: 70ms; }
+.onb .stagger > *:nth-child(3):not(.callout) { animation-delay: 140ms; }
+.onb .stagger > *:nth-child(4):not(.callout) { animation-delay: 210ms; }
+.onb .stagger > *:nth-child(5):not(.callout) { animation-delay: 280ms; }
+.onb .stagger > *:nth-child(6):not(.callout) { animation-delay: 350ms; }
+
+.onb .arrow {
+  transition: translate 200ms var(--ease-smooth);
+}
+.onb .press:enabled:hover .arrow {
+  translate: 3px 0;
+}
+
+.onb .tier {
+  transition: background-color 180ms var(--ease-smooth), translate 200ms var(--ease-smooth), border-color 180ms var(--ease-smooth);
+}
+.onb .tier:enabled:hover {
+  translate: 0 -2px;
+}
+.onb .tier:enabled:active {
+  scale: 0.97;
+}
+
+.onb .step-seg {
+  transition: background-color 300ms var(--ease-smooth), scale 150ms var(--ease-smooth);
+}
+.onb .step-seg:enabled:hover {
+  scale: 1 2.2;
+}
+
+/* The figure keeps its drawing's proportions and fills the column. */
+.onb .figure {
+  width: min(100%, calc(80vh * 930 / 616));
+}
+@media (max-width: 1023px) {
+  .onb .figure {
+    width: min(100%, calc(42vh * 930 / 616));
+  }
+}
+
+/* Depth: the laptop moves a little with the pointer, the parts and their
+   notes more. Plain translation, so lines and text stay sharp. */
+.onb .depth-1,
+.onb .depth-2 {
+  transition: transform 700ms var(--ease-smooth);
+}
+.onb .depth-1 {
+  transform: translate(calc(var(--px, 0) * 5px), calc(var(--py, 0) * 4px));
+}
+.onb .depth-2 {
+  transform: translate(calc(var(--px, 0) * 12px), calc(var(--py, 0) * 9px));
+}
+
+/* Callout cards: real text at a fixed size, over the drawing. */
+.onb .fig-card {
+  position: absolute;
+  pointer-events: auto;
+  cursor: default;
+  transform: translate(10px, -50%);
+  padding: 9px 12px 10px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in oklab, var(--ink) 13%, transparent);
+  background: color-mix(in oklab, var(--bg) 80%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--ink) 5%, transparent),
+    0 10px 24px -16px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  transition:
+    border-color 180ms var(--ease-smooth),
+    background-color 180ms var(--ease-smooth),
+    translate 220ms var(--ease-smooth),
+    box-shadow 220ms var(--ease-smooth);
+}
+.onb .fig-card-end {
+  transform: translate(calc(-100% - 10px), -50%);
+}
+.onb .fig-card.active {
+  border-color: color-mix(in oklab, var(--accent) 85%, transparent);
+  background: color-mix(in oklab, var(--accent) 9%, color-mix(in oklab, var(--bg) 86%, transparent));
+  box-shadow:
+    0 0 0 3px color-mix(in oklab, var(--accent) 16%, transparent),
+    0 12px 28px -16px rgba(0, 0, 0, 0.55);
+  translate: 3px 0;
+}
+.onb .fig-card-end.active {
+  translate: -3px 0;
+}
+.onb .fig-card-index {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  color: var(--ink-faint);
+  transition: color 180ms var(--ease-smooth);
+}
+.onb .fig-card.active .fig-card-index {
+  color: var(--accent-text);
+}
+.onb .fig-card-detail {
+  margin-top: 6px;
+  padding-left: 22px;
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--ink-faint);
+}
+.onb .fig-card.active .fig-card-detail {
+  color: var(--ink-muted);
+}
+[data-theme="light"] .onb .fig-card {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 10px 24px -16px rgba(41, 37, 33, 0.25);
+}
+
+.onb .heat-line {
+  stroke-dasharray: 10 6;
+  opacity: 0;
+  animation: onb-heat 1.6s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 260ms);
+}
+@keyframes onb-heat {
+  0% { opacity: 0; transform: translateY(6px); stroke-dashoffset: 0; }
+  30% { opacity: 0.9; }
+  100% { opacity: 0; transform: translateY(-10px); stroke-dashoffset: -16; }
+}
+
+.onb .switch {
+  transition: background-color 200ms var(--ease-smooth), scale 150ms var(--ease-smooth);
+}
+.onb .switch:active {
+  scale: 0.94;
+}
+.onb .switch-knob {
+  transition: translate 240ms var(--ease-smooth), background-color 200ms var(--ease-smooth);
+}
+
+.onb .tier-strong::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 100% 0%, color-mix(in oklab, var(--accent) 14%, transparent), transparent 60%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onb .draw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .onb .fill-in,
+  .onb .callout {
+    animation: onb-fade 200ms linear forwards;
+    animation-delay: 0ms;
+  }
+  .onb .highlight::before {
+    animation: none;
+    transform: none;
+  }
+  .onb .highlight.on-accent {
+    transition-delay: 0ms;
+  }
+  .onb .heat-line {
+    animation: none;
+    opacity: 0.7;
+  }
+  .onb .caret,
+  .onb .scan-line,
+  .onb .pulse-soft,
+  .onb .burst,
+  .onb .cpu-core,
+  .onb .mem-cell,
+  .onb .cube-bob,
+  .onb .origin-ping,
+  .onb .live-dot,
+  .onb .key-flash {
+    animation: none;
+  }
+  .onb .key-flash,
+  .onb .spark {
+    display: none;
+  }
+  .onb .key-wave {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .onb .part-rise,
+  .onb .screen-on,
+  .onb .scan-bar,
+  .onb .screen-swap,
+  .onb .name-swap,
+  .onb .stagger > *:not(.callout) {
+    animation: onb-fade 200ms linear both;
+    animation-delay: 0ms;
+  }
+  .onb .depth-1,
+  .onb .depth-2 {
+    transform: none !important;
+  }
+  .onb .fig-card {
+    transition: none;
+  }
+  .onb .arrow,
+  .onb .tier,
+  .onb .step-seg {
+    transition: none;
+  }
+  .onb .part,
+  .onb .press {
+    transition: opacity 150ms linear, background-color 150ms linear, color 150ms linear;
+  }
+  .onb .press:enabled:active {
+    scale: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .onb .fig-label {
+    display: none;
+  }
+}

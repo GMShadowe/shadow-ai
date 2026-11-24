@@ -95,6 +95,13 @@ export interface ModelInfo {
   vision?: boolean;
   sends_data?: boolean;
   host?: string;
+  custom?: boolean;
+  /** Whether this computer can run it, downloaded or not. */
+  fits?: boolean;
+  needs?: string | null;
+  strong?: boolean;
+  download_gb?: number | null;
+  download_approx?: boolean;
 }
 
 export interface FeedbackReason {
