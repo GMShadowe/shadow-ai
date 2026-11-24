@@ -20,6 +20,7 @@ things, so the conversion happens here and nowhere else:
 """
 
 import json
+import threading
 from dataclasses import dataclass, field
 
 import httpx
@@ -94,6 +95,43 @@ def ollama_chat(model: str, messages: list[dict], schemas=None, temperature: flo
     if schemas:
         kwargs["tools"] = schemas
     return ollama_client().chat(**kwargs)
+
+
+_preloading: set[str] = set()
+_preload_lock = threading.Lock()
+
+
+def is_loaded(model: str) -> bool:
+    names = {m.model for m in ollama_client().ps().models}
+    return model in names or f"{model}:latest" in names
+
+
+def preload(model: str) -> str:
+    """Loads a chat model with the options a real message will send, so the
+    message doesn't wait for it. Returns at once; the load runs on a thread."""
+    try:
+        if is_loaded(model):
+            return "loaded"
+    except Exception as e:
+        print(f"[model] couldn't ask Ollama what is loaded: {e}")
+        return "unknown"
+    with _preload_lock:
+        if model in _preloading:
+            return "loading"
+        _preloading.add(model)
+    threading.Thread(target=_load, args=(model,), daemon=True).start()
+    return "loading"
+
+
+def _load(model: str) -> None:
+    try:
+        ollama_chat(model, [])
+        print(f"[model] {model} loaded ahead of the message")
+    except Exception as e:
+        print(f"[model] couldn't load {model} ahead of the message: {e}")
+    finally:
+        with _preload_lock:
+            _preloading.discard(model)
 
 
 def ollama_stream(model: str, messages: list[dict], schemas, temperature, num_ctx: int = NUM_CTX):

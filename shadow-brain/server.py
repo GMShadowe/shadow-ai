@@ -24,6 +24,7 @@ import permissions
 import storage
 from orchestrator import handle_turn, stream_turn, LOG_PATH
 import custom
+import providers
 import export
 import preview
 import feedback
@@ -1475,10 +1476,20 @@ def warm_router():
     cold speed after under a minute idle, so a discarded prediction now means
     the message they're writing is routed at warm speed. Returns at once; the
     prediction runs on a thread."""
-    if get_settings()["router"] != "laya":
-        return {"state": "not used"}
     from router import laya_router
-    return {"state": laya_router.warm_in_background()}
+    router = laya_router.warm_in_background() if get_settings()["router"] == "laya" else "not used"
+    return {"state": router, "model": _warm_model()}
+
+
+def _warm_model() -> str:
+    try:
+        cfg = load_tier_config(assistants.get_profile()["model"])
+    except ValueError as e:
+        print(f"[model] nothing to load ahead: {e}")
+        return "unknown"
+    if cfg.get("kind") == "byok" or not cfg.get("base_model"):
+        return "not used"
+    return providers.preload(cfg["base_model"])
 
 
 @app.post("/chat/stop")
