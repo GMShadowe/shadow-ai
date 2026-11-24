@@ -15,7 +15,7 @@ from assistants import memory_db_path
 
 EMBED_MODEL = "nomic-embed-text"
 TOP_K = 5                # how many memories to pull per query
-MIN_SCORE = 0.35         # ignore weak matches
+MIN_SCORE = 0.42
 
 
 def _now() -> str:
