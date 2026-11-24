@@ -30,7 +30,10 @@ def later(text: str, tier: str | None, aid: str, quiet: float | None = None) -> 
         _waiting.append((text, tier, aid))
         if _timer is not None:
             _timer.cancel()
-        _timer = threading.Timer(QUIET_SECONDS if quiet is None else quiet, flush)
+        if quiet is None:
+            import cool
+            quiet = cool.quiet_seconds(QUIET_SECONDS)
+        _timer = threading.Timer(quiet, flush)
         _timer.daemon = True
         _timer.start()
 

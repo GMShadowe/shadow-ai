@@ -130,4 +130,5 @@ def all_tiers(include_custom: bool = True) -> list[dict]:
 
 
 def max_steps(effort: str | None = None) -> int:
-    return EFFORT_STEPS.get(effort or default_effort(), 6)
+    import cool
+    return cool.steps(EFFORT_STEPS.get(effort or default_effort(), 6))

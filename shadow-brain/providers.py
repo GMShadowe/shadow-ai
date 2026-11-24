@@ -82,16 +82,22 @@ def ollama_options(temperature: float | None = None) -> dict:
     # Every call to a chat model must send the same num_ctx: Ollama reloads
     # the whole model when it changes, and a greeting or a memory save sent
     # without it cost two reloads.
-    options = {"num_ctx": NUM_CTX}
+    import cool
+    options = {"num_ctx": NUM_CTX, **cool.ollama_options()}
     if temperature is not None:
         options["temperature"] = temperature
     return options
 
 
+def keep_alive() -> str:
+    import cool
+    return cool.keep_alive(KEEP_ALIVE)
+
+
 def ollama_chat(model: str, messages: list[dict], schemas=None, temperature: float | None = None,
                 stream: bool = False):
     kwargs = {"model": model, "messages": messages, "think": False, "stream": stream,
-              "options": ollama_options(temperature), "keep_alive": KEEP_ALIVE}
+              "options": ollama_options(temperature), "keep_alive": keep_alive()}
     if schemas:
         kwargs["tools"] = schemas
     return ollama_client().chat(**kwargs)

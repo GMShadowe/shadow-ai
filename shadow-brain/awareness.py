@@ -8,7 +8,7 @@ import time
 from datetime import datetime
 
 from assistants import get_profile
-from config import load_tier_config, EFFORT_STEPS, get_workspace
+from config import load_tier_config, EFFORT_STEPS, get_workspace, max_steps
 from settings import get_settings
 from memory import long_term
 from tools.state import offline, tool_state
@@ -141,7 +141,7 @@ def turn_facts(effort: str | None = None, allowed: list[str] | None = None,
         print(f"[memory] couldn't count memories: {e}")
 
     if effort:
-        lines.append(f"Effort is set to {effort}: you can take up to {EFFORT_STEPS.get(effort, 6)} tool steps this turn.")
+        lines.append(f"Effort is set to {effort}: you can take up to {max_steps(effort)} tool steps this turn.")
     return "\n".join(lines)
 
 

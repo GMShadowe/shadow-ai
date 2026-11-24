@@ -19,6 +19,9 @@ DEFAULTS = {
     # False until first-run setup finishes. It describes the install, not an
     # assistant, which is why it is here and not in a profile.
     "onboarded": False,
+    # None until someone chooses: Cool mode then follows the machine
+    # (cool.default), on at 16 GB and under without a strong graphics card.
+    "cool_mode": None,
 }
 
 CHOICES = {
@@ -74,6 +77,8 @@ def update_settings(patch: dict) -> dict:
         if key in BOOLEANS:
             if not isinstance(value, bool):
                 raise ValueError(f"{key} must be true or false.")
+        if key == "cool_mode" and value is not None and not isinstance(value, bool):
+            raise ValueError("cool_mode must be true, false or null (follow this computer).")
         if key == "workspace":
             value = _check_workspace(value)
         current[key] = value

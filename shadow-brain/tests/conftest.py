@@ -25,6 +25,9 @@ def data_dir(tmp_path, monkeypatch):
     redirect_data(str(data), monkeypatch.setattr)
     import settings
     settings.update_settings({"router": "keywords"})
+    # Cool mode follows the machine when unset; the tests mustn't.
+    import cool
+    monkeypatch.setattr(cool, "_default", False)
     return data
 
 

@@ -3,8 +3,10 @@ tokens of text, tool starts and results, and permission requests."""
 
 import json
 import re
+import time
 
 import context
+import cool
 import permissions
 import providers
 import usage
@@ -275,6 +277,12 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
             result = call_tool(name, args)
             yield {"type": "tool_end", "name": name, "result": result}
             messages.append({"role": "tool", "tool_name": name, "content": result})
+
+        # Cool mode: a short rest between steps, so a long task doesn't run
+        # the chip flat out from start to finish.
+        rest = cool.pause()
+        if rest:
+            time.sleep(rest)
 
         # Checked here rather than at the top of the loop, because what has to
         # be prevented is the *next* call: the tool results just added make the
