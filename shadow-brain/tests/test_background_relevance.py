@@ -3,7 +3,7 @@ answered with the weather in their city and an offer of their favourite drink.""
 from memory import long_term
 from memory.short_term import ShortTermMemory
 from orchestrator import BACKGROUND_RULE, handle_turn, wants_memories
-from tests.helpers import quiet_turn
+from tests.helpers import quiet_turn, system_text
 
 
 def test_short_small_talk_gets_no_memories():
@@ -26,7 +26,7 @@ def test_a_greeting_reaches_the_model_without_remembered_facts(monkeypatch):
 
     handle_turn("hi lol", ShortTermMemory())
 
-    system = fake.seen[0][0]["content"]
+    system = system_text(fake.seen[0])
     assert searched == []
     assert "Likes filter coffee" not in system
     assert BACKGROUND_RULE in system

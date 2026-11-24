@@ -60,3 +60,9 @@ def quiet_turn(monkeypatch, *steps, facts=None):
     monkeypatch.setattr(long_term, "add", lambda text, source="user", aid=None: saved.append((text, source)) or True)
     monkeypatch.setattr(extract, "extract_facts", lambda text, tier=None: list(facts or []))
     return fake, saved
+
+
+def system_text(messages: list[dict]) -> str:
+    """Every system message in a request: the prompt that stays the same for
+    a chat, and the one written for this turn."""
+    return "\n\n".join(m["content"] for m in messages if m.get("role") == "system")

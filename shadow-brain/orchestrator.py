@@ -20,7 +20,7 @@ from settings import get_settings
 
 import permissions
 import skills
-from awareness import compact
+from awareness import identity, turn_facts
 
 RULES = (
     "Be honest. If you don't know something, say so instead of guessing. "
@@ -227,36 +227,46 @@ def add_skill_tools(allowed: list[str], ask: list[str], blocked: list[str],
             ask.append(name)
 
 
-def build_system_prompt(adapters, blocked, ask, image_count=0, tier=None, effort=None,
-                        allowed=None, skill=None, profile=None, message=None):
+def stable_prompt(tier=None, profile=None) -> str:
+    """Everything in the system prompt that stays the same for a whole chat.
+    It comes first, before the conversation, so Ollama can keep the
+    conversation it already read; turn_prompt goes after it."""
     p = profile or get_profile()
     prompt = (
-        f"{compact(tier, effort, allowed, ask, p, message)}\n\n"
+        f"{identity(tier, p)}\n\n"
         f"{TONES.get(p['tone'], '')} {LENGTHS.get(p['response_length'], '')}\n\n"
         f"{RULES}\n\n{BACKGROUND_RULE}"
     )
-    if image_count:
-        prompt += "\n\n" + VISION_RULES.format(count=image_count)
-    for adapter in adapters:
-        prompt += "\n\n" + adapter["specialty_prompt"]
     # Offline mode needs naming: otherwise the model tells the user to turn a
     # tool back on, when the real switch is Settings - Privacy.
     if offline():
         prompt += ("\n\nOffline mode is on, so the web tools are blocked and nothing can leave this computer. "
                    "If the user asks for something from the internet, say plainly that offline mode is on "
                    "and that they can turn it off in Settings - Privacy. Never guess the answer instead.")
+    if p["custom_instructions"]:
+        prompt += ("\n\nThe user's personal instructions. Follow them unless they conflict "
+                   f"with the honesty rules above:\n{p['custom_instructions']}")
+    return prompt
+
+
+def turn_prompt(adapters, blocked, ask, image_count=0, effort=None, allowed=None,
+                skill=None, profile=None, message=None) -> str:
+    """Instructions for this message only. Sent as a system message just
+    before it and never kept in the history."""
+    p = profile or get_profile()
+    prompt = turn_facts(effort, allowed, ask, p, message)
+    if image_count:
+        prompt += "\n\n" + VISION_RULES.format(count=image_count)
+    for adapter in adapters:
+        prompt += "\n\n" + adapter["specialty_prompt"]
     if blocked:
         prompt += (f"\n\nThese tools are turned off in Settings: {', '.join(blocked)}. "
                    "Don't try to use them. If the task needs one, tell the user they can turn it on in Settings.")
     if ask:
         prompt += (f"\n\nThese tools need the user's approval each time: {', '.join(ask)}. "
                    "You can still use them, the user will be asked first. If they deny, don't try again.")
-    if p["custom_instructions"]:
-        prompt += ("\n\nThe user's personal instructions. Follow them unless they conflict "
-                   f"with the honesty rules above:\n{p['custom_instructions']}")
-    # Last, because it is the most specific thing the user asked for. It lives
-    # in the system prompt, which the compressor never trims, and it is gone
-    # again next turn - nothing here is remembered except the name.
+    # Last, because it is the most specific thing the user asked for. It is
+    # gone again next turn - nothing here is remembered except the name.
     if skill:
         header = ADDED_SKILL_HEADER if skill.get("added") else SKILL_HEADER
         prompt += "\n\n" + header.format(name=skill["name"], source=skill.get("source"),
@@ -267,6 +277,25 @@ def build_system_prompt(adapters, blocked, ask, image_count=0, tier=None, effort
                 files="\n".join(f"- {skill['folder']}/{f}" for f in skill["files"][:30])
                 + ("\n- and more" if len(skill["files"]) > 30 else ""))
     return prompt
+
+
+def build_system_prompt(adapters, blocked, ask, image_count=0, tier=None, effort=None,
+                        allowed=None, skill=None, profile=None, message=None):
+    p = profile or get_profile()
+    return (stable_prompt(tier, p) + "\n\n" +
+            turn_prompt(adapters, blocked, ask, image_count, effort, allowed, skill, p, message))
+
+
+def assemble(stable: str, turn: str, history: list[dict], question: dict,
+             after: list[dict], split: bool) -> list[dict]:
+    """The request, in the order that lets Ollama reuse what it read last
+    turn: the unchanging prompt, the history, then this turn's instructions.
+    A BYOK endpoint gets the old single system prompt, because some providers
+    refuse a system message anywhere but first."""
+    if not split:
+        return [{"role": "system", "content": stable + "\n\n" + turn}, *history, question, *after]
+    return [{"role": "system", "content": stable}, *history,
+            {"role": "system", "content": turn}, question, *after]
 
 
 def skill_request(user_input: str, skill: dict | None) -> str:
@@ -466,23 +495,24 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
         allowed.append("about_me")
 
     tools_used: list[dict] = []
-    system_prompt = build_system_prompt(adapters, blocked, ask, len(images), tier, effort,
-                                        allowed, skill, profile, user_input)
+    stable = stable_prompt(tier, profile)
+    turn_note = turn_prompt(adapters, blocked, ask, len(images), effort,
+                                allowed, skill, profile, user_input)
     if no_tools_reason:
-        system_prompt += "\n\n" + no_tools_reason
+        turn_note += "\n\n" + no_tools_reason
     if any(t in allowed for t in WEB_TOOLS):
-        system_prompt += "\n\n" + UNTRUSTED_NOTE
+        turn_note += "\n\n" + UNTRUSTED_NOTE
     for name in display:
         if name in DISPLAY_NOTES:
-            system_prompt += "\n\n" + DISPLAY_NOTES[name]
+            turn_note += "\n\n" + DISPLAY_NOTES[name]
     if voice:
-        system_prompt += "\n\n" + VOICE_NOTE
+        turn_note += "\n\n" + VOICE_NOTE
 
     # Pull relevant long-term memories into the prompt.
     try:
         memories = long_term.search(user_input, aid=aid) if wants_memories(user_input) else []
         if memories:
-            system_prompt += "\n\nThings you remember about the user:\n" + "\n".join(f"- {m}" for m in memories)
+            turn_note += "\n\nThings you remember about the user:\n" + "\n".join(f"- {m}" for m in memories)
     except Exception as e:
         print(f"[memory] search failed: {e}")
 
@@ -523,7 +553,7 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
                  "tool_calls": [{"function": {"name": "fetch_url", "arguments": {"url": url}}}]},
                 {"role": "tool", "tool_name": "fetch_url", "content": page},
             ]
-        system_prompt += (
+        turn_note += (
             f"\n\nYou already searched the web for the user's own words: \"{query}\"" +
             (" and read the top result" if url else "") + ". "
             "Those results come after their message. Answer from them, and say which page a fact came from. "
@@ -533,7 +563,7 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
             "Don't run the same search again."
         )
     elif wants_research and is_follow_up:
-        system_prompt += (
+        turn_note += (
             "\n\nThe user's message is a short follow-up. Use the conversation to work out "
             "exactly what they mean, then call web_search with a full, specific query "
             "that includes the actual name of the thing (never just the user's short reply)."
@@ -543,10 +573,8 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     if images:
         user_message["images"] = images
 
-    working = [{"role": "system", "content": system_prompt}]
-    working += history
-    working.append(user_message)
-    working += search_messages
+    working = assemble(stable, turn_note, history, user_message, search_messages,
+                       split=tier_cfg.get("kind") != "byok")
 
     reply = ""
     pending: dict | None = None

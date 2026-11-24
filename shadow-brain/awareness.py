@@ -80,19 +80,30 @@ PLACE_RE = re.compile(
     r"restaurants?|cafes?|shops?|travel|trip|time ?zone)\b", re.I)
 
 
-def compact(tier: str | None = None, effort: str | None = None,
-            allowed: list[str] | None = None, ask: list[str] | None = None,
-            profile: dict | None = None, message: str | None = None) -> str:
-    """The short block that goes into every system prompt."""
+def identity(tier: str | None = None, profile: dict | None = None) -> str:
+    """The part of the awareness block that stays the same for a whole chat.
+    It opens every prompt, so anything that changes from one message to the
+    next belongs in turn_facts: Qwen 3.5 reads the whole conversation again
+    when the start of the prompt changes."""
     profile = profile or get_profile()
     cfg = load_tier_config(tier)
-    now = datetime.now()
-
-    lines = [
+    return "\n".join([
         f"You are {profile['name']}, running the {cfg['label']} model ({cfg['base_model']}) "
         f"locally on this computer via Ollama.",
-        f"Right now: {now.strftime('%A, %d %B %Y, %H:%M')}. {STALE_KNOWLEDGE}",
-    ]
+        STALE_KNOWLEDGE,
+        f"This machine runs {platform.system()} on {platform.machine()}. "
+        f"Your workspace folder is {get_workspace()} — you can only read, write and run things inside it.",
+        "You can't see the user's screen, hear them, or access anything outside the workspace and the web tools.",
+    ])
+
+
+def turn_facts(effort: str | None = None, allowed: list[str] | None = None,
+               ask: list[str] | None = None, profile: dict | None = None,
+               message: str | None = None) -> str:
+    """What is true for this message only: the time, the tools loaded for it,
+    the location and weather when the message is about them."""
+    profile = profile or get_profile()
+    lines = [f"Right now: {datetime.now().strftime('%A, %d %B %Y, %H:%M')}."]
 
     # Location is per assistant, so it lives in the profile, not in global
     # settings. Empty means the user shared nothing: no line, and no weather
@@ -106,11 +117,6 @@ def compact(tier: str | None = None, effort: str | None = None,
         about_weather = message is None or bool(WEATHER_RE.search(message))
         if about_weather or PLACE_RE.search(message):
             lines.append(f"The user is in {location}." + (f" Weather: {weather}." if weather and about_weather else ""))
-
-    lines.append(
-        f"This machine runs {platform.system()} on {platform.machine()}. "
-        f"Your workspace folder is {get_workspace()} — you can only read, write and run things inside it."
-    )
 
     if allowed is not None:
         on = [t for t in allowed if t not in (ask or [])]
@@ -128,7 +134,7 @@ def compact(tier: str | None = None, effort: str | None = None,
             lines.append(NO_TOOLS)
 
     try:
-        n = long_term.count(profile["id"])
+        n = long_term.count(profile.get("id"))
         if n:
             lines.append(f"You remember {n} thing(s) about the user long-term; relevant ones are shown below when they apply.")
     except Exception as e:
@@ -136,9 +142,14 @@ def compact(tier: str | None = None, effort: str | None = None,
 
     if effort:
         lines.append(f"Effort is set to {effort}: you can take up to {EFFORT_STEPS.get(effort, 6)} tool steps this turn.")
-
-    lines.append("You can't see the user's screen, hear them, or access anything outside the workspace and the web tools.")
     return "\n".join(lines)
+
+
+def compact(tier: str | None = None, effort: str | None = None,
+            allowed: list[str] | None = None, ask: list[str] | None = None,
+            profile: dict | None = None, message: str | None = None) -> str:
+    profile = profile or get_profile()
+    return identity(tier, profile) + "\n" + turn_facts(effort, allowed, ask, profile, message)
 
 
 def detailed() -> str:
