@@ -25,3 +25,8 @@ AGENT.md
 AGENTS.md
 shadow-brain/.claude/
 shadow-brain/.agents/
+
+# Laya training: built from data/ by prepare.py, and the trained checkpoints.
+laya-train/train.jsonl
+laya-train/test.jsonl
+laya-train/out/

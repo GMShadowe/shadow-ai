@@ -43,6 +43,8 @@ def data_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(shell, "DATA_DIR", str(data))
     import skills
     monkeypatch.setattr(skills, "ADDED_DIR", str(data / "skills"))
+    from router import laya_router
+    monkeypatch.setattr(laya_router, "TUNED_DIR", str(data / "laya"))
     settings.update_settings({"router": "keywords"})
     return data
 

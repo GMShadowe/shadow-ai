@@ -1,0 +1,145 @@
+{"prompt": "how many steps did i take today", "route": "health"}
+{"prompt": "what's my step count", "route": "health"}
+{"prompt": "did i hit 10k steps", "route": "health"}
+{"prompt": "how did i sleep last night", "route": "health"}
+{"prompt": "what was my sleep score", "route": "health"}
+{"prompt": "how long did i sleep", "route": "health"}
+{"prompt": "how much deep sleep did i get", "route": "health"}
+{"prompt": "whats my resting heart rate", "route": "health"}
+{"prompt": "what's my heart rate right now", "route": "health"}
+{"prompt": "was my heart rate high during the run", "route": "health"}
+{"prompt": "how's my hrv this week", "route": "health"}
+{"prompt": "whats my blood oxygen", "route": "health"}
+{"prompt": "show my spo2 from last night", "route": "health"}
+{"prompt": "how many calories did i burn today", "route": "health"}
+{"prompt": "calories burned this week", "route": "health"}
+{"prompt": "how many active zone minutes do i have", "route": "health"}
+{"prompt": "did i work out today", "route": "health"}
+{"prompt": "how was my workout yesterday", "route": "health"}
+{"prompt": "how many workouts this week", "route": "health"}
+{"prompt": "what's my breathing rate", "route": "health"}
+{"prompt": "am i more rested than last week", "route": "health"}
+{"prompt": "how active was i yesterday", "route": "health"}
+{"prompt": "compare my steps this week to last week", "route": "health"}
+{"prompt": "did i sleep better on the weekend", "route": "health"}
+{"prompt": "what time did i fall asleep", "route": "health"}
+{"prompt": "how many times did i wake up last night", "route": "health"}
+{"prompt": "my band says my hr was 110, when was that", "route": "health"}
+{"prompt": "how many floors did i climb", "route": "health"}
+{"prompt": "how far did i walk today", "route": "health"}
+{"prompt": "what's my average resting hr this month", "route": "health"}
+{"prompt": "was i active enough today", "route": "health"}
+{"prompt": "how much did i move this morning", "route": "health"}
+{"prompt": "my fitbit sleep data from monday", "route": "health"}
+{"prompt": "did my heart rate spike in the afternoon", "route": "health"}
+{"prompt": "how long was my run", "route": "health"}
+{"prompt": "how many minutes was i in fat burn zone", "route": "health"}
+{"prompt": "steps so far", "route": "health"}
+{"prompt": "sleep last night?", "route": "health"}
+{"prompt": "hr?", "route": "health"}
+{"prompt": "how did i sleep", "route": "health"}
+{"prompt": "my steps", "route": "health"}
+{"prompt": "how rested am i", "route": "health"}
+{"prompt": "what's my readiness today", "route": "health"}
+{"prompt": "have i been sleeping less lately", "route": "health"}
+{"prompt": "show me my step trend for the week", "route": "health"}
+{"prompt": "whats my storage", "route": "system"}
+{"prompt": "how much storage left", "route": "system"}
+{"prompt": "how much disk space do i have", "route": "system"}
+{"prompt": "how much space is free on my drive", "route": "system"}
+{"prompt": "is my disk almost full", "route": "system"}
+{"prompt": "whats my battery", "route": "system"}
+{"prompt": "battery percentage", "route": "system"}
+{"prompt": "how much battery is left", "route": "system"}
+{"prompt": "is my laptop charging", "route": "system"}
+{"prompt": "how much ram do i have", "route": "system"}
+{"prompt": "how much ram is free", "route": "system"}
+{"prompt": "how much memory is being used", "route": "system"}
+{"prompt": "whats my cpu", "route": "system"}
+{"prompt": "cpu usage right now", "route": "system"}
+{"prompt": "what processor does this computer have", "route": "system"}
+{"prompt": "what's using all my cpu", "route": "system"}
+{"prompt": "what apps are running", "route": "system"}
+{"prompt": "whats running on port 3000", "route": "system"}
+{"prompt": "kill the process on port 8080", "route": "system"}
+{"prompt": "how long has my computer been on", "route": "system"}
+{"prompt": "what os am i on", "route": "system"}
+{"prompt": "what version of macos is this", "route": "system"}
+{"prompt": "open spotify", "route": "system"}
+{"prompt": "open the calculator app", "route": "system"}
+{"prompt": "close chrome", "route": "system"}
+{"prompt": "what's my ip address", "route": "system"}
+{"prompt": "am i connected to wifi", "route": "system"}
+{"prompt": "turn the volume down", "route": "system"}
+{"prompt": "check my system specs", "route": "system"}
+{"prompt": "how much free space on my mac", "route": "system"}
+{"prompt": "read notes.md", "route": "files"}
+{"prompt": "read notes.md and tell me what's in it", "route": "files"}
+{"prompt": "list the files in my workspace", "route": "files"}
+{"prompt": "what's in my downloads folder", "route": "files"}
+{"prompt": "open data.csv", "route": "files"}
+{"prompt": "delete junk.txt", "route": "files"}
+{"prompt": "rename draft.txt to final.txt", "route": "files"}
+{"prompt": "move report.pdf into the archive folder", "route": "files"}
+{"prompt": "create a folder called drafts", "route": "files"}
+{"prompt": "find every pdf in my workspace", "route": "files"}
+{"prompt": "which files mention invoice", "route": "files"}
+{"prompt": "show me what's inside todo.txt", "route": "files"}
+{"prompt": "copy budget.xlsx to backups", "route": "files"}
+{"prompt": "write the meeting notes to notes.md", "route": "files"}
+{"prompt": "how many files are in this folder", "route": "files"}
+{"prompt": "search my notes folder for the budget", "route": "files"}
+{"prompt": "make a list of groceries and save it as groceries.txt", "route": "files"}
+{"prompt": "delete the empty folders", "route": "files"}
+{"prompt": "whats the biggest file in my workspace", "route": "files"}
+{"prompt": "open the readme", "route": "files"}
+{"prompt": "news about nvidia", "route": "research"}
+{"prompt": "any news on the india vs australia series", "route": "research"}
+{"prompt": "latest on the openai lawsuit", "route": "research"}
+{"prompt": "whats the latest on the election results", "route": "research"}
+{"prompt": "try searching on airbnb for london apartments", "route": "research"}
+{"prompt": "search on booking.com for hotels in goa", "route": "research"}
+{"prompt": "what's bitcoin trading at", "route": "research"}
+{"prompt": "who won the last f1 race", "route": "research"}
+{"prompt": "latest version of python", "route": "research"}
+{"prompt": "what changed in the newest ollama release", "route": "research"}
+{"prompt": "price of the iphone 17 pro", "route": "research"}
+{"prompt": "look up what crdts are", "route": "research"}
+{"prompt": "search the web for the population of pune", "route": "research"}
+{"prompt": "find reviews of the framework laptop 16", "route": "research"}
+{"prompt": "what's the weather in london this weekend", "route": "research"}
+{"prompt": "when is the next spacex launch", "route": "research"}
+{"prompt": "current gold price in india", "route": "research"}
+{"prompt": "who is the ceo of nvidia now", "route": "research"}
+{"prompt": "did the new zelda game come out yet", "route": "research"}
+{"prompt": "headlines today", "route": "research"}
+{"prompt": "hi lol", "route": "chat"}
+{"prompt": "sup wsg", "route": "chat"}
+{"prompt": "hi hru", "route": "chat"}
+{"prompt": "its cold actually", "route": "chat"}
+{"prompt": "thanks!", "route": "chat"}
+{"prompt": "what should i cook today?", "route": "chat"}
+{"prompt": "any tips to sleep better?", "route": "chat"}
+{"prompt": "why do we need sleep", "route": "chat"}
+{"prompt": "how much water should i drink a day", "route": "chat"}
+{"prompt": "explain quantum mechanics simply", "route": "chat"}
+{"prompt": "whats a crdt in one line", "route": "chat"}
+{"prompt": "what can you do", "route": "chat"}
+{"prompt": "whats your name", "route": "chat"}
+{"prompt": "tell me a joke", "route": "chat"}
+{"prompt": "i'm feeling a bit low today", "route": "chat"}
+{"prompt": "should i learn rust or go", "route": "chat"}
+{"prompt": "what's the difference between ram and storage", "route": "chat"}
+{"prompt": "how does a fitness tracker measure heart rate", "route": "chat"}
+{"prompt": "any news on my job application? i'm nervous", "route": "chat"}
+{"prompt": "remind me what we talked about", "route": "chat"}
+{"prompt": "write a python function that reverses a string", "route": "coding"}
+{"prompt": "fix the bug in app.py", "route": "coding"}
+{"prompt": "run the tests", "route": "coding"}
+{"prompt": "why does my script crash with a keyerror", "route": "coding"}
+{"prompt": "make a script that renames my photos by date", "route": "coding"}
+{"prompt": "add type hints to utils.py", "route": "coding"}
+{"prompt": "write a bash one-liner to count lines in all py files", "route": "coding"}
+{"prompt": "debug this: TypeError: 'NoneType' object is not subscriptable", "route": "coding"}
+{"prompt": "convert this javascript to typescript", "route": "coding"}
+{"prompt": "write a react component for a todo list", "route": "coding"}
