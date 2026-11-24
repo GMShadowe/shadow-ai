@@ -41,28 +41,37 @@ interface PullProgressProps {
   models: string[];
   onDone?: () => void;
   onError?: (message: string) => void;
+  /** Which download is running and how far it is, null while Ollama gives no byte counts. */
+  onProgress?: (index: number, fraction: number | null) => void;
 }
 
-export default function PullProgress({ models, onDone, onError }: PullProgressProps) {
+export default function PullProgress({ models, onDone, onError, onProgress }: PullProgressProps) {
   const [index, setIndex] = useState(0);
   const [status, setStatus] = useState("");
   const [completed, setCompleted] = useState<number | null>(null);
   const [total, setTotal] = useState<number | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
-  const started = useRef(false);
+  const report = useRef(onProgress);
 
   useEffect(() => {
-    // One download at a time, in order, and only ever started once: React
-    // may run an effect twice in development and two pulls of the same
-    // model would fight over the same progress bar.
-    if (started.current) return;
-    started.current = true;
+    report.current = onProgress;
+  }, [onProgress]);
 
-    let cancelled = false;
+  useEffect(() => {
+    report.current?.(index, completed && total ? Math.min(1, completed / total) : null);
+  }, [index, completed, total]);
+
+  useEffect(() => {
+    // One download at a time, in order. React runs an effect twice in
+    // development; the first run is aborted, connection and all, so the
+    // second is the only one reporting. A guard that skipped the second run
+    // left the first one cancelled and the bar stuck at "Starting".
+    const abort = new AbortController();
+    const cancelled = () => abort.signal.aborted;
 
     (async () => {
       for (let i = 0; i < models.length; i++) {
-        if (cancelled) return;
+        if (cancelled()) return;
         setIndex(i);
         setStatus("");
         setCompleted(null);
@@ -70,35 +79,38 @@ export default function PullProgress({ models, onDone, onError }: PullProgressPr
 
         let streamError: string | null = null;
         try {
-          await pullModel(models[i], (event) => {
-            if (cancelled) return;
-            if (event.type === "progress") {
-              setStatus(String(event.status ?? ""));
-              setCompleted(typeof event.completed === "number" ? event.completed : null);
-              setTotal(typeof event.total === "number" ? event.total : null);
-            } else if (event.type === "error") {
-              // The brain reports the reason verbatim rather than ending
-              // the stream silently, so pass it straight through.
-              streamError = String(event.message ?? "The download failed.");
-            }
-          });
+          await pullModel(
+            models[i],
+            (event) => {
+              if (cancelled()) return;
+              if (event.type === "progress") {
+                setStatus(String(event.status ?? ""));
+                setCompleted(typeof event.completed === "number" ? event.completed : null);
+                setTotal(typeof event.total === "number" ? event.total : null);
+              } else if (event.type === "error") {
+                // The brain reports the reason verbatim rather than ending
+                // the stream silently, so pass it straight through.
+                streamError = String(event.message ?? "The download failed.");
+              }
+            },
+            abort.signal
+          );
         } catch (e) {
+          if (cancelled()) return;
           streamError = (e as Error).message;
         }
 
-        if (cancelled) return;
+        if (cancelled()) return;
         if (streamError) {
           setFailed(streamError);
           onError?.(streamError);
           return;
         }
       }
-      if (!cancelled) onDone?.();
+      if (!cancelled()) onDone?.();
     })();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => abort.abort();
   }, [models, onDone, onError]);
 
   if (failed) {
