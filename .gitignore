@@ -10,6 +10,9 @@ __pycache__/
 # the training log. None of it belongs in version control.
 shadow-brain/data/
 
+# Eval runs: replies from a live model, regenerated whenever the eval runs.
+shadow-brain/evals/results/
+
 # Editor/OS noise
 .DS_Store
 *.log
