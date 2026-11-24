@@ -1,0 +1,1842 @@
+{"prompt": "can you write a python script to scrape the local weather data from that API?", "route": "coding"}
+{"prompt": "start the printer driver update now please", "route": "system"}
+{"prompt": "add type hints to the entire utils module please", "route": "coding"}
+{"prompt": "backup all documents in my work directory", "route": "files"}
+{"prompt": "turn on bluetooth", "route": "system"}
+{"prompt": "turn on airplane mode then turn it off", "route": "system"}
+{"prompt": "can you open that csv file I uploaded?", "route": "files"}
+{"prompt": "enable guest mode on the network adapter temporarily", "route": "system"}
+{"prompt": "what do i need to do if it rains today", "route": "chat"}
+{"prompt": "is there anyone who can confirm if that rumor about the bridge closure is true?", "route": "research"}
+{"prompt": "what is the current cpu temperature reading", "route": "system"}
+{"prompt": "check disk usage on the /var partition", "route": "system"}
+{"prompt": "create a new text document called shopping list", "route": "files"}
+{"prompt": "make sure these docs are synced before we leave", "route": "files"}
+{"prompt": "update the react component to use hooks instead of class", "route": "coding"}
+{"prompt": "read out the contents of notes.txt so i can copy it", "route": "files"}
+{"prompt": "look up the current availability of group tours at the botanical garden", "route": "research"}
+{"prompt": "where is the nearest pharmacy that stocks insulin?", "route": "research"}
+{"prompt": "can you rename the project-specs.txt file to be uppercase now?", "route": "files"}
+{"prompt": "check how much ram my laptop has left", "route": "system"}
+{"prompt": "i accidentally moved my homework folder back i need it here again", "route": "files"}
+{"prompt": "can you help me fix this syntax error in my vue component", "route": "coding"}
+{"prompt": "write a quick sql stored procedure to sum sales by month", "route": "coding"}
+{"prompt": "my phone isn't turning on can u help?", "route": "chat"}
+{"prompt": "i need some help understanding what gravity actually does", "route": "chat"}
+{"prompt": "what's the cost of a round trip to cleveland from here right now?", "route": "research"}
+{"prompt": "fix the syntax error in line 42 of my app.py file", "route": "coding"}
+{"prompt": "what is the capital of france", "route": "chat"}
+{"prompt": "i need to find all the config files in the system root directory.", "route": "files"}
+{"prompt": "what are today's top weather forecasts for the bay area", "route": "research"}
+{"prompt": "where are my photos from yesterday's trip stored on this laptop", "route": "files"}
+{"prompt": "restart the printer server", "route": "system"}
+{"prompt": "search for any text files containing \"password\" without passwords", "route": "files"}
+{"prompt": "create a new directory structure like documents/images/music", "route": "files"}
+{"prompt": "where did i put the json data from yesterday?", "route": "files"}
+{"prompt": "can you refactor the loop in my sql query to reduce execution time by filtering earlier?", "route": "coding"}
+{"prompt": "who won the last super bowl game", "route": "chat"}
+{"prompt": "how much does a standard room cost at the grand hotel right now", "route": "research"}
+{"prompt": "find the contact info for the city planning department.", "route": "research"}
+{"prompt": "create a new folder called groceries", "route": "files"}
+{"prompt": "find where I stored my vacation photos from last summer", "route": "files"}
+{"prompt": "turn off bluetooth since we're not using headphones today", "route": "system"}
+{"prompt": "where are the current parking rates for downtown hotels", "route": "research"}
+{"prompt": "has the airport terminal 3 been extended for international flights yet?", "route": "research"}
+{"prompt": "can you search for the contact info for the plumbing company that fixed my sink?", "route": "research"}
+{"prompt": "where can i find the instructions for updating my vehicle registration online?", "route": "research"}
+{"prompt": "what are the requirements for applying to the senior housing program?", "route": "research"}
+{"prompt": "i think the new policy on parking is a terrible idea, what do you think?", "route": "chat"}
+{"prompt": "where are you located", "route": "chat"}
+{"prompt": "move the export folder where i saved everything last night", "route": "files"}
+{"prompt": "my computer keeps freezing every time i run this program", "route": "chat"}
+{"prompt": "forgot my keys again sorry", "route": "chat"}
+{"prompt": "can you find out the current ticket prices for the olympic stadium tomorrow?", "route": "research"}
+{"prompt": "how long does it usually take to process my passport renewal application online", "route": "research"}
+{"prompt": "is the bakery open on holidays and what time do they close?", "route": "research"}
+{"prompt": "run the cleaning script in the backup folder", "route": "system"}
+{"prompt": "i need help refactoring this legacy nodejs code so it handles async better", "route": "coding"}
+{"prompt": "what do i do if my dog starts biting other dogs", "route": "chat"}
+{"prompt": "so what should i do about my homework if i don't like doing it?", "route": "chat"}
+{"prompt": "i hear thunder but i cant see rain where is it coming from?", "route": "chat"}
+{"prompt": "can you refactor these java classes to implement the strategy pattern?", "route": "coding"}
+{"prompt": "why does the sky turn blue at sunset", "route": "chat"}
+{"prompt": "search for any txt files that contain the word \"meeting\" and show me where they are", "route": "files"}
+{"prompt": "hello can you explain photosynthesis like i am five?", "route": "chat"}
+{"prompt": "shutdown the system after ten minutes from now", "route": "system"}
+{"prompt": "hi there, how are you doing today?", "route": "chat"}
+{"prompt": "can you calculate 2 plus 2 for me?", "route": "chat"}
+{"prompt": "does walmart still carry this specific brand of detergent?", "route": "research"}
+{"prompt": "did the school nurse finish her shift yesterday and is she back tomorrow?", "route": "research"}
+{"prompt": "show me the file structure of the /var/www/html folder", "route": "files"}
+{"prompt": "i have a bunch of scattered todo items, could you put them all in one place?", "route": "files"}
+{"prompt": "show me the logged-in user accounts list", "route": "system"}
+{"prompt": "show me my open applications", "route": "system"}
+{"prompt": "start the firewall settings up", "route": "system"}
+{"prompt": "create a new backup copy of my weekly report.xlsx", "route": "files"}
+{"prompt": "how much does the new electric vehicle model cost with a warranty", "route": "research"}
+{"prompt": "how do i change my oil in a 2015 truck?", "route": "chat"}
+{"prompt": "where did i put my car keys they must be in the house somewhere", "route": "chat"}
+{"prompt": "my node app keeps crashing with a memory leak, where should i start debugging?", "route": "coding"}
+{"prompt": "i forgot how to bake sourdough bread can you give me tips", "route": "chat"}
+{"prompt": "morning", "route": "chat"}
+{"prompt": "can you refactor this react component to use hooks instead of class components?", "route": "coding"}
+{"prompt": "delete those old backup files i don't need anymore", "route": "files"}
+{"prompt": "add error handling to this shell function", "route": "coding"}
+{"prompt": "where can i buy a return ticket for the olympics next year online?", "route": "research"}
+{"prompt": "find me the nearest pharmacy that still has ibuprofen in stock.", "route": "research"}
+{"prompt": "open a command prompt and run disk cleanup", "route": "system"}
+{"prompt": "why is it always so noisy on this street at rush hour", "route": "chat"}
+{"prompt": "run a quick diagnostic on my system", "route": "system"}
+{"prompt": "list all txt files larger than 5mb on my hard drive", "route": "files"}
+{"prompt": "read the readme file and tell me how to use this tool", "route": "files"}
+{"prompt": "is there parking available at the new gym downtown after hours?", "route": "research"}
+{"prompt": "what happens when you mix baking soda and vinegar together", "route": "chat"}
+{"prompt": "does my health insurance plan cover dental work for kids over ten?", "route": "research"}
+{"prompt": "create a python script to automate my backups", "route": "coding"}
+{"prompt": "what's the weather like in tokyo today?", "route": "research"}
+{"prompt": "create a backup copy of my important text documents", "route": "files"}
+{"prompt": "i need to organize my downloads folder so files with .pdf get sorted into a new archive directory", "route": "files"}
+{"prompt": "how do i fix my printer that keeps pausing?", "route": "chat"}
+{"prompt": "enable bluetooth pairing", "route": "system"}
+{"prompt": "does the 2024 model year of the f-150 still come with the tow package as standard", "route": "research"}
+{"prompt": "check if the wifi driver is currently active", "route": "system"}
+{"prompt": "generate a quick script in perl to convert csv files to json", "route": "coding"}
+{"prompt": "where is my shopping list from yesterday?", "route": "files"}
+{"prompt": "my current bash script is failing with a 500 error on the port argument, help me fix it.", "route": "coding"}
+{"prompt": "close firefox and slack so they don't crash in the background", "route": "system"}
+{"prompt": "hi human", "route": "chat"}
+{"prompt": "check the availability of tickets for the concert on saturday night", "route": "research"}
+{"prompt": "hey", "route": "chat"}
+{"prompt": "find any txt files named receipt", "route": "files"}
+{"prompt": "i need to delete all the old csv files from last year", "route": "files"}
+{"prompt": "stop all services starting with the word \"temp\"", "route": "system"}
+{"prompt": "close firefox then open visual studio code instead", "route": "system"}
+{"prompt": "my code is throwing a runtime error on large inputs what do i fix?", "route": "coding"}
+{"prompt": "create a new empty folder named random ideas", "route": "files"}
+{"prompt": "can you help me test the edge cases for this graphql resolver function?", "route": "coding"}
+{"prompt": "open a new google chrome window", "route": "system"}
+{"prompt": "create a quick shell script that renames all images older than a month in my backup folder", "route": "coding"}
+{"prompt": "convert this python script to run on linux instead of mac", "route": "coding"}
+{"prompt": "have they released the details about the power outage yet?", "route": "research"}
+{"prompt": "write a nodejs function to validate user input format", "route": "coding"}
+{"prompt": "can you write a python script to scrape the prices from amazon?", "route": "coding"}
+{"prompt": "did they release the latest safety guidelines for swimming in the lake yet?", "route": "research"}
+{"prompt": "find all markdown files and list their names in a simple text output", "route": "files"}
+{"prompt": "i want to see the latest article about climate change from last month.", "route": "research"}
+{"prompt": "update all graphics drivers to the latest version from nvidia", "route": "system"}
+{"prompt": "open a new terminal window", "route": "system"}
+{"prompt": "what is the weather forecast for tomorrow in seattle?", "route": "research"}
+{"prompt": "enable the display settings panel", "route": "system"}
+{"prompt": "unlock my screen with my password", "route": "system"}
+{"prompt": "search for recent complaints about the water quality in the river nearby", "route": "research"}
+{"prompt": "can you find the latest news about the school board vote?", "route": "research"}
+{"prompt": "what are some healthy snacks under $5", "route": "chat"}
+{"prompt": "turn on the external hdmi port for my monitor", "route": "system"}
+{"prompt": "check event logs for any critical errors since yesterday", "route": "system"}
+{"prompt": "how would you fix my computer if i gave it to you today?", "route": "chat"}
+{"prompt": "disable the firewall temporarily just for testing", "route": "system"}
+{"prompt": "turn off bluetooth and cut the power to the wi-fi card", "route": "system"}
+{"prompt": "i'd like to convert this bash loop into a more efficient python generator", "route": "coding"}
+{"prompt": "i need help debugging why the server crashes when more than 10 users connect", "route": "coding"}
+{"prompt": "i need to refactor these hardcoded magic numbers in my config file to use environment variables", "route": "coding"}
+{"prompt": "rename the zip file to archives_2023", "route": "files"}
+{"prompt": "run the backup script again", "route": "system"}
+{"prompt": "search for the most recent news about the flood levels along river valley.", "route": "research"}
+{"prompt": "run a full virus scan using native tools", "route": "system"}
+{"prompt": "create a new folder called \"todo_items\" inside documents", "route": "files"}
+{"prompt": "fix the race condition in my node service", "route": "coding"}
+{"prompt": "is there any news about the factory shutdown today?", "route": "research"}
+{"prompt": "is there a ticket required for the upcoming music festival on saturday?", "route": "research"}
+{"prompt": "can you pull up the latest article on that new bridge construction?", "route": "research"}
+{"prompt": "when did the last solar eclipse occur and where to view it", "route": "research"}
+{"prompt": "can you read this txt file and tell me what it says about my schedule?", "route": "files"}
+{"prompt": "find me all the receipts from last month", "route": "files"}
+{"prompt": "how much ram is free on this machine?", "route": "system"}
+{"prompt": "does the school district have a list of approved textbooks available for rent?", "route": "research"}
+{"prompt": "what are the requirements to get a license for driving a cargo truck?", "route": "research"}
+{"prompt": "what happened to the delivery service last week? i need current info.", "route": "research"}
+{"prompt": "show me all running services on the computer", "route": "system"}
+{"prompt": "please explain how a smartphone works for my grandson who is six.", "route": "chat"}
+{"prompt": "fix the null pointer exception in my android service", "route": "coding"}
+{"prompt": "check if my wifi password is changed", "route": "system"}
+{"prompt": "does anyone know where the best sushi place is located", "route": "chat"}
+{"prompt": "is the construction site on 5th avenue open for deliveries today?", "route": "research"}
+{"prompt": "enable automatic updates for drivers", "route": "system"}
+{"prompt": "give me details on the upcoming schedule of the local football team.", "route": "research"}
+{"prompt": "locate the configuration file used by my old app", "route": "files"}
+{"prompt": "can you check the battery health percentage for me?", "route": "system"}
+{"prompt": "is there any news about the solar eclipse happening tomorrow in california", "route": "research"}
+{"prompt": "can u explain gravity simply", "route": "chat"}
+{"prompt": "help me figure out which movie to watch tonight", "route": "chat"}
+{"prompt": "explain the water cycle like im five", "route": "chat"}
+{"prompt": "im feeling pretty off today how can i cope", "route": "chat"}
+{"prompt": "write a lambda function script to process and transform s3 bucket data", "route": "coding"}
+{"prompt": "delete the temporary backup list i made last night please.", "route": "files"}
+{"prompt": "rename my vacation photos to summer2024", "route": "files"}
+{"prompt": "i heard people are talking about a new movie but id like your opinion", "route": "chat"}
+{"prompt": "create a new text file called grocery_notes.txt", "route": "files"}
+{"prompt": "generate a dockerfile snippet to build a multi-stage application for nodejs and python", "route": "coding"}
+{"prompt": "did they release the new app download link yet today?", "route": "research"}
+{"prompt": "my golang service is hanging on the database connection pool, need ideas for optimizing the query", "route": "coding"}
+{"prompt": "how do i debug why my api response returns 500 when the database connection pool is exhausted?", "route": "coding"}
+{"prompt": "can you tell me everything i need to know about booking a flight right now?", "route": "research"}
+{"prompt": "check if the update service is currently active", "route": "system"}
+{"prompt": "can you show me where the inventory list is stored?", "route": "files"}
+{"prompt": "show me all files ending with .txt in the home directory", "route": "files"}
+{"prompt": "need a vue filter that formats dates according to the user's locale settings", "route": "coding"}
+{"prompt": "check how much disk space is occupied by each folder", "route": "system"}
+{"prompt": "do i need special permits to build a shed behind my property?", "route": "research"}
+{"prompt": "write a python script to parse csv files and export them as json", "route": "coding"}
+{"prompt": "check my cpu temperature", "route": "system"}
+{"prompt": "open the task manager and end the process named chrome.exe", "route": "system"}
+{"prompt": "read the csv file in my downloads folder please", "route": "files"}
+{"prompt": "hey i forgot what day it is today", "route": "chat"}
+{"prompt": "check how much battery power i have left", "route": "system"}
+{"prompt": "how much does it cost to rent a kayak at the marina right now?", "route": "research"}
+{"prompt": "can you fix this bug in my nodejs server where the timeout keeps failing", "route": "coding"}
+{"prompt": "how much ram do i have left?", "route": "system"}
+{"prompt": "my golang service is throwing a panic on startup, what checks should i run", "route": "coding"}
+{"prompt": "please explain photosynthesis in simple terms", "route": "chat"}
+{"prompt": "where can i buy tickets for the next concert by adele?", "route": "research"}
+{"prompt": "pause network adapter temporarily", "route": "system"}
+{"prompt": "can you tell me where i can buy those vintage records in town?", "route": "research"}
+{"prompt": "fix the indentation in this bash script it keeps failing", "route": "coding"}
+{"prompt": "run diagnostics on my hard drive", "route": "system"}
+{"prompt": "i messed up the git commit and want to revert just that change", "route": "coding"}
+{"prompt": "can you help me write a loop that processes large datasets efficiently?", "route": "coding"}
+{"prompt": "can you help me write the code to send emails via the smtp api?", "route": "coding"}
+{"prompt": "can you tell me what photosynthesis is", "route": "chat"}
+{"prompt": "can you help me write a unit test for the image resizing algorithm?", "route": "coding"}
+{"prompt": "is it better to save your money in a bank or under the mattress?", "route": "chat"}
+{"prompt": "can you help me debug why my loop keeps printing the last item twice?", "route": "coding"}
+{"prompt": "run a full antivirus scan from command line", "route": "system"}
+{"prompt": "what's up man just wanna chat", "route": "chat"}
+{"prompt": "is there a specific requirement to get a driver's license in california?", "route": "research"}
+{"prompt": "find all pdf files older than 2019 and delete them", "route": "files"}
+{"prompt": "why is water wet if it has no skin?", "route": "chat"}
+{"prompt": "delete the cache files in the root directory", "route": "files"}
+{"prompt": "move my contacts export file to the secure folder", "route": "files"}
+{"prompt": "check why my fans are spinning so loud right now", "route": "system"}
+{"prompt": "why does my bike tire keep going flat", "route": "chat"}
+{"prompt": "is that new law going into effect next month or later", "route": "research"}
+{"prompt": "i'm trying to create a graphql mutation for updating users", "route": "coding"}
+{"prompt": "oops i deleted the wrong csv file can you get it back?", "route": "files"}
+{"prompt": "im bored do u have any ideas for movies to watch", "route": "chat"}
+{"prompt": "is my wifi adapter disconnected?", "route": "system"}
+{"prompt": "does anyone know how much it costs to rent a bike at the downtown station?", "route": "research"}
+{"prompt": "generate a regex pattern to extract phone numbers from text", "route": "coding"}
+{"prompt": "is the hard drive spinning or is it dead?", "route": "system"}
+{"prompt": "disable automatic driver updates in my panel", "route": "system"}
+{"prompt": "show me how to convert these legacy sql statements to postgres dialect", "route": "coding"}
+{"prompt": "read the config.json file at /home/user/app/settings and show me the api keys", "route": "files"}
+{"prompt": "close the background process that's eating my cpu", "route": "system"}
+{"prompt": "does amazon still deliver to my zip code right now", "route": "research"}
+{"prompt": "what time does the museum start its special exhibit tonight", "route": "research"}
+{"prompt": "move my photos into the new camera roll directory", "route": "files"}
+{"prompt": "stop the print spooler service", "route": "system"}
+{"prompt": "hi", "route": "chat"}
+{"prompt": "create a new text file called grocery list", "route": "files"}
+{"prompt": "check if there is parking available at the museum tonight after hours.", "route": "research"}
+{"prompt": "disable automatic updates for one week just for me", "route": "system"}
+{"prompt": "turn off remote desktop access in settings", "route": "system"}
+{"prompt": "toggle wifi off and then back on again", "route": "system"}
+{"prompt": "here is a bug in my python script, here's the traceback can you patch it?", "route": "coding"}
+{"prompt": "i need to convert these xml documents to json using xslt", "route": "coding"}
+{"prompt": "turn off the system notifications completely", "route": "system"}
+{"prompt": "rewrite this gatsby config to enable sourcemaps", "route": "coding"}
+{"prompt": "morning coffee sounds great with toast right", "route": "chat"}
+{"prompt": "can you open that project report i left on my desktop?", "route": "files"}
+{"prompt": "i forgot how to install dependencies with npm in a non-standard project structure", "route": "coding"}
+{"prompt": "are you sure about that movie?", "route": "chat"}
+{"prompt": "hey whats up how are you doing today?", "route": "chat"}
+{"prompt": "i want to automate the deployment process by writing a terraform script for this infra", "route": "coding"}
+{"prompt": "i need to disable quick startup in power options", "route": "system"}
+{"prompt": "open settings and change the wallpaper resolution", "route": "system"}
+{"prompt": "generate a sql query to find users who haven't logged in for over 90 days.", "route": "coding"}
+{"prompt": "read the latest bug report txt from yesterday's email", "route": "files"}
+{"prompt": "is the flu shot available at my local pharmacy this week", "route": "research"}
+{"prompt": "stop the bluetooth adapter right now", "route": "system"}
+{"prompt": "show me the list of running applications", "route": "system"}
+{"prompt": "stop that background app draining my cpu", "route": "system"}
+{"prompt": "does everyone know that apple drops from the tree", "route": "chat"}
+{"prompt": "turn on airplane mode and wait two minutes", "route": "system"}
+{"prompt": "could you tell me some tips for learning a new language from scratch", "route": "chat"}
+{"prompt": "disable updates for firefox browser", "route": "system"}
+{"prompt": "update the configuration schema so it accepts both date strings and timestamp objects", "route": "coding"}
+{"prompt": "is my wifi working properly", "route": "system"}
+{"prompt": "can you tell me a joke?", "route": "chat"}
+{"prompt": "give me an opinion on the new movie coming out", "route": "chat"}
+{"prompt": "find any json files that contain user passwords", "route": "files"}
+{"prompt": "i need a regex pattern to extract all transaction IDs from this log file.", "route": "coding"}
+{"prompt": "delete the old project backup folder from my desktop", "route": "files"}
+{"prompt": "i need to move all the json files from my downloads folder into docs.", "route": "files"}
+{"prompt": "boot from usb stick", "route": "system"}
+{"prompt": "can you check if the school is open for summer camp registration today?", "route": "research"}
+{"prompt": "can you find out where i can get a prescription refill for my allergy meds", "route": "research"}
+{"prompt": "where can i find documentation on how to reset my router?", "route": "research"}
+{"prompt": "turn on airplane mode for ten seconds", "route": "system"}
+{"prompt": "rewrite this complex nested if-else block into a series of clear conditions for better readability", "route": "coding"}
+{"prompt": "how do i debug a race condition in my multi-threaded c++ application?", "route": "coding"}
+{"prompt": "write an elasticsearch query to find documents modified last week", "route": "coding"}
+{"prompt": "check the weather forecast for saturday morning in chicago.", "route": "research"}
+{"prompt": "delete all temporary logs older than 3 days from /var/log/app", "route": "files"}
+{"prompt": "read the contents of invoice_998.pdf", "route": "files"}
+{"prompt": "fix the async/await syntax in this vue component so the data updates correctly on mount", "route": "coding"}
+{"prompt": "i heard a rumor about the mayor resigning do you believe it", "route": "chat"}
+{"prompt": "could you tell me why the sky is blue?", "route": "chat"}
+{"prompt": "can i give advice on choosing a new laptop brand", "route": "chat"}
+{"prompt": "launch the system monitoring tool", "route": "system"}
+{"prompt": "save the current page content to a markdown file", "route": "files"}
+{"prompt": "close the windows updater window manually", "route": "system"}
+{"prompt": "implement retry logic for the api calls in node", "route": "coding"}
+{"prompt": "can you show me how to change the color theme in this css file from blue to red", "route": "coding"}
+{"prompt": "rewrite the function to handle null inputs safely", "route": "coding"}
+{"prompt": "can you tell me more about the health code requirements for restaurants right now?", "route": "research"}
+{"prompt": "check my current battery percentage and health status", "route": "system"}
+{"prompt": "enable auto-connect for mobile hotspots", "route": "system"}
+{"prompt": "please delete my old vacation photos", "route": "files"}
+{"prompt": "add logging statements to trace where the transaction timeout is occurring in ruby", "route": "coding"}
+{"prompt": "i heard there might be a traffic jam on bridge street today, is that true?", "route": "research"}
+{"prompt": "can you tell me what the price of a standard single room is at the grand hotel right now?", "route": "research"}
+{"prompt": "what are the latest rumors about the upcoming smartphone launch event", "route": "research"}
+{"prompt": "what services are running right now", "route": "system"}
+{"prompt": "i think that movie was overrated", "route": "chat"}
+{"prompt": "write a simple test case to verify the api endpoint returns null", "route": "coding"}
+{"prompt": "is my wifi actually connected to the router", "route": "system"}
+{"prompt": "i need to organize these csv files in one folder", "route": "files"}
+{"prompt": "check the error logs in the console output", "route": "system"}
+{"prompt": "did they cancel the community garden meeting or is it still happening next saturday?", "route": "research"}
+{"prompt": "can you tell me how to tie a bowtie?", "route": "chat"}
+{"prompt": "enable guest mode in the operating system just for safety", "route": "system"}
+{"prompt": "is the new pizza place downtown open today since their sign says they're closed?", "route": "research"}
+{"prompt": "the frontend react app isn't connecting to the backend websocket, let's debug the handshake code", "route": "coding"}
+{"prompt": "can you look up the current stock price for apple inc", "route": "research"}
+{"prompt": "generate a postman collection json that tests all the routes in our new rest api", "route": "coding"}
+{"prompt": "who made that announcement about the school board changes?", "route": "research"}
+{"prompt": "find the project folder where i saved last week's notes", "route": "files"}
+{"prompt": "can you show me where the nearest 24 hour pharmacy is located", "route": "research"}
+{"prompt": "find the recipe for authentic sushi using only Japanese ingredients", "route": "research"}
+{"prompt": "disable the startup app named updater", "route": "system"}
+{"prompt": "read the schema.json to understand the structure before export", "route": "files"}
+{"prompt": "find any pdf files larger than 5mb and tell me their names", "route": "files"}
+{"prompt": "find any csv files containing customer emails and read them for me", "route": "files"}
+{"prompt": "where do i find the annual report for the city water utility?", "route": "research"}
+{"prompt": "my ci pipeline failed because of a linting issue, let me know what to change", "route": "coding"}
+{"prompt": "verify if the system has enough ram for this heavy render job", "route": "system"}
+{"prompt": "how much does a round trip ticket cost from nyc to London right now?", "route": "research"}
+{"prompt": "can you look up the weather forecast for the mountain range next week?", "route": "research"}
+{"prompt": "who is the president of france currently", "route": "research"}
+{"prompt": "where can i find directions to the airport terminal c?", "route": "research"}
+{"prompt": "do you think remote work is good long term", "route": "chat"}
+{"prompt": "my regex isn't matching the expected pattern, help me debug it", "route": "coding"}
+{"prompt": "did the mayor sign off on the budget increase yesterday?", "route": "research"}
+{"prompt": "open terminal and type df -h", "route": "system"}
+{"prompt": "my terraform code is not applying, it says resource already exists", "route": "coding"}
+{"prompt": "can you write a bash script to automate my daily backup process?", "route": "coding"}
+{"prompt": "read through that csv file with all my expenses and tell me what to do with it", "route": "files"}
+{"prompt": "how do i make pancakes from scratch?", "route": "chat"}
+{"prompt": "can you shut down my laptop for me?", "route": "system"}
+{"prompt": "where is the contact list that i emailed myself yesterday?", "route": "files"}
+{"prompt": "i'm getting an 'undefined is not a function' error in my typescript file near line 42, can you spot it?", "route": "coding"}
+{"prompt": "why is this function returning null and how do i debug it?", "route": "coding"}
+{"prompt": "is the subway running on time today or are there delays?", "route": "research"}
+{"prompt": "is my hard drive full of temp files?", "route": "system"}
+{"prompt": "check availability for a conference room at the hotel downtown", "route": "research"}
+{"prompt": "organize my home directory into subfolders by category please", "route": "files"}
+{"prompt": "is there free wifi available at the new co-working space today", "route": "research"}
+{"prompt": "can you write a python script to scrape the local weather api?", "route": "coding"}
+{"prompt": "find any json files I have created this month", "route": "files"}
+{"prompt": "what are the opening hours for the post office today?", "route": "research"}
+{"prompt": "what is the current exchange rate between the euro and the dollar?", "route": "research"}
+{"prompt": "stop all running processes", "route": "system"}
+{"prompt": "where is the csv file with sales numbers from last week?", "route": "files"}
+{"prompt": "where can i find directions to the red barn winery from i-95?", "route": "research"}
+{"prompt": "run the cleanup script i saved yesterday", "route": "system"}
+{"prompt": "how do i write a unit test using jest to verify that the login function returns false when password is wrong?", "route": "coding"}
+{"prompt": "move everything from temp folder into main storage", "route": "files"}
+{"prompt": "update the database schema to add a new column for customer loyalty points", "route": "coding"}
+{"prompt": "uninstall that antivirus program i just downloaded", "route": "system"}
+{"prompt": "can you explain how photosynthesis works to my kids?", "route": "chat"}
+{"prompt": "kill that stuck chrome process", "route": "system"}
+{"prompt": "can you debug why this nodejs async callback is never being called?", "route": "coding"}
+{"prompt": "organize my desktop icons by moving them to categorized folders", "route": "files"}
+{"prompt": "can you find out what happens if i order food before they open?", "route": "research"}
+{"prompt": "did anyone see the news report about the flood warning yesterday", "route": "research"}
+{"prompt": "read the large log file at /data/syslog-2024.log and count lines starting with ERROR", "route": "files"}
+{"prompt": "can u explain how photosynthesis works like i am five", "route": "chat"}
+{"prompt": "did they update the menu at that italian place or is it still the same specials?", "route": "research"}
+{"prompt": "find all images in the photos directory and sort them by date", "route": "files"}
+{"prompt": "rename this csv to sales_report_q3.csv", "route": "files"}
+{"prompt": "reset the system time to 2024", "route": "system"}
+{"prompt": "is there a pending update i should install today?", "route": "system"}
+{"prompt": "what do you think of the new weather forecast for tomorrow", "route": "chat"}
+{"prompt": "can you check how much free ram i have left", "route": "system"}
+{"prompt": "show network latency stats", "route": "system"}
+{"prompt": "run sudo apt-get update", "route": "system"}
+{"prompt": "find where i saved my school report last semester", "route": "files"}
+{"prompt": "why is the sky blue?", "route": "chat"}
+{"prompt": "stop the printer service temporarily", "route": "system"}
+{"prompt": "delete all temporary files in my temp directory", "route": "files"}
+{"prompt": "fix the typo in the meeting agenda doc", "route": "files"}
+{"prompt": "find out what time the library hours change on weekends", "route": "research"}
+{"prompt": "move my project notes into a new folder called summer2024", "route": "files"}
+{"prompt": "i need a copy of the building permits submitted last month for 123 oak street", "route": "research"}
+{"prompt": "execute the backup database command now", "route": "system"}
+{"prompt": "can you translate this into japanese: hello world", "route": "chat"}
+{"prompt": "move the grocery list into budget folder", "route": "files"}
+{"prompt": "delete this temporary cache folder that seems stuck", "route": "files"}
+{"prompt": "stop the background updater service for a few minutes", "route": "system"}
+{"prompt": "my cat lost its way where should i look?", "route": "chat"}
+{"prompt": "did anyone else see that movie coming out later this week?", "route": "chat"}
+{"prompt": "did anyone else see that bird near the park today", "route": "chat"}
+{"prompt": "turn on the laptop screen", "route": "system"}
+{"prompt": "how much is a standard double room at the hyatt regency right now?", "route": "research"}
+{"prompt": "search for any receipts related to last month's trip", "route": "files"}
+{"prompt": "where did i save the json data for the monthly sales?", "route": "files"}
+{"prompt": "how do i make a cup of coffee", "route": "chat"}
+{"prompt": "monitor current disk space usage", "route": "system"}
+{"prompt": "does pineapple belong on pizza?", "route": "chat"}
+{"prompt": "i need to organize these csv exports from last week so i can sort them by date", "route": "files"}
+{"prompt": "restart the network adapter so i can connect to the office wifi again", "route": "system"}
+{"prompt": "give me the full path to the photo of the birthday party", "route": "files"}
+{"prompt": "delete these temporary files that are taking up space", "route": "files"}
+{"prompt": "copy the contents of notes.txt into a fresh markdown file named task_tracker.md", "route": "files"}
+{"prompt": "what are the current opening hours for the post office on weekends?", "route": "research"}
+{"prompt": "my rust project is missing the lib.rs file, can you create it with the basics", "route": "coding"}
+{"prompt": "where can i find the legal document about my tenant rights?", "route": "research"}
+{"prompt": "delete the temp folder that keeps appearing", "route": "files"}
+{"prompt": "backup all the csv files in my downloads directory", "route": "files"}
+{"prompt": "generate a bash script to clean up old log files older than 7 days.", "route": "coding"}
+{"prompt": "update all system drivers", "route": "system"}
+{"prompt": "explain how photosynthesis works to me like im five", "route": "chat"}
+{"prompt": "help me write a python script to parse json files", "route": "coding"}
+{"prompt": "help me fix the syntax error when i try to run my bash script", "route": "coding"}
+{"prompt": "how do i find out if the library book i borrowed was returned yesterday?", "route": "research"}
+{"prompt": "rename my image gallery folder to personal photos 2024", "route": "files"}
+{"prompt": "what are the current rules for renting a beach house during the summer season?", "route": "research"}
+{"prompt": "check if there is parking available at the concert hall after 8 pm tonight", "route": "research"}
+{"prompt": "add error handling so the web scraper doesn't crash if the site goes down", "route": "coding"}
+{"prompt": "what is the capital of france?", "route": "chat"}
+{"prompt": "restart my router because it's acting slow", "route": "system"}
+{"prompt": "close firefox and chrome together please", "route": "system"}
+{"prompt": "how do i apply for the small business grant they announced yesterday?", "route": "research"}
+{"prompt": "check how much battery is left on my phone", "route": "system"}
+{"prompt": "turn on airplane mode temporarily", "route": "system"}
+{"prompt": "enable automatic updates for the kernel", "route": "system"}
+{"prompt": "i tried to bake a cake but it turned into bricks what did i do wrong?", "route": "chat"}
+{"prompt": "what are the current stock prices for apple and amazon trading today?", "route": "research"}
+{"prompt": "what's the current availability of last call tickets for the jazz festival?", "route": "research"}
+{"prompt": "stop the print spooler service right away", "route": "system"}
+{"prompt": "what was the weather forecast saying for the marathon last tuesday morning?", "route": "research"}
+{"prompt": "show me which services are running", "route": "system"}
+{"prompt": "open my notes and bold every second item", "route": "files"}
+{"prompt": "where did the company that opened my local gym go bankrupt or relocate?", "route": "research"}
+{"prompt": "what are the current regulations for renting a bike in this city?", "route": "research"}
+{"prompt": "i got an uncaught exception in my javascript code, what does it mean and how do i fix it?", "route": "coding"}
+{"prompt": "generate a script to backup all files in /home/user with compression", "route": "coding"}
+{"prompt": "how do i refactor this function to remove the unused variable?", "route": "coding"}
+{"prompt": "where are my grocery list documents saved?", "route": "files"}
+{"prompt": "read and summarize the attached report", "route": "files"}
+{"prompt": "tell me the capital of france", "route": "chat"}
+{"prompt": "create a folder called homework_2024", "route": "files"}
+{"prompt": "find the json configuration for my python script and read just the api_key field", "route": "files"}
+{"prompt": "create a simple to-do list document for my upcoming trip", "route": "files"}
+{"prompt": "what's the address of the fire station i called earlier?", "route": "research"}
+{"prompt": "can you tell me where to buy groceries on sale at walmart this week", "route": "research"}
+{"prompt": "here is the latest spec, rewrite the data migration code to handle nulls better", "route": "coding"}
+{"prompt": "format the c drive as ext4", "route": "system"}
+{"prompt": "how should i handle a difficult argument with my boss?", "route": "chat"}
+{"prompt": "is there an open movie theater in my neighborhood right now", "route": "research"}
+{"prompt": "close my open browser tab", "route": "system"}
+{"prompt": "your dog looks really happy today", "route": "chat"}
+{"prompt": "please extract data.txt into a csv named cleaned_data.csv using comma as delimiter", "route": "files"}
+{"prompt": "create a folder called backups inside my documents and put all images in there", "route": "files"}
+{"prompt": "reboot the desktop computer", "route": "system"}
+{"prompt": "i need a quick script that parses this json and outputs just the prices", "route": "coding"}
+{"prompt": "install the latest drivers for my graphics card and then reboot automatically", "route": "system"}
+{"prompt": "stop that background app running all night long", "route": "system"}
+{"prompt": "show me connected devices list", "route": "system"}
+{"prompt": "organize my music playlist into separate folders by genre", "route": "files"}
+{"prompt": "is it better to drive or fly across state", "route": "chat"}
+{"prompt": "my dog ate a chocolate bar please tell me what to do", "route": "chat"}
+{"prompt": "write a unit test for the new login endpoint", "route": "coding"}
+{"prompt": "why do plants need sunlight during winter months too?", "route": "chat"}
+{"prompt": "i need to organize my images into by date folders", "route": "files"}
+{"prompt": "restart chrome if it froze", "route": "system"}
+{"prompt": "where are all those json configuration files stored on my desktop folder?", "route": "files"}
+{"prompt": "i need to write a python script to scrape emails from that domain", "route": "coding"}
+{"prompt": "rename this log file to remove the debug prefix", "route": "files"}
+{"prompt": "extract the data from this spreadsheet without writing a program", "route": "files"}
+{"prompt": "start the print spooler service", "route": "system"}
+{"prompt": "enable bluetooth so i can pair my headphones", "route": "system"}
+{"prompt": "how do i refactor this legacy codebase to use async patterns", "route": "coding"}
+{"prompt": "i forgot how to tie my shoes again", "route": "chat"}
+{"prompt": "read and summarize the content of log_202312.txt for me", "route": "files"}
+{"prompt": "what are the latest weather conditions for houston this week", "route": "research"}
+{"prompt": "i think i saved the recipe file somewhere, please find it for me", "route": "files"}
+{"prompt": "generate an html template with embedded javascript that toggles a dropdown menu on click", "route": "coding"}
+{"prompt": "i cant figure out how to calculate the interest on my loan", "route": "chat"}
+{"prompt": "did the power outage get fixed this morning in zone b?", "route": "research"}
+{"prompt": "can you tell me how much free ram is left on my laptop right now", "route": "system"}
+{"prompt": "read the contents of my project notes", "route": "files"}
+{"prompt": "what are the operating hours for the post office tomorrow?", "route": "research"}
+{"prompt": "can you convert this python list comprehension into a generator function to save memory?", "route": "coding"}
+{"prompt": "create a directory structure for my new music project", "route": "files"}
+{"prompt": "i have a long list of grocery items can you save it to a new text file?", "route": "files"}
+{"prompt": "extract data from this excel sheet and put it in a new file", "route": "files"}
+{"prompt": "start the print spooler service again", "route": "system"}
+{"prompt": "where is the parking garage at the convention center open now?", "route": "research"}
+{"prompt": "turn off all background processes except the music player and my terminal", "route": "system"}
+{"prompt": "reboot now", "route": "system"}
+{"prompt": "i want to write a rust program that calculates fibonacci numbers", "route": "coding"}
+{"prompt": "i heard people say the library closes at six but i think it might be longer", "route": "chat"}
+{"prompt": "generate a docker-compose file for my microservices stack", "route": "coding"}
+{"prompt": "copy the configuration file to another location for backup", "route": "files"}
+{"prompt": "are there any open bakeries in the city center today?", "route": "research"}
+{"prompt": "find the last message i sent regarding the meeting minutes and open it now", "route": "files"}
+{"prompt": "what color is the sky at sunset?", "route": "chat"}
+{"prompt": "tell me a joke about technology please", "route": "chat"}
+{"prompt": "can you debug why the api is returning 500 errors", "route": "coding"}
+{"prompt": "is the bus schedule changed because of construction next monday", "route": "research"}
+{"prompt": "open my grades.xlsx and tell me which subjects are lowest", "route": "files"}
+{"prompt": "what are the ingredients for pasta carbonara", "route": "chat"}
+{"prompt": "find out how much the annual membership costs for the library association", "route": "research"}
+{"prompt": "update the database migration script to add the new column", "route": "coding"}
+{"prompt": "who wrote this text document and where is it saved?", "route": "files"}
+{"prompt": "show me all files named receipts.jso in home directory", "route": "files"}
+{"prompt": "close firefox and then start google chrome instead", "route": "system"}
+{"prompt": "backup the entire root folder before i start deleting stuff", "route": "files"}
+{"prompt": "check if the bus route 15 runs late tomorrow during rainstorms", "route": "research"}
+{"prompt": "what are the opening hours for the library at night?", "route": "research"}
+{"prompt": "how does a solar panel generate electricity", "route": "chat"}
+{"prompt": "close all music apps i have open", "route": "system"}
+{"prompt": "check if my battery is holding charge well", "route": "system"}
+{"prompt": "generate a sql insert statement to populate the new orders table with sample data", "route": "coding"}
+{"prompt": "organize my documents into years 2023 and 2024 folders", "route": "files"}
+{"prompt": "i think the new tax law might affect small businesses a lot do you agree", "route": "chat"}
+{"prompt": "search for current deals on electronics during black friday sale 2024.", "route": "research"}
+{"prompt": "check how much storage is available on the sd card", "route": "system"}
+{"prompt": "did the storm cause power outages in my neighborhood today or is it safe yet?", "route": "research"}
+{"prompt": "what time does the library close on tuesdays in december?", "route": "research"}
+{"prompt": "i need the user manual for my 2019 iphone 12 pro max", "route": "research"}
+{"prompt": "close all windows please", "route": "system"}
+{"prompt": "show me the schedule for the soccer game this weekend.", "route": "research"}
+{"prompt": "could you explain what photosynthesis actually does for plants", "route": "chat"}
+{"prompt": "check what applications started when my computer woke up from sleep mode", "route": "system"}
+{"prompt": "read the instructions in that zip file and summarize them for me", "route": "files"}
+{"prompt": "can you move the pdf of the contract to my documents folder?", "route": "files"}
+{"prompt": "hello friend", "route": "chat"}
+{"prompt": "convert this list of requirements into a typescript interface definition", "route": "coding"}
+{"prompt": "show me the disk usage on each partition", "route": "system"}
+{"prompt": "what's the status on my order #4592 from that furniture store?", "route": "research"}
+{"prompt": "does sugar really make teeth rot", "route": "chat"}
+{"prompt": "who won the local soccer championship last season?", "route": "research"}
+{"prompt": "how do i automate the deployment pipeline using terraform and github actions?", "route": "coding"}
+{"prompt": "check how much battery is left in my phone right now", "route": "system"}
+{"prompt": "create a dockerfile that runs this app on port 8080 instead of 3000", "route": "coding"}
+{"prompt": "my dog seems sad why does that happen", "route": "chat"}
+{"prompt": "my cat thinks he is a dog", "route": "chat"}
+{"prompt": "does anyone know if the subway is having construction delays this week?", "route": "research"}
+{"prompt": "read the csv file I saved last night and show me a few rows", "route": "files"}
+{"prompt": "i think remote work has too many downsides", "route": "chat"}
+{"prompt": "restart the network adapter", "route": "system"}
+{"prompt": "are they still accepting reservations at that cafe since their reopening?", "route": "research"}
+{"prompt": "are there any tickets left for the theater tonight?", "route": "research"}
+{"prompt": "find all documents larger than 5mb and show them to me", "route": "files"}
+{"prompt": "reorder my contacts by phone number", "route": "files"}
+{"prompt": "can you fix the syntax error in my python script?", "route": "coding"}
+{"prompt": "backup the family calendar json", "route": "files"}
+{"prompt": "update me on the latest news about the hurricane hitting florida", "route": "research"}
+{"prompt": "generate a sql query to update the stock levels for all products over 100", "route": "coding"}
+{"prompt": "please refactor this legacy c++ codebase to remove the hardcoded configuration values", "route": "coding"}
+{"prompt": "can you fix this bug in my javascript code where the array is empty?", "route": "coding"}
+{"prompt": "check the current price of a used 2018 honda civic in oregon", "route": "research"}
+{"prompt": "is there any news about the flood warning being lifted from river valley?", "route": "research"}
+{"prompt": "open my budget tracker and tell me what to do", "route": "files"}
+{"prompt": "what is the capital city of australia spelled correctly", "route": "chat"}
+{"prompt": "i think the new movie at the cinema looks pretty cool", "route": "chat"}
+{"prompt": "turn screen brightness to maximum", "route": "system"}
+{"prompt": "who won the last world series game seven?", "route": "research"}
+{"prompt": "read the content of config.json so i can edit it", "route": "files"}
+{"prompt": "find any csv files larger than 10mb and list their names", "route": "files"}
+{"prompt": "update the main.py file to use environment variables for secrets", "route": "coding"}
+{"prompt": "can you recommend some good jazz bands", "route": "chat"}
+{"prompt": "generate a bash script that automates backing up my home directory every night", "route": "coding"}
+{"prompt": "i accidentally deleted a contact list, can you help me restore it from backup?", "route": "files"}
+{"prompt": "i tried to refactor this ref but got an infinite loop, stop it", "route": "coding"}
+{"prompt": "delete that old backup file i keep clicking on by accident", "route": "files"}
+{"prompt": "is the museum free to enter this coming friday afternoon?", "route": "research"}
+{"prompt": "reboot the router to fix the intermittent connection issues at home", "route": "system"}
+{"prompt": "convert the legacy c++ codebase to typescript for the frontend integration", "route": "coding"}
+{"prompt": "can you organize my desktop icons into logical folders based on extension type?", "route": "files"}
+{"prompt": "enable bluetooth and make sure headphones are paired", "route": "system"}
+{"prompt": "run the cleanup script for temporary files", "route": "system"}
+{"prompt": "i want to delete these old receipts from 2019 but first show me how many lines they are", "route": "files"}
+{"prompt": "my dog seems anxious whenever it hears the siren so what should i do", "route": "chat"}
+{"prompt": "is there any document about the meeting from yesterday?", "route": "files"}
+{"prompt": "find the last modified csv file named sales_data.csv and open it for editing", "route": "files"}
+{"prompt": "rename my old homework folder to grade10_math_2024", "route": "files"}
+{"prompt": "please refactor this legacy java method to use streams instead of loops.", "route": "coding"}
+{"prompt": "who runs the local park and what events are happening next month at their website", "route": "research"}
+{"prompt": "generate a regular expression to validate email addresses", "route": "coding"}
+{"prompt": "what happened last night at the town hall meeting?", "route": "research"}
+{"prompt": "can you tell me how to boil an egg", "route": "chat"}
+{"prompt": "hey can you just tell me how to make lasagna?", "route": "chat"}
+{"prompt": "hello hello", "route": "chat"}
+{"prompt": "rename this text file from grocery_list.txt to my-shopping-list.md", "route": "files"}
+{"prompt": "search for any text files mentioning \"urgent deadline\" and display them in a table", "route": "files"}
+{"prompt": "debug why the server keeps timing out on port 8080", "route": "coding"}
+{"prompt": "restart my computer", "route": "system"}
+{"prompt": "where can i download the latest software update for my printer driver?", "route": "research"}
+{"prompt": "can you explain how a solar panel works simply please", "route": "chat"}
+{"prompt": "is it true that pandas only eat bamboo or do they have other diets?", "route": "chat"}
+{"prompt": "can you find out if the library is open on weekends", "route": "research"}
+{"prompt": "my test suite keeps failing on the login module, what could be causing those assertion errors?", "route": "coding"}
+{"prompt": "can you help me write an sql trigger to auto-increment primary keys", "route": "coding"}
+{"prompt": "im having trouble understanding my taxes but i bet its just because im bad at math", "route": "chat"}
+{"prompt": "check my battery percentage", "route": "system"}
+{"prompt": "check current pricing on organic almond milk at wilsons grocery", "route": "research"}
+{"prompt": "copy the receipt image to cloud storage", "route": "files"}
+{"prompt": "where is the nearest pharmacy that stocks ibuprofen right now", "route": "research"}
+{"prompt": "disable bluetooth after i'm done", "route": "system"}
+{"prompt": "did anyone hear about the flood warnings in the north district today?", "route": "research"}
+{"prompt": "organize my desktop files into categories", "route": "files"}
+{"prompt": "please refactor this javascript logic to be asynchronous using promises instead of callbacks", "route": "coding"}
+{"prompt": "delete that old backup folder", "route": "files"}
+{"prompt": "can u translate this sentence into spanish", "route": "chat"}
+{"prompt": "where is the nearest pharmacy that still has ibuprofen in stock?", "route": "research"}
+{"prompt": "how many stars are there in our galaxy do you know?", "route": "chat"}
+{"prompt": "run a memory leak check script for me", "route": "system"}
+{"prompt": "can you check if my wifi password is still active", "route": "system"}
+{"prompt": "check if apple iphone 15 pro is still in stock online.", "route": "research"}
+{"prompt": "check disk space on c drive only", "route": "system"}
+{"prompt": "how does photosynthesis work", "route": "chat"}
+{"prompt": "who is the new director at the city museum?", "route": "research"}
+{"prompt": "what are the latest news updates about the local school board meeting", "route": "research"}
+{"prompt": "what is the address for the fire station on west avenue?", "route": "research"}
+{"prompt": "turn off the screen saver and dim the display", "route": "system"}
+{"prompt": "do you think remote work is good?", "route": "chat"}
+{"prompt": "write a script that parses csv files and outputs them as json objects", "route": "coding"}
+{"prompt": "find out if there's any power outages reported for my neighborhood right now", "route": "research"}
+{"prompt": "read the markdown file about travel tips", "route": "files"}
+{"prompt": "i need to refactor the login validation logic in our new auth module", "route": "coding"}
+{"prompt": "do cats eat bugs for dinner?", "route": "chat"}
+{"prompt": "rename \"my_secret_doc\" to \"family_trivia_questions_2024\"", "route": "files"}
+{"prompt": "fix my python script so it stops crashing on empty input", "route": "coding"}
+{"prompt": "who owns the land near the old mill site according to public records", "route": "research"}
+{"prompt": "kill all firefox processes", "route": "system"}
+{"prompt": "is it true that octopuses have three hearts", "route": "chat"}
+{"prompt": "my plant has yellow leaves please help", "route": "chat"}
+{"prompt": "write an automated test case for the login endpoint using pytest.", "route": "coding"}
+{"prompt": "update the typescript interfaces so they match the new backend response", "route": "coding"}
+{"prompt": "i think pizza is way better than burgers", "route": "chat"}
+{"prompt": "did the court ruling come down earlier today regarding the housing case?", "route": "research"}
+{"prompt": "is it true that the park is being closed for renovations next month?", "route": "research"}
+{"prompt": "i am getting a timeout error when trying to connect to redis, should i add exponential backoff in my code?", "route": "coding"}
+{"prompt": "i need to know if that new restaurant downtown is still open.", "route": "research"}
+{"prompt": "i need to see if my flight to paris this friday is still confirmed for 3pm.", "route": "research"}
+{"prompt": "am i connected to the internet?", "route": "system"}
+{"prompt": "can you tell me the price of gas right now near me?", "route": "research"}
+{"prompt": "where is the best place to look up the technical specs for that laptop model?", "route": "research"}
+{"prompt": "find and move all csv data files to the analytics directory", "route": "files"}
+{"prompt": "can you find me a doctor who specializes in pediatric orthopedics open right now?", "route": "research"}
+{"prompt": "delete this draft email i keep getting stuck on", "route": "files"}
+{"prompt": "i think cats make better pets than dogs why do you disagree?", "route": "chat"}
+{"prompt": "organize the csv files by date column", "route": "files"}
+{"prompt": "i need you to find that text file with the address i sent to you earlier", "route": "files"}
+{"prompt": "please extract the zip archive named contract_v2.zip", "route": "files"}
+{"prompt": "what are the opening hours for the library after new year's?", "route": "research"}
+{"prompt": "read the settings.json configuration file for me", "route": "files"}
+{"prompt": "create a new folder called backup inside my working directory", "route": "files"}
+{"prompt": "can you find the manual for that specific model vacuum cleaner?", "route": "research"}
+{"prompt": "please create a new folder called \"archived_2024\" and move everything older into it.", "route": "files"}
+{"prompt": "hello", "route": "chat"}
+{"prompt": "can you search for the recipe i saw on youtube yesterday about sourdough bread?", "route": "research"}
+{"prompt": "i'm getting a memory leak in my node process, help me trace where the circular reference is", "route": "coding"}
+{"prompt": "generate a template email using handlebars with dynamic variables merged in lodash", "route": "coding"}
+{"prompt": "write a bash script that logs all system errors into a separate text file", "route": "coding"}
+{"prompt": "what is the current temperature forecast for tokyo today?", "route": "research"}
+{"prompt": "update the unit tests to cover the new edge case where the input array is empty", "route": "coding"}
+{"prompt": "turn off the screen", "route": "system"}
+{"prompt": "can you generate a regex pattern to validate email addresses?", "route": "coding"}
+{"prompt": "can you show me all available flights from ny to la departing this friday", "route": "research"}
+{"prompt": "could you add error handling to my fetch requests so it doesn't exit silently?", "route": "coding"}
+{"prompt": "open the project config json and show me what it says", "route": "files"}
+{"prompt": "im feeling down can you talk about hope", "route": "chat"}
+{"prompt": "where can i find the contact info for the city recycling department?", "route": "research"}
+{"prompt": "create a unit test suite for the user authentication module", "route": "coding"}
+{"prompt": "does that new subway line in downtown run on weekends?", "route": "research"}
+{"prompt": "help me calculate my grocery bill", "route": "chat"}
+{"prompt": "generate a json output format for these new inventory records so we can parse it easily", "route": "coding"}
+{"prompt": "debug why this sql query returns duplicate rows every time", "route": "coding"}
+{"prompt": "create a subfolder called notes inside downloads", "route": "files"}
+{"prompt": "update the configuration for this nodejs server to add Redis caching", "route": "coding"}
+{"prompt": "can you recommend a good pizza place near me? no wait, just talk about why margherita is the best", "route": "chat"}
+{"prompt": "can you extract the top ten entries from my data.txt file?", "route": "files"}
+{"prompt": "delete all backup files matching the pattern *.tmp on my system", "route": "files"}
+{"prompt": "what is capitalism really about?", "route": "chat"}
+{"prompt": "move that spreadsheet to the downloads folder then close it", "route": "files"}
+{"prompt": "organize these downloaded zip files into subfolders by year", "route": "files"}
+{"prompt": "organize my screenshots into separate folders by date", "route": "files"}
+{"prompt": "run the cleanup tool to remove temporary files", "route": "system"}
+{"prompt": "please recommend some funny movies", "route": "chat"}
+{"prompt": "start the printer spooler service manually", "route": "system"}
+{"prompt": "update the database migration script to support schema versioning across multiple environments", "route": "coding"}
+{"prompt": "im feeling kinda down today do you have any uplifting quotes", "route": "chat"}
+{"prompt": "open that csv with the sales data", "route": "files"}
+{"prompt": "i cant find my wallet anywhere can you help search?", "route": "chat"}
+{"prompt": "reboot my computer to fix this glitch", "route": "system"}
+{"prompt": "how do i make this cake look better", "route": "chat"}
+{"prompt": "how much did the star wars sequel gross at the box office last night", "route": "research"}
+{"prompt": "is it okay to wash the car with a hose", "route": "chat"}
+{"prompt": "check if the FDA approved this new drug yet", "route": "research"}
+{"prompt": "generate a powershell command that creates a zip file from the current directory", "route": "coding"}
+{"prompt": "close the antivirus program it's being annoying me", "route": "system"}
+{"prompt": "run the disk cleanup utility to free up space on c drive", "route": "system"}
+{"prompt": "my dog ate my shoes", "route": "chat"}
+{"prompt": "how do I refactor this legacy java code to use dependency injection?", "route": "coding"}
+{"prompt": "my friend says their car won't start and i want to know if it needs oil", "route": "chat"}
+{"prompt": "i think the sky is green today", "route": "chat"}
+{"prompt": "can you look up the tax rates for property in our zip code?", "route": "research"}
+{"prompt": "rewrite this legacy java class to use async methods instead of blocking calls", "route": "coding"}
+{"prompt": "can you search for reviews on the top-rated pizza place in brooklyn?", "route": "research"}
+{"prompt": "who wrote to kill mockingbird", "route": "chat"}
+{"prompt": "hello my name is alex", "route": "chat"}
+{"prompt": "i need to refactor the error handling block to match the new standard", "route": "coding"}
+{"prompt": "kill process id 12345 immediately", "route": "system"}
+{"prompt": "delete old screenshots from last week", "route": "files"}
+{"prompt": "i need to write a function that sorts an array of objects by date", "route": "coding"}
+{"prompt": "where can i find official documentation for the new recycling policy?", "route": "research"}
+{"prompt": "turn on mobile hotspot sharing", "route": "system"}
+{"prompt": "check if the network card driver needs a reinstall", "route": "system"}
+{"prompt": "hey can u explain quantum entanglement simple?", "route": "chat"}
+{"prompt": "close firefox please", "route": "system"}
+{"prompt": "show me the disk space used by photos", "route": "system"}
+{"prompt": "i need help with refactoring this complex nested if statement to make it readable", "route": "coding"}
+{"prompt": "find me a nearby pharmacy that is still open late tonight", "route": "research"}
+{"prompt": "i think the meeting starts at nine but not sure", "route": "chat"}
+{"prompt": "is my wifi connected?", "route": "system"}
+{"prompt": "what apps are consuming more than 50% of my battery", "route": "system"}
+{"prompt": "hey hey", "route": "chat"}
+{"prompt": "run a full system scan to detect and remove malware", "route": "system"}
+{"prompt": "is the hard drive full or did it fail again?", "route": "system"}
+{"prompt": "how does a credit score get calculated exactly?", "route": "chat"}
+{"prompt": "rename project_alpha to project_beta", "route": "files"}
+{"prompt": "my neighbor claims he saw a bigfoot footprint near his porch this morning", "route": "chat"}
+{"prompt": "open the main_config.json document for viewing", "route": "files"}
+{"prompt": "check the current price of gas at shell station near me", "route": "research"}
+{"prompt": "i need a script that automates deploying my docker containers", "route": "coding"}
+{"prompt": "can you convert this html form into a react functional component?", "route": "coding"}
+{"prompt": "show me the battery percentage and plug status", "route": "system"}
+{"prompt": "my node app is throwing an uncaught exception whenever i try to parse the json response, can you debug it?", "route": "coding"}
+{"prompt": "i need to copy the research_paper.pdf to an external drive", "route": "files"}
+{"prompt": "can you tell me how to reset my wifi router without looking up the manual", "route": "chat"}
+{"prompt": "can you search for any file containing the word \"urgent\" in the project folder?", "route": "files"}
+{"prompt": "what time does the museum close this evening including holidays", "route": "research"}
+{"prompt": "please save my current draft under a new name without saving old one", "route": "files"}
+{"prompt": "find all the grocery lists in my notes", "route": "files"}
+{"prompt": "debug why the npm package installation keeps failing with that specific dependency", "route": "coding"}
+{"prompt": "show me all the services running currently on boot", "route": "system"}
+{"prompt": "i forgot how to tie my shoes", "route": "chat"}
+{"prompt": "list all txt files larger than five mb in temp directory", "route": "files"}
+{"prompt": "what's the weather forecast for tomorrow in oakland?", "route": "research"}
+{"prompt": "optimize this query to reduce the database load", "route": "coding"}
+{"prompt": "restart the web browser", "route": "system"}
+{"prompt": "hi there hope you are having a good day", "route": "chat"}
+{"prompt": "write a perl script that parses csv data and outputs it as json.", "route": "coding"}
+{"prompt": "write a go routine to process large files in parallel", "route": "coding"}
+{"prompt": "can you open that csv file i saved yesterday", "route": "files"}
+{"prompt": "disconnect external mouse via usb-c port", "route": "system"}
+{"prompt": "run a memory leak diagnostic script in root mode", "route": "system"}
+{"prompt": "save this json structure as config.txt", "route": "files"}
+{"prompt": "close firefox and google chrome", "route": "system"}
+{"prompt": "can you pull up the latest news about the school board meeting?", "route": "research"}
+{"prompt": "i think dogs are better than cats, what do you think?", "route": "chat"}
+{"prompt": "kill all processes using more than 500mb ram", "route": "system"}
+{"prompt": "check the current price of a round trip ticket to paris for next wednesday", "route": "research"}
+{"prompt": "start the printer service", "route": "system"}
+{"prompt": "find me the latest news on renewable energy policy changes in california.", "route": "research"}
+{"prompt": "i think cats make better pets than dogs", "route": "chat"}
+{"prompt": "write a simple algorithm to sort a list of dictionaries by their value", "route": "coding"}
+{"prompt": "write a small c++ program that reads two floats and outputs their sum", "route": "coding"}
+{"prompt": "what time does the library open and close on sunday?", "route": "research"}
+{"prompt": "find all csv files named something with \"inventory\" in the project root and list their paths", "route": "files"}
+{"prompt": "check how much free ram i have left", "route": "system"}
+{"prompt": "my vue app is rendering stale data, help me add computed properties", "route": "coding"}
+{"prompt": "can you add input validation for that email field in my form handler?", "route": "coding"}
+{"prompt": "can you find where i saved the shopping list from yesterday?", "route": "files"}
+{"prompt": "create a list file of movies to watch before the summer break", "route": "files"}
+{"prompt": "where can i find the latest news on the city council meeting?", "route": "research"}
+{"prompt": "how do i fix my leaky faucet", "route": "chat"}
+{"prompt": "can u help me pick a restaurant for dinner tonight", "route": "chat"}
+{"prompt": "organize my pictures by year and location", "route": "files"}
+{"prompt": "how do i write a dockerfile that includes multiple layers to minimize image size?", "route": "coding"}
+{"prompt": "move all files in the \"misc\" folder into this specific subfolder I just created called organized", "route": "files"}
+{"prompt": "hi there!", "route": "chat"}
+{"prompt": "generate a bash script that automates backup rotation for our s3 buckets", "route": "coding"}
+{"prompt": "search for any txt files containing \"urgent\"", "route": "files"}
+{"prompt": "please rename \"final_project_v2\" to \"final_project_final\" and update the internal link", "route": "files"}
+{"prompt": "can u explain how a vacuum works", "route": "chat"}
+{"prompt": "greetings", "route": "chat"}
+{"prompt": "open the command prompt and type in that weird script from yesterday", "route": "system"}
+{"prompt": "who wrote the article about the stock market crash yesterday?", "route": "research"}
+{"prompt": "my script crashes with a \"permission denied\" error when trying to read from /dev/sda1, what's the issue?", "route": "coding"}
+{"prompt": "restart the computer without asking me to confirm", "route": "system"}
+{"prompt": "what are the side effects of too much sugar?", "route": "chat"}
+{"prompt": "hide the draft files from everyone", "route": "files"}
+{"prompt": "stop all background services running right now", "route": "system"}
+{"prompt": "run sudo apt update system wide", "route": "system"}
+{"prompt": "update the build script to include the latest dependencies", "route": "coding"}
+{"prompt": "what happened in world war two?", "route": "chat"}
+{"prompt": "update the package.json version number and publish to npm", "route": "coding"}
+{"prompt": "show me all the images inside the vacation folder", "route": "files"}
+{"prompt": "move the folder named old_projects to archive", "route": "files"}
+{"prompt": "i want to add a new api endpoint for user authentication using express", "route": "coding"}
+{"prompt": "turn off the display saver mode", "route": "system"}
+{"prompt": "what does red light mean at intersections", "route": "chat"}
+{"prompt": "how do i write a sed command to remove all trailing whitespace from lines", "route": "coding"}
+{"prompt": "move the backup folder out of the way", "route": "files"}
+{"prompt": "my soup tastes weird can you help fix it?", "route": "chat"}
+{"prompt": "move the downloaded zip files to the downloads folder and extract them", "route": "files"}
+{"prompt": "please sort all my video files by date so they are easy to find.", "route": "files"}
+{"prompt": "find out when the train to chicago departs next morning.", "route": "research"}
+{"prompt": "turn off my screen saver", "route": "system"}
+{"prompt": "can you give me the current price of a round trip ticket to paris?", "route": "research"}
+{"prompt": "toggle bluetooth off and on", "route": "system"}
+{"prompt": "create a new folder called \"backup_nov\" inside my home directory", "route": "files"}
+{"prompt": "i really hate the smell of old books does anyone else find them gross", "route": "chat"}
+{"prompt": "refactor this messy python list comprehension into a readable loop.", "route": "coding"}
+{"prompt": "start the printer service again", "route": "system"}
+{"prompt": "please look up the latest price of organic strawberries in farmer's market this week", "route": "research"}
+{"prompt": "how do i optimize this java stream that processes millions of lines and times out?", "route": "coding"}
+{"prompt": "find out if the new library has any books on robotics borrowed", "route": "research"}
+{"prompt": "so like if we go to the mall should we buy that new jacket?", "route": "chat"}
+{"prompt": "turn wifi back on", "route": "system"}
+{"prompt": "shutdown this machine completely instead of just putting it to sleep", "route": "system"}
+{"prompt": "show me all running services sorted by start time", "route": "system"}
+{"prompt": "my bash automation is failing, debug why the loop isn't running", "route": "coding"}
+{"prompt": "i am getting a runtime error, what's the easiest way to debug it?", "route": "coding"}
+{"prompt": "where can i find the best pizza in brooklyn right now?", "route": "research"}
+{"prompt": "can you refactor these three functions into one reusable class?", "route": "coding"}
+{"prompt": "i want to change the logic in this ruby method to support optional parameters without breaking existing code", "route": "coding"}
+{"prompt": "check how much ram i have left", "route": "system"}
+{"prompt": "how do i pronounce \"sardonyx\" correctly?", "route": "chat"}
+{"prompt": "is it true that the subway strike starts Monday or was that a rumor?", "route": "research"}
+{"prompt": "disable autocorrect for typing", "route": "system"}
+{"prompt": "how do i open the word document named project_plan.docx?", "route": "files"}
+{"prompt": "my wifi keeps dropping, can you restart the network adapter?", "route": "system"}
+{"prompt": "search for information about the new zoning laws affecting downtown construction.", "route": "research"}
+{"prompt": "create an empty directory structure: project/phase1/docs and project/phase1/images", "route": "files"}
+{"prompt": "what applications are running in the background?", "route": "system"}
+{"prompt": "where did i save that grocery list i was writing today", "route": "files"}
+{"prompt": "create a new folder called \"budget_items\" in my home directory", "route": "files"}
+{"prompt": "do you think remote work is better than office?", "route": "chat"}
+{"prompt": "shutdown after saving work", "route": "system"}
+{"prompt": "my friend says ai will replace doctors do you agree?", "route": "chat"}
+{"prompt": "update the kernel packages in the background", "route": "system"}
+{"prompt": "check if the sleep service is running properly", "route": "system"}
+{"prompt": "check if there's any news about power outages in north brooklyn today.", "route": "research"}
+{"prompt": "create a django view that filters posts by category and sorts them by date descending", "route": "coding"}
+{"prompt": "can you show me the map of all the coffee shops near campus?", "route": "research"}
+{"prompt": "generate a golang struct that matches this json schema", "route": "coding"}
+{"prompt": "tell me everything i know about the new school curriculum changes.", "route": "research"}
+{"prompt": "verify that the firewall is allowing traffic on port 8080", "route": "system"}
+{"prompt": "write a python script that scrapes product prices from amazon using requests and selenium", "route": "coding"}
+{"prompt": "can you rename these documents so they start with today's date", "route": "files"}
+{"prompt": "i need a go routine that processes images concurrently and saves them to s3.", "route": "coding"}
+{"prompt": "generate a script to scrape product prices from the website", "route": "coding"}
+{"prompt": "did they cancel the school concert this friday or is it still on?", "route": "research"}
+{"prompt": "where is that specific report json file with the q3 analytics?", "route": "files"}
+{"prompt": "who wrote the book called great expectations?", "route": "research"}
+{"prompt": "boot into safe mode to fix startup issues", "route": "system"}
+{"prompt": "check if that specific model of car is still being manufactured.", "route": "research"}
+{"prompt": "i need advice on how to start a small business with no money", "route": "chat"}
+{"prompt": "are there any flight deals available from oregon to hawaii starting next friday", "route": "research"}
+{"prompt": "what are the opening hours and menu prices at sushi sam under the bridge", "route": "research"}
+{"prompt": "open and show me the invoice dated october 10th", "route": "files"}
+{"prompt": "convert this regular expression from matching urls to validating email formats.", "route": "coding"}
+{"prompt": "increase the hdd partition size manually using disk management", "route": "system"}
+{"prompt": "where did the export from excel go?", "route": "files"}
+{"prompt": "find out where i can buy a copy of that new law document.", "route": "research"}
+{"prompt": "can you write a small c program that calculates fibonacci numbers up to n provided as input?", "route": "coding"}
+{"prompt": "can you write a python script to parse csv files and export to json?", "route": "coding"}
+{"prompt": "what is the cost of filing for bankruptcy in my state?", "route": "research"}
+{"prompt": "access the system settings to change the display brightness slider to 40 percent", "route": "system"}
+{"prompt": "find all csv files containing student grades in the home directory", "route": "files"}
+{"prompt": "how much is it going to rain today in queens?", "route": "research"}
+{"prompt": "can you tell me why the sky is blue?", "route": "chat"}
+{"prompt": "what are the health benefits of eating berries?", "route": "chat"}
+{"prompt": "disable automatic updates for security reasons", "route": "system"}
+{"prompt": "how do i check the current clock time on the system?", "route": "system"}
+{"prompt": "create a new folder called receipts and move all bills there", "route": "files"}
+{"prompt": "please show me all the json files in downloads folder", "route": "files"}
+{"prompt": "write a migration script to add the new column to the users table", "route": "coding"}
+{"prompt": "where is the nearest pharmacy that sells insulin before 10 am?", "route": "research"}
+{"prompt": "can you check if the gym equipment is down at times between 5pm and 7pm?", "route": "research"}
+{"prompt": "help me write a cron job that runs every 15 minutes", "route": "coding"}
+{"prompt": "give me some tips for studying better", "route": "chat"}
+{"prompt": "where is the best place to watch the sunset", "route": "chat"}
+{"prompt": "what's the current price of gold per ounce today?", "route": "research"}
+{"prompt": "my node server is crashing, help me write middleware to catch and log these errors", "route": "coding"}
+{"prompt": "generate a shell loop that processes each file in the directory", "route": "coding"}
+{"prompt": "how do i add logging to these database queries using the new module?", "route": "coding"}
+{"prompt": "what's the current temperature of my ram sticks?", "route": "system"}
+{"prompt": "who was the first president of the united states?", "route": "chat"}
+{"prompt": "create a script that generates random test data in json format", "route": "coding"}
+{"prompt": "check if the meeting room booked for our team is actually free at three.", "route": "research"}
+{"prompt": "are there any open dentists in the university area with night shifts?", "route": "research"}
+{"prompt": "can you look up the ingredients list on that organic cereal brand", "route": "research"}
+{"prompt": "does the new grocery store open at 7am on monday or later", "route": "research"}
+{"prompt": "where is my grocery list", "route": "files"}
+{"prompt": "freeze my screen display for debugging", "route": "system"}
+{"prompt": "what is the average cost to fix a leaky faucet in this region?", "route": "research"}
+{"prompt": "please create a script that parses this log file and extracts error codes into a csv file", "route": "coding"}
+{"prompt": "open my expenses csv file", "route": "files"}
+{"prompt": "find every file tagged with project alpha in root directory", "route": "files"}
+{"prompt": "create a cron job script to backup the database every night at midnight", "route": "coding"}
+{"prompt": "check if any background apps are using too many cpu cores", "route": "system"}
+{"prompt": "where did i put those meeting recordings last week before they were moved?", "route": "files"}
+{"prompt": "im trying to decide where to go for vacation next month", "route": "chat"}
+{"prompt": "i think pizza with extra pepperoni is the best food", "route": "chat"}
+{"prompt": "how do i write a sql stored procedure that updates user balance by adding the transaction amount?", "route": "coding"}
+{"prompt": "monitor my server uptime right now", "route": "system"}
+{"prompt": "i need to debug the memory leak in my nodejs application can you show me how to use chromedp?", "route": "coding"}
+{"prompt": "can you help me write a python script to scrape prices from amazon?", "route": "coding"}
+{"prompt": "i need to copy these 50 csv rows to a new sheet, do you think that counts as organizing?", "route": "files"}
+{"prompt": "look at my battery percentage", "route": "system"}
+{"prompt": "i need help refactoring this loop to use list comprehension for better performance in my python backend.", "route": "coding"}
+{"prompt": "disable bluetooth temporarily just for this meeting", "route": "system"}
+{"prompt": "can you verify if the pizza place i like still serves their pepperoni pie", "route": "research"}
+{"prompt": "call me back when you find that phone number for the pizza place", "route": "research"}
+{"prompt": "what are the latest stats on crime rate in south district?", "route": "research"}
+{"prompt": "how do i change the api endpoint configuration in this nodejs server without restarting it?", "route": "coding"}
+{"prompt": "help me write an email to my boss", "route": "chat"}
+{"prompt": "organize all the photos from last christmas into a folder named holiday memories", "route": "files"}
+{"prompt": "my heroku app keeps crashing on deploy, check the dockerfile syntax.", "route": "coding"}
+{"prompt": "reboot the computer if it is frozen", "route": "system"}
+{"prompt": "hey can you explain photosynthesis to me simply?", "route": "chat"}
+{"prompt": "how do i write a unit test case to verify the login form handles duplicate passwords?", "route": "coding"}
+{"prompt": "convert the csv import logic to parse json instead", "route": "coding"}
+{"prompt": "enable dark mode in settings", "route": "system"}
+{"prompt": "disable automatic updates for now", "route": "system"}
+{"prompt": "just tell me how photosynthesis works", "route": "chat"}
+{"prompt": "find me all json files smaller than 5mb in the downloads directory", "route": "files"}
+{"prompt": "can you read this raw data text file and summarize the first entry?", "route": "files"}
+{"prompt": "show me what processes are using the most cpu", "route": "system"}
+{"prompt": "what's the best way to refactor this async promise chain?", "route": "coding"}
+{"prompt": "convert the following html table to a pandas dataframe and export it to csv format.", "route": "coding"}
+{"prompt": "could you describe how a toaster works from memory?", "route": "chat"}
+{"prompt": "delete these temporary images from my download folder", "route": "files"}
+{"prompt": "what are the best books to read this summer for a relaxing vacation?", "route": "chat"}
+{"prompt": "does the national park pass work at both cleveland and st louis parks", "route": "research"}
+{"prompt": "reboot into safe mode so i can run diagnostics", "route": "system"}
+{"prompt": "create a new list called grocery items in shared folder", "route": "files"}
+{"prompt": "my phone just turned blue yesterday", "route": "chat"}
+{"prompt": "create a new folder called \"random stuff\" and put pictures inside", "route": "files"}
+{"prompt": "find me the contact number for the local fire department.", "route": "research"}
+{"prompt": "what is the capital of Argentina", "route": "chat"}
+{"prompt": "how much ram is left on this machine?", "route": "system"}
+{"prompt": "is there free wifi available at the new library branch downtown?", "route": "research"}
+{"prompt": "search for any recent complaints filed against the city water department", "route": "research"}
+{"prompt": "i have no idea how to make pasta from scratch", "route": "chat"}
+{"prompt": "what is the latest news about the bridge collapse rumor i saw online", "route": "research"}
+{"prompt": "delete that old grocery list i forgot about in documents", "route": "files"}
+{"prompt": "can you tell me how much gas prices are at shell station 42 downtown", "route": "research"}
+{"prompt": "generate a bash script that automates the backup process for files in /data/server1 and /data/server2.", "route": "coding"}
+{"prompt": "convert this shell script to use native python modules instead of calling external tools", "route": "coding"}
+{"prompt": "what is my current battery percentage", "route": "system"}
+{"prompt": "show me the top three apps using cpu right now", "route": "system"}
+{"prompt": "can you search for the latest price of gold per ounce right now?", "route": "research"}
+{"prompt": "what are the current admission prices for the central library?", "route": "research"}
+{"prompt": "my phone screen is broken what should i do", "route": "chat"}
+{"prompt": "write a regular expression to validate email addresses and exclude test@test.com format", "route": "coding"}
+{"prompt": "hi there friend", "route": "chat"}
+{"prompt": "please organize my documents into a new project folder", "route": "files"}
+{"prompt": "look up the ingredients list for that new ice cream flavor on sale near me", "route": "research"}
+{"prompt": "help me write a function to calculate the fibonacci sequence", "route": "coding"}
+{"prompt": "create a dockerfile based on this current project structure", "route": "coding"}
+{"prompt": "sup dude", "route": "chat"}
+{"prompt": "how do I refactor this loop into a list comprehension?", "route": "coding"}
+{"prompt": "i accidentally renamed my main project file can you rename it back?", "route": "files"}
+{"prompt": "delete the temporary backup folder that keeps popping up", "route": "files"}
+{"prompt": "monitor cpu usage in real time", "route": "system"}
+{"prompt": "what makes a good leader in my opinion", "route": "chat"}
+{"prompt": "im trying to bake bread without yeast what should i use instead?", "route": "chat"}
+{"prompt": "hello there how are you doing today?", "route": "chat"}
+{"prompt": "hey whats up bro?", "route": "chat"}
+{"prompt": "create a unit test that asserts the input string must not be null", "route": "coding"}
+{"prompt": "does the moon actually change its shape or is that just an illusion?", "route": "chat"}
+{"prompt": "my dog barks all night can anyone tell me what's wrong with him?", "route": "chat"}
+{"prompt": "stop the background service named updater.exe", "route": "system"}
+{"prompt": "rewrite these html forms to include required validation attributes", "route": "coding"}
+{"prompt": "just tell me more about quantum physics", "route": "chat"}
+{"prompt": "check if i'm connected to any active vpn connections", "route": "system"}
+{"prompt": "create a subfolder called projects inside my work directory", "route": "files"}
+{"prompt": "fix the indentation in this python file so linter passes without warnings.", "route": "coding"}
+{"prompt": "what does the latest regulation say about parking zones on Fridays?", "route": "research"}
+{"prompt": "rename this document to invoice_final_v2.pdf please", "route": "files"}
+{"prompt": "open chrome and kill the process", "route": "system"}
+{"prompt": "my rust library has an ownership error, help me debug it", "route": "coding"}
+{"prompt": "rename my contact list to personal_contacts.csv", "route": "files"}
+{"prompt": "reboot the machine via terminal", "route": "system"}
+{"prompt": "how are you feeling today?", "route": "chat"}
+{"prompt": "did the hospital change their hours for emergency services this week?", "route": "research"}
+{"prompt": "what scripts are running right this second", "route": "system"}
+{"prompt": "what is the capital city of australia spelled correctly?", "route": "chat"}
+{"prompt": "who won the last super bowl game?", "route": "chat"}
+{"prompt": "show me what's inside that zip file without extracting it for now", "route": "files"}
+{"prompt": "read the config.json file to check settings", "route": "files"}
+{"prompt": "what are the capital cities of france and spain?", "route": "chat"}
+{"prompt": "write a unit test case using jest for a function that handles null inputs gracefully", "route": "coding"}
+{"prompt": "what's the best way to start learning spanish", "route": "chat"}
+{"prompt": "i forgot my password for wifi", "route": "chat"}
+{"prompt": "enable bluetooth but make it private mode", "route": "system"}
+{"prompt": "could you create a new text file called \"shopping_final\" with the items we discussed?", "route": "files"}
+{"prompt": "delete the old backup folder on my desktop please", "route": "files"}
+{"prompt": "i need to convert this legacy cobol report data into json format, what is the best approach?", "route": "coding"}
+{"prompt": "how do i export these images so i can attach them later?", "route": "files"}
+{"prompt": "kill all chrome tabs and close the browser completely", "route": "system"}
+{"prompt": "where are my backup files located on this machine?", "route": "files"}
+{"prompt": "run memtest86+ on my laptop now", "route": "system"}
+{"prompt": "convert this sql query to postgres dialect syntax", "route": "coding"}
+{"prompt": "are dogs better than cats", "route": "chat"}
+{"prompt": "look into the warranty terms for a leaky faucet repair i need to do this weekend", "route": "research"}
+{"prompt": "write a terraform script to provision a new aws rds instance with t2.medium spec", "route": "coding"}
+{"prompt": "who invented the lightbulb and when exactly was that?", "route": "chat"}
+{"prompt": "enable airplane mode and then turn wifi back on", "route": "system"}
+{"prompt": "is my battery drain normal or something wrong?", "route": "system"}
+{"prompt": "i need to debug why the api endpoint is returning 500 errors in production", "route": "coding"}
+{"prompt": "i need help refactoring this function to reduce duplication", "route": "coding"}
+{"prompt": "could you create a small c++ class called Calculator with methods for add, subtract, multiply, and divide?", "route": "coding"}
+{"prompt": "tell me more about the history of ancient greece please", "route": "chat"}
+{"prompt": "can you refactor this monolithic function into smaller reusable modules following clean architecture principles", "route": "coding"}
+{"prompt": "which folder contains the latest project screenshots i took today?", "route": "files"}
+{"prompt": "restart the network service", "route": "system"}
+{"prompt": "my react component isn't rendering the list items, debug it for me", "route": "coding"}
+{"prompt": "open my code editor", "route": "system"}
+{"prompt": "can you explain what quantum computing is", "route": "chat"}
+{"prompt": "verify if my student visa application was still accepted last week", "route": "research"}
+{"prompt": "just reply yes or no actually", "route": "chat"}
+{"prompt": "can you unzip this archive and show me its contents?", "route": "files"}
+{"prompt": "rewrite that api call so it uses async instead of fetch", "route": "coding"}
+{"prompt": "update drivers for my graphics card", "route": "system"}
+{"prompt": "open that csv report and highlight rows where sales are under 500", "route": "files"}
+{"prompt": "can you rewrite this javascript function to make it cleaner and faster?", "route": "coding"}
+{"prompt": "increase the screen brightness to max", "route": "system"}
+{"prompt": "look through my gmail backups and tell me if anything is missing", "route": "files"}
+{"prompt": "look up the ingredients list for that burger place on the map", "route": "research"}
+{"prompt": "check the latest weather forecast for tomorrow night please", "route": "research"}
+{"prompt": "turn off my monitor", "route": "system"}
+{"prompt": "move everything from the temp folder into desktop", "route": "files"}
+{"prompt": "i messed up the refactoring and broke a dependency, how do i fix it?", "route": "coding"}
+{"prompt": "what commands would you use to lint this codebase before pushing?", "route": "coding"}
+{"prompt": "check my cpu usage", "route": "system"}
+{"prompt": "need a regular expression to validate email addresses in my php code", "route": "coding"}
+{"prompt": "how do i refactor this legacy sql query to use parameterized statements instead of string concatenation?", "route": "coding"}
+{"prompt": "what should i wear to a wedding in october?", "route": "chat"}
+{"prompt": "open the spreadsheet at /Documents/Budget_2024.xlsx so i can update row 15", "route": "files"}
+{"prompt": "delete the old logs.json file it has too much history now", "route": "files"}
+{"prompt": "rewrite this legacy shell script to use modern python instead", "route": "coding"}
+{"prompt": "run the disk cleanup tool again please", "route": "system"}
+{"prompt": "how do i optimize this nested loop to run faster in c++?", "route": "coding"}
+{"prompt": "i need to find out who won the local election in november last year.", "route": "research"}
+{"prompt": "can you help me with this math problem without using code", "route": "chat"}
+{"prompt": "organize the incoming messages into their respective subject folders", "route": "files"}
+{"prompt": "hi there", "route": "chat"}
+{"prompt": "write a powershell command to backup the entire /etc directory to s3 storage bucket", "route": "coding"}
+{"prompt": "i need help refactoring that loop to use list comprehension instead of append", "route": "coding"}
+{"prompt": "i need help debugging why my node server crashes when i send more than 100 requests at once", "route": "coding"}
+{"prompt": "can you refactor this function to use async instead of blocking calls?", "route": "coding"}
+{"prompt": "i need a quick script to parse json log files and extract error codes", "route": "coding"}
+{"prompt": "can you refactor these sql queries to use indexes instead of full table scans?", "route": "coding"}
+{"prompt": "create a new text file called password-notes.txt immediately", "route": "files"}
+{"prompt": "run this command: lsof -i :8080", "route": "system"}
+{"prompt": "can you optimize this sql query to run faster?", "route": "coding"}
+{"prompt": "look up the current price of organic coffee beans in Seattle", "route": "research"}
+{"prompt": "close all windows that are running in the background", "route": "system"}
+{"prompt": "who wrote that famous poem about the river from 1890?", "route": "research"}
+{"prompt": "restart the desktop environment before installing the new drivers", "route": "system"}
+{"prompt": "start the network manager service again", "route": "system"}
+{"prompt": "show me all the json files in my documents folder", "route": "files"}
+{"prompt": "turn off bluetooth connectivity to save power", "route": "system"}
+{"prompt": "i hate Mondays so much", "route": "chat"}
+{"prompt": "generate a mock server response for testing our frontend login flow", "route": "coding"}
+{"prompt": "how do i test my new api endpoint with pytest", "route": "coding"}
+{"prompt": "how do i refactor this react component to use hooks instead of state?", "route": "coding"}
+{"prompt": "is my hard drive full?", "route": "system"}
+{"prompt": "start the update service again", "route": "system"}
+{"prompt": "i need to organize my school notes into a folder structure", "route": "files"}
+{"prompt": "restart my network adapter", "route": "system"}
+{"prompt": "i need a regex pattern to extract email addresses from this log text", "route": "coding"}
+{"prompt": "my spreadsheet is full of duplicate rows can you clean it up for me?", "route": "files"}
+{"prompt": "kill that weird process eating all my cpu power", "route": "system"}
+{"prompt": "merge the two csv sheets together", "route": "files"}
+{"prompt": "who was the author of that book i found in the back of the bookstore?", "route": "research"}
+{"prompt": "can you rename that folder named temp to archives?", "route": "files"}
+{"prompt": "i need to verify if my student ID is still valid before i go to registration", "route": "research"}
+{"prompt": "read the json output from the sensor logs", "route": "files"}
+{"prompt": "i think my cat is stuck outside, can you check?", "route": "chat"}
+{"prompt": "rename \"report_2023_final_v1.docx\" to \"Q4_Sales_Report_Final.pdf\" for me", "route": "files"}
+{"prompt": "tell me what's using so much cpu", "route": "system"}
+{"prompt": "do cats really meow at humans or other animals too?", "route": "chat"}
+{"prompt": "fix the syntax error in line 42 of my bash script for automated deployments", "route": "coding"}
+{"prompt": "enable bluetooth now", "route": "system"}
+{"prompt": "can you check if the parking garage near the museum is still under construction?", "route": "research"}
+{"prompt": "can you check if the water is safe to drink right now in the basement?", "route": "research"}
+{"prompt": "can you tell me the ingredients and calories in a medium cheeseburger", "route": "research"}
+{"prompt": "fix the indentation and variable naming in this messy javascript file for consistency", "route": "coding"}
+{"prompt": "you said my essay structure was off what exactly changed", "route": "chat"}
+{"prompt": "organize these downloaded videos into categories", "route": "files"}
+{"prompt": "how much does a round trip ticket to Paris cost right now?", "route": "research"}
+{"prompt": "write a regular expression to extract phone numbers formatted as (xxx) xxx-xxxx from plain text.", "route": "coding"}
+{"prompt": "my cat ate something weird what should i do", "route": "chat"}
+{"prompt": "i think the bridge closure was lifted, can you confirm with official sources?", "route": "research"}
+{"prompt": "find all json files larger than 1mb", "route": "files"}
+{"prompt": "convert the lodash utils into standalone modules", "route": "coding"}
+{"prompt": "what are the latest rules for visiting the national park?", "route": "research"}
+{"prompt": "turn on the external display since my main screen broke last night", "route": "system"}
+{"prompt": "disable the external hard drive mount point", "route": "system"}
+{"prompt": "my python script produces wrong output for negative numbers, how do i fix it?", "route": "coding"}
+{"prompt": "find and rename any text files missing their extension", "route": "files"}
+{"prompt": "can you write a quick script in go that parses xml and extracts the total cost element?", "route": "coding"}
+{"prompt": "how do i write a bash script to parse log files and extract error codes matching pattern xyz?", "route": "coding"}
+{"prompt": "run diagnostics to check if my hard drive is dying", "route": "system"}
+{"prompt": "create a bash script that automates the backup of my docker containers", "route": "coding"}
+{"prompt": "can you shut down everything except my terminal", "route": "system"}
+{"prompt": "who won the championship game last night?", "route": "research"}
+{"prompt": "start the backup script that runs every night", "route": "system"}
+{"prompt": "what are some good places to walk around downtown today", "route": "chat"}
+{"prompt": "reboot the system to fix this issue", "route": "system"}
+{"prompt": "open task manager and freeze memory usage", "route": "system"}
+{"prompt": "im looking for recipes that use only ingredients i already have in my fridge", "route": "chat"}
+{"prompt": "reset the wifi router settings", "route": "system"}
+{"prompt": "can you find the latest news about the city council meeting tomorrow?", "route": "research"}
+{"prompt": "good morning sunshine", "route": "chat"}
+{"prompt": "hello there friend", "route": "chat"}
+{"prompt": "show me the disk space usage", "route": "system"}
+{"prompt": "how do i optimize this mysql query that keeps timing out on large datasets?", "route": "coding"}
+{"prompt": "start the remote desktop connection", "route": "system"}
+{"prompt": "i need help with a math problem about fractions", "route": "chat"}
+{"prompt": "where is the closest 24 hour grocery store with fresh produce?", "route": "research"}
+{"prompt": "lookup the current exchange rate for euros to dollars.", "route": "research"}
+{"prompt": "open the settings app for sound configuration", "route": "system"}
+{"prompt": "open my laptop and shut down the browser after i'm done browsing", "route": "system"}
+{"prompt": "the html css layout is breaking on mobile devices, help me fix the responsive media queries", "route": "coding"}
+{"prompt": "where is the csv with last quarter sales data?", "route": "files"}
+{"prompt": "where can i find the most recent patch notes for my new game", "route": "research"}
+{"prompt": "who won the soccer match last night and what was the score?", "route": "research"}
+{"prompt": "write a regex pattern to strip all special characters from strings in php", "route": "coding"}
+{"prompt": "my node app crashes on startup, check the logs for a syntax error", "route": "coding"}
+{"prompt": "is there any availability for group tours at the museum this friday?", "route": "research"}
+{"prompt": "who is the current CEO of tech giant X?", "route": "research"}
+{"prompt": "need to create a docker-compose.yml for my microservices stack", "route": "coding"}
+{"prompt": "run task manager so i can kill that runaway process", "route": "system"}
+{"prompt": "generate a bash command list to clean up orphaned docker containers", "route": "coding"}
+{"prompt": "reboot the computer", "route": "system"}
+{"prompt": "what's 12 plus 8", "route": "chat"}
+{"prompt": "i need a list of all text documents on my desktop sorted by date", "route": "files"}
+{"prompt": "do dogs have dreams", "route": "chat"}
+{"prompt": "look up the schedule for the upcoming marathon and where the aid stations are located", "route": "research"}
+{"prompt": "can you help me understand how gravity works in space?", "route": "chat"}
+{"prompt": "shutdown my laptop now", "route": "system"}
+{"prompt": "rename these csv files to include their year at the end", "route": "files"}
+{"prompt": "increase the screen brightness by ten percent", "route": "system"}
+{"prompt": "convert the json data file to readable text", "route": "files"}
+{"prompt": "my screen is flickering like crazy what do i do", "route": "chat"}
+{"prompt": "i need to know if that restaurant is open on weekends", "route": "research"}
+{"prompt": "close my chrome tab that was stuck", "route": "system"}
+{"prompt": "how do i delete the screenshot logs from last month", "route": "files"}
+{"prompt": "where did i find that cool vintage film reel from 1985 on ebay?", "route": "research"}
+{"prompt": "convert this spreadsheet and send it to me as a txt file", "route": "files"}
+{"prompt": "fix the indentation and add type hints to this nodejs module", "route": "coding"}
+{"prompt": "hey whats the best way to refactor my old nodejs express router to use typescript", "route": "coding"}
+{"prompt": "help me understand this paragraph about climate change", "route": "chat"}
+{"prompt": "what's the price of a round trip ticket to paris from new york right now?", "route": "research"}
+{"prompt": "where is the backup for last nights upload?", "route": "files"}
+{"prompt": "generate an xml schema for a contact form with fields for name, email, and message", "route": "coding"}
+{"prompt": "what does the parking permit cost for residents in zip code 90210?", "route": "research"}
+{"prompt": "can you find my shopping list in the notes app", "route": "files"}
+{"prompt": "is there anyone left for the late-night shift at the bank on friday?", "route": "research"}
+{"prompt": "close all windows and restart my computer", "route": "system"}
+{"prompt": "delete the temp folder contents because they are taking up space", "route": "files"}
+{"prompt": "run a system update now", "route": "system"}
+{"prompt": "what is the latest status on the subway track repairs on monday morning?", "route": "research"}
+{"prompt": "generate a bash script that automates the backup of all files in /data/projects", "route": "coding"}
+{"prompt": "what are the hours of the post office on mason street?", "route": "research"}
+{"prompt": "please generate a sql query to update the inventory table based on the csv", "route": "coding"}
+{"prompt": "i heard there is a secret passage in the palace but im not sure", "route": "chat"}
+{"prompt": "what is the current exchange rate between the dollar and the euro?", "route": "research"}
+{"prompt": "i need a bash script that backups my database every night", "route": "coding"}
+{"prompt": "delete everything inside the backups folder except main.json", "route": "files"}
+{"prompt": "do i need an umbrella if the forecast says 10 percent chance of rain", "route": "chat"}
+{"prompt": "is the library still open on sunday morning this year?", "route": "research"}
+{"prompt": "i keep getting a syntax error on line 42 of utils.py could you debug this for me and explain why it fails?", "route": "coding"}
+{"prompt": "move the images folder from guest to media library", "route": "files"}
+{"prompt": "how do i debug why my terraform state file is locking resources unexpectedly?", "route": "coding"}
+{"prompt": "delete the temporary logs folder without confirming first", "route": "files"}
+{"prompt": "rename all images in pictures folder to their hex filenames please", "route": "files"}
+{"prompt": "where did i save that contact list export?", "route": "files"}
+{"prompt": "write a bash script to parse log files and output json format", "route": "coding"}
+{"prompt": "delete all drafts under the personal account", "route": "files"}
+{"prompt": "save this draft text into my working documents section", "route": "files"}
+{"prompt": "is there a discount available for seniors at the concert tomorrow night?", "route": "research"}
+{"prompt": "did the new park opening hours change last week", "route": "research"}
+{"prompt": "my phone battery is dying fast any tips?", "route": "chat"}
+{"prompt": "how do i convert this csv data into a pandas dataframe", "route": "coding"}
+{"prompt": "my database query returns rows in wrong order, fix the sorting logic", "route": "coding"}
+{"prompt": "can you tell me what causes acid rain?", "route": "chat"}
+{"prompt": "what are the rules for bringing pets to the city park right now?", "route": "research"}
+{"prompt": "could you remind me about the rules for playing chess please?", "route": "chat"}
+{"prompt": "convert this text into a json file and save it as data.json", "route": "files"}
+{"prompt": "how do i write a regex pattern to validate zip codes in javascript", "route": "coding"}
+{"prompt": "generate a pytest suite for validating the authentication flow in django", "route": "coding"}
+{"prompt": "how do i fix the syntax error in my vue file when building for production?", "route": "coding"}
+{"prompt": "generate a unit test suite for the authentication middleware", "route": "coding"}
+{"prompt": "how do i implement oauth2 token refresh logic in my swift ios app securely?", "route": "coding"}
+{"prompt": "hey whats your favorite color and why?", "route": "chat"}
+{"prompt": "please find my grocery list in the notes app and open it for me", "route": "files"}
+{"prompt": "my golang library is failing unit tests, refactor the error handling logic in auth.go", "route": "coding"}
+{"prompt": "what's the best way to write a regex to match valid email addresses?", "route": "coding"}
+{"prompt": "show me all running processes sorted by cpu usage", "route": "system"}
+{"prompt": "can you unzip that zip file and put it on my desktop?", "route": "files"}
+{"prompt": "show me the location of that important invoice pdf i downloaded today.", "route": "files"}
+{"prompt": "fix the compilation error in my rust project, it seems like the ownership model is breaking somewhere", "route": "coding"}
+{"prompt": "how do i write a function to calculate the fibonacci sequence in python?", "route": "coding"}
+{"prompt": "write a regex pattern to validate emails without leading spaces", "route": "coding"}
+{"prompt": "delete those old backup folders i clicked by mistake", "route": "files"}
+{"prompt": "read the inventory sheet we talked about and summarize the stock levels", "route": "files"}
+{"prompt": "what are the benefits of drinking plenty of water every day?", "route": "chat"}
+{"prompt": "who designed the new mural on main street?", "route": "research"}
+{"prompt": "convert this xlsx sheet to a readable csv table", "route": "files"}
+{"prompt": "read the content of notes.txt without typing anything", "route": "files"}
+{"prompt": "i accidentally deleted my photos, help me recover them from recycle bin or wherever they went", "route": "files"}
+{"prompt": "can you show me how to unit test this new api endpoint with pytest", "route": "coding"}
+{"prompt": "restart the computer to fix the login loop", "route": "system"}
+{"prompt": "move the json folder to my documents directory", "route": "files"}
+{"prompt": "is there any parking available near central station right now?", "route": "research"}
+{"prompt": "open firefox in the background and leave it running", "route": "system"}
+{"prompt": "zip up all my photos from today's trip into one archive", "route": "files"}
+{"prompt": "is it better to walk or take the bus to work?", "route": "chat"}
+{"prompt": "fix the syntax error in my react component where the state isn't updating when I click the button", "route": "coding"}
+{"prompt": "open and read the configuration.json file", "route": "files"}
+{"prompt": "find me a list of all available medications that can treat type two diabetes.", "route": "research"}
+{"prompt": "please delete the empty temp folder in my user directory", "route": "files"}
+{"prompt": "can you open that csv file i dropped on the desktop?", "route": "files"}
+{"prompt": "generate a sql query to count users who signed up last month", "route": "coding"}
+{"prompt": "can you zip these three documents into one archive?", "route": "files"}
+{"prompt": "explain the water cycle to me", "route": "chat"}
+{"prompt": "what would happen if all the ice caps melted tomorrow?", "route": "chat"}
+{"prompt": "create a lambda function that converts base64 images to bytes", "route": "coding"}
+{"prompt": "run diagnostics to see if my graphics card is overheating", "route": "system"}
+{"prompt": "renaming all images to their original filename plus .jpg extension would be great", "route": "files"}
+{"prompt": "can you help me optimize these sql queries they are running slow", "route": "coding"}
+{"prompt": "i think pineapple belongs on pizza but people hate it what do you think?", "route": "chat"}
+{"prompt": "rename all images in gallery to add today's date prefix", "route": "files"}
+{"prompt": "disable automatic wake-on-network so devices don't turn on at night", "route": "system"}
+{"prompt": "which folders contain images from last summer trip", "route": "files"}
+{"prompt": "delete the temporary csv output file from yesterday", "route": "files"}
+{"prompt": "where is my laptop charging currently?", "route": "system"}
+{"prompt": "how much does it cost to get a license to practice medicine in california?", "route": "research"}
+{"prompt": "look up the weather forecast for tomorrow in oregon", "route": "research"}
+{"prompt": "did someone steal my headphones from the gym bag?", "route": "chat"}
+{"prompt": "disable that startup service I don't want", "route": "system"}
+{"prompt": "i think the new law is unfair what do you make of that", "route": "chat"}
+{"prompt": "is there any update on the construction delay at the airport?", "route": "research"}
+{"prompt": "can you verify if my dog is currently in foster care or has been adopted already?", "route": "research"}
+{"prompt": "update the backend code to support multiple currency options without changing the frontend", "route": "coding"}
+{"prompt": "run a deep scan on the c drive to fix any corrupted file system records", "route": "system"}
+{"prompt": "write a quick utility function to calculate the md5 hash of user passwords", "route": "coding"}
+{"prompt": "run a diagnostic to check how much ram is actually available right now", "route": "system"}
+{"prompt": "reset the network adapter settings back to defaults", "route": "system"}
+{"prompt": "can you open that large csv with sales figures?", "route": "files"}
+{"prompt": "write a test case using pytest to verify that the user login endpoint returns 401 for invalid tokens", "route": "coding"}
+{"prompt": "hello there", "route": "chat"}
+{"prompt": "look up contact info for the local community center", "route": "research"}
+{"prompt": "can you tell me a joke about computers", "route": "chat"}
+{"prompt": "delete those temporary files in the downloads folder they are taking up space", "route": "files"}
+{"prompt": "organize these mixed images into separate folders by type", "route": "files"}
+{"prompt": "is it true that the city council approved the park renovation next week?", "route": "research"}
+{"prompt": "can you read the attachment named invoice_q3.pdf and tell me the total amount?", "route": "files"}
+{"prompt": "i want to copy these three documents to the external drive", "route": "files"}
+{"prompt": "i need to refactor this function to handle null inputs better", "route": "coding"}
+{"prompt": "turn off my laptop screen", "route": "system"}
+{"prompt": "is there a power outage in our sector right now?", "route": "research"}
+{"prompt": "find all my csv files in the downloads directory", "route": "files"}
+{"prompt": "run a full disk check on c drive", "route": "system"}
+{"prompt": "what are the requirements to get that permit for the home renovation", "route": "research"}
+{"prompt": "can you generate a dockerfile to build and run the latest version of our microservice container?", "route": "coding"}
+{"prompt": "can you help me write a regex pattern to match email addresses?", "route": "coding"}
+{"prompt": "hey whats up", "route": "chat"}
+{"prompt": "can you save this list to a new text file?", "route": "files"}
+{"prompt": "create a new text file named shopping_list.txt right now", "route": "files"}
+{"prompt": "implement a decorator in python that logs the execution time of any function called with it.", "route": "coding"}
+{"prompt": "please rename this folder called \"final_draft\" to \"finished_work\"", "route": "files"}
+{"prompt": "turn off my laptop right now", "route": "system"}
+{"prompt": "is it safe to drive on this road during a snowstorm right now?", "route": "research"}
+{"prompt": "how do i shut down my computer right now?", "route": "system"}
+{"prompt": "can you save my shopping list to a text file?", "route": "files"}
+{"prompt": "what is the menu at bistro noir tonight?", "route": "research"}
+{"prompt": "dont you think we should go home soon its late", "route": "chat"}
+{"prompt": "what process is using 90% of my cpu right now?", "route": "system"}
+{"prompt": "write a regex pattern to match any email address that contains a plus sign but exclude those with underscores.", "route": "coding"}
+{"prompt": "what is the schedule for the bus from the airport to the train station", "route": "research"}
+{"prompt": "rewrite these react components to use hooks instead of lifecycle methods", "route": "coding"}
+{"prompt": "organize my downloads so images go here and videos go there", "route": "files"}
+{"prompt": "find me a reliable plumber in case my sink bursts again", "route": "research"}
+{"prompt": "write a small utility function in javascript to sanitize user input", "route": "coding"}
+{"prompt": "organize my images by deleting duplicates automatically", "route": "files"}
+{"prompt": "generate a script that watches the logs directory and sends alerts via slack whenever error_level > 5 occurs.", "route": "coding"}
+{"prompt": "who owns the building at 1400 west 5th street", "route": "research"}
+{"prompt": "open the settings page for display brightness", "route": "system"}
+{"prompt": "reboot into safe mode immediately", "route": "system"}
+{"prompt": "monitor my thermal readings right now", "route": "system"}
+{"prompt": "how much does a round trip ticket cost from ny to la right now?", "route": "research"}
+{"prompt": "i need to reboot the laptop", "route": "system"}
+{"prompt": "my cat keeps scratching at the door should i open it?", "route": "chat"}
+{"prompt": "i need to find the invoice from last monday", "route": "files"}
+{"prompt": "can you write a unit test file to cover all edge cases of my login function", "route": "coding"}
+{"prompt": "generate a simple c++ function that calculates fibonacci numbers up to n.", "route": "coding"}
+{"prompt": "can you restart the windows update helper?", "route": "system"}
+{"prompt": "can you find the grocery list i made yesterday?", "route": "files"}
+{"prompt": "where did i save the meeting notes from yesterday's standup?", "route": "files"}
+{"prompt": "i think pineapple belongs on pizza but others disagree", "route": "chat"}
+{"prompt": "did they cancel the weather alert for the storm later tonight", "route": "research"}
+{"prompt": "does the new tax law effective june 1st affect freelance workers?", "route": "research"}
+{"prompt": "create a simple html page with embedded javascript to draw a pie chart using canvas", "route": "coding"}
+{"prompt": "i need the current hours for the library because my daughter is sick", "route": "research"}
+{"prompt": "did they update the policy on pet parks lately?", "route": "research"}
+{"prompt": "is there a news report about the flood damage in the south sector?", "route": "research"}
+{"prompt": "how much was paid out in dividends by tech corp last quarter?", "route": "research"}
+{"prompt": "can you show me where my bank statements are stored?", "route": "files"}
+{"prompt": "what's using so much battery right now", "route": "system"}
+{"prompt": "who is the current mayor of san francisco?", "route": "research"}
+{"prompt": "my golang web app keeps timing out during startup, can you refactor the init logic?", "route": "coding"}
+{"prompt": "find all files larger than 10mb in downloads", "route": "files"}
+{"prompt": "can you find the contact info for the city planner regarding parking restrictions?", "route": "research"}
+{"prompt": "i heard there's a storm coming, should i worry?", "route": "chat"}
+{"prompt": "explain how photosynthesis works for my science project", "route": "chat"}
+{"prompt": "update the drivers for my graphics card", "route": "system"}
+{"prompt": "look for the json data file inside the server_logs folder", "route": "files"}
+{"prompt": "can you tell me where to find the best vegan tacos downtown?", "route": "research"}
+{"prompt": "launch terminal and run a diagnostic script", "route": "system"}
+{"prompt": "find the current exchange rate for buying dollars with euros at my bank", "route": "research"}
+{"prompt": "refactor this function to remove the hardcoded magic numbers for api endpoints", "route": "coding"}
+{"prompt": "check the latest price of gas at the Shell station on Main Street", "route": "research"}
+{"prompt": "update kernel drivers manually", "route": "system"}
+{"prompt": "delete the old draft version of the script", "route": "files"}
+{"prompt": "can you find the contact info for the plumbing company who fixed my sink last month?", "route": "research"}
+{"prompt": "turn on bluetooth and pair my headphones", "route": "system"}
+{"prompt": "how do i refactor these three functions to remove the global state?", "route": "coding"}
+{"prompt": "rewrite this sql query to include an order by clause on created_date descending", "route": "coding"}
+{"prompt": "is there any information about the new tax laws affecting renters in spring 2024?", "route": "research"}
+{"prompt": "who won the last round table tennis tournament in the city?", "route": "research"}
+{"prompt": "how do i write a unit test for async functions in java?", "route": "coding"}
+{"prompt": "backup everything in my documents folder", "route": "files"}
+{"prompt": "what are your thoughts on remote work", "route": "chat"}
+{"prompt": "what are the hours for the town hall meeting on wednesday afternoon?", "route": "research"}
+{"prompt": "write an elixir module with a callback for handling payment transactions", "route": "coding"}
+{"prompt": "can you find the review scores for the new iphone release coming out next week", "route": "research"}
+{"prompt": "convert that legacy c++ file into modern java syntax", "route": "coding"}
+{"prompt": "can you refactor the error handling block in my microservice to log details before exiting?", "route": "coding"}
+{"prompt": "delete the old backup zip files please", "route": "files"}
+{"prompt": "how do i implement type safety for this javascript array without a library?", "route": "coding"}
+{"prompt": "can you refactor this messy css into a cleaner class-based structure?", "route": "coding"}
+{"prompt": "create a new json file called notes.json so i can start writing stuff in it", "route": "files"}
+{"prompt": "i think that new movie you recommended sucks", "route": "chat"}
+{"prompt": "the linting tool keeps complaining about unused imports", "route": "coding"}
+{"prompt": "i need the ingredients list for that specific cake recipe i saw earlier", "route": "research"}
+{"prompt": "what was the stock market doing yesterday morning?", "route": "research"}
+{"prompt": "how much is a round trip ticket to denver right now?", "route": "research"}
+{"prompt": "i need to refactor this legacy java class to use async/await patterns instead of callbacks", "route": "coding"}
+{"prompt": "how much storage space does my c drive have left", "route": "system"}
+{"prompt": "delete that old backup zip on my desktop", "route": "files"}
+{"prompt": "generate a regular expression to validate email addresses in html forms", "route": "coding"}
+{"prompt": "what does that strange sound outside mean?", "route": "chat"}
+{"prompt": "rename my notes.txt to project_notes.pdf", "route": "files"}
+{"prompt": "what's the best way to learn french quickly?", "route": "chat"}
+{"prompt": "is there any good sushi place in brooklyn open today before six pm?", "route": "research"}
+{"prompt": "what are the three branches of government we have?", "route": "chat"}
+{"prompt": "check if any background services are running", "route": "system"}
+{"prompt": "does walmart sell ice cream in stock near me?", "route": "research"}
+{"prompt": "rename this project file to final_v2", "route": "files"}
+{"prompt": "the regex in my javascript file isn't matching special characters correctly", "route": "coding"}
+{"prompt": "i think the sun is actually a satellite", "route": "chat"}
+{"prompt": "open terminal and run a script that updates my drivers", "route": "system"}
+{"prompt": "search for the latest update on vaccine availability at community clinics.", "route": "research"}
+{"prompt": "does my student visa application still need the passport scan I uploaded?", "route": "research"}
+{"prompt": "i'm trying to refactor this loop into a map-reduce style approach but I keep getting type errors", "route": "coding"}
+{"prompt": "write a test case for the new payment processing logic in jest", "route": "coding"}
+{"prompt": "close those three chrome tabs that are eating up my battery life", "route": "system"}
+{"prompt": "i forgot how to configure docker compose so here is my docker-compose.yml content", "route": "coding"}
+{"prompt": "my docker-compose file keeps failing, check if there are any syntax errors", "route": "coding"}
+{"prompt": "can you move all screenshots from last week into one folder?", "route": "files"}
+{"prompt": "wait why did the traffic light turn red so suddenly", "route": "chat"}
+{"prompt": "help me find my homework assignment from last week", "route": "files"}
+{"prompt": "search for any txt files containing the word \"deadline\"", "route": "files"}
+{"prompt": "what's the ticket price for the museum exhibit that starts next friday?", "route": "research"}
+{"prompt": "hello world", "route": "chat"}
+{"prompt": "i need to find the file with the password settings but i can't remember the name", "route": "files"}
+{"prompt": "what would you do if i told u my cat stole the bread", "route": "chat"}
+{"prompt": "check if the kernel is stable", "route": "system"}
+{"prompt": "what is the current status of flight dh402 arriving at jfk?", "route": "research"}
+{"prompt": "is that new restaurant open yet or is it still closed?", "route": "research"}
+{"prompt": "create a new text file called budget tracking", "route": "files"}
+{"prompt": "save this meeting transcript as a pdf immediately", "route": "files"}
+{"prompt": "turn off bluetooth to save power", "route": "system"}
+{"prompt": "open the spreadsheet and tell me what's in row 5", "route": "files"}
+{"prompt": "hey, move the project folder from downloads to documents, thanks", "route": "files"}
+{"prompt": "find the latest update on the status of my flight.", "route": "research"}
+{"prompt": "create a unit test case for the user authentication flow", "route": "coding"}
+{"prompt": "open the settings app and change the wallpaper", "route": "system"}
+{"prompt": "why did i drop the ice cream cone and now its on the floor", "route": "chat"}
+{"prompt": "optimize the query speed by rewriting that sql join statement", "route": "coding"}
+{"prompt": "hey can you explain how photosynthesis works simply please", "route": "chat"}
+{"prompt": "i need to know if my appointment with the doctor is confirmed", "route": "research"}
+{"prompt": "close any unnecessary windows to lower the fan speed", "route": "system"}
+{"prompt": "is there any news about the solar flare hitting us today?", "route": "research"}
+{"prompt": "does pineapple belong on pizza", "route": "chat"}
+{"prompt": "look up the menu for the Italian place on main street.", "route": "research"}
+{"prompt": "what does the official policy say about returning items bought online?", "route": "research"}
+{"prompt": "rename my important documents folder to critical_work_v2", "route": "files"}
+{"prompt": "check how many active services are started before login", "route": "system"}
+{"prompt": "what services are currently active?", "route": "system"}
+{"prompt": "write a sql stored procedure to update inventory counts after each sale.", "route": "coding"}
+{"prompt": "i'm getting a null pointer exception when trying to read that xml file, help me debug it", "route": "coding"}
+{"prompt": "monitor disk space on my c drive only", "route": "system"}
+{"prompt": "how do i write a unit test for this new restful endpoint without using an api client library?", "route": "coding"}
+{"prompt": "fix that weird pop-up appearing when i wake up", "route": "system"}
+{"prompt": "help me write a regex pattern to validate email addresses with optional subdomains", "route": "coding"}
+{"prompt": "write a groovy script using ansible to install apache2 on servers matching host pattern *prod", "route": "coding"}
+{"prompt": "did they announce any changes to the school holiday schedule yet?", "route": "research"}
+{"prompt": "why is the subway running late everywhere downtown?", "route": "research"}
+{"prompt": "turn off the screen saver", "route": "system"}
+{"prompt": "is it safe to eat wild mushrooms?", "route": "chat"}
+{"prompt": "check if there is a sale on organic coffee beans at wilson's", "route": "research"}
+{"prompt": "i really hate Mondays so much", "route": "chat"}
+{"prompt": "what's up dude", "route": "chat"}
+{"prompt": "disable the startup animations in the settings panel", "route": "system"}
+{"prompt": "write a go struct with fields user_id, email, and role, plus a method to print the user details.", "route": "coding"}
+{"prompt": "where are all my downloaded files stored on linux?", "route": "files"}
+{"prompt": "turn off the bluetooth service since i don't use it", "route": "system"}
+{"prompt": "how does the internet actually connect devices without wires sometimes?", "route": "chat"}
+{"prompt": "did anyone fix the pothole near 5th and oak yet?", "route": "research"}
+{"prompt": "shut down the laptop after I close all windows", "route": "system"}
+{"prompt": "open the control panel and look at user accounts", "route": "system"}
+{"prompt": "create a typescript interface for a User object including optional fields like address and social_security_number.", "route": "coding"}
+{"prompt": "restart the printer service", "route": "system"}
+{"prompt": "delete all files older than 3 days in my downloads folder", "route": "files"}
+{"prompt": "did the mayor sign the new zoning laws last week?", "route": "research"}
+{"prompt": "how long has the new library been serving books digitally?", "route": "research"}
+{"prompt": "can you write a terraform script to provision a new ec2 instance with auto scaling group?", "route": "coding"}
+{"prompt": "can you fix this bug where the loop doesn't finish?", "route": "coding"}
+{"prompt": "how do i write a cron job to back up the database every night?", "route": "coding"}
+{"prompt": "check the thermal status of the cpu so we don't let it overheat during gaming", "route": "system"}
+{"prompt": "write a python script that automates renaming files based on their last modified date", "route": "coding"}
+{"prompt": "did you see the new football match last night", "route": "chat"}
+{"prompt": "stop all background processes running right now", "route": "system"}
+{"prompt": "find and open the spreadsheet with q3 financials", "route": "files"}
+{"prompt": "i need help debugging why the build fails when I add the new eslint rules", "route": "coding"}
+{"prompt": "i have no idea what this error code means but it keeps coming up", "route": "chat"}
+{"prompt": "hey whats your name", "route": "chat"}
+{"prompt": "open that list and tell me what's on it", "route": "files"}
+{"prompt": "shut down the computer completely", "route": "system"}
+{"prompt": "where did i save that json file with the login credentials?", "route": "files"}
+{"prompt": "can you tell me how to make a cup of french press coffee like a pro", "route": "chat"}
+{"prompt": "close the windows that have been left open since lunch", "route": "system"}
+{"prompt": "restart the network adapter manually", "route": "system"}
+{"prompt": "rename \"copy_of_project.psd\" to \"project_final.docx\"", "route": "files"}
+{"prompt": "debug why my docker container keeps crashing when i run the npm start command after pulling new dependencies.", "route": "coding"}
+{"prompt": "check how much free memory i have left on my laptop", "route": "system"}
+{"prompt": "is the school bus running on schedule this morning?", "route": "research"}
+{"prompt": "just remember to lock your front door before you go out", "route": "chat"}
+{"prompt": "find out if the movie ending was different in other regions", "route": "research"}
+{"prompt": "did anyone find out how to fix that software error yet?", "route": "research"}
+{"prompt": "convert this json object into a csv file using bash", "route": "coding"}
+{"prompt": "can you refactor this loop to use a list comprehension instead?", "route": "coding"}
+{"prompt": "has the new iphone been released yet and where can i pre-order it", "route": "research"}
+{"prompt": "check if any high cpu processes are currently running", "route": "system"}
+{"prompt": "create a terraform resource definition for an aws s3 bucket with versioning enabled.", "route": "coding"}
+{"prompt": "update the react component to fetch data from the new api endpoint", "route": "coding"}
+{"prompt": "how do i rewrite this sql query to optimize performance on large tables", "route": "coding"}
+{"prompt": "where are my favorite recipes stored on this computer?", "route": "files"}
+{"prompt": "create a new json file with my contact info", "route": "files"}
+{"prompt": "is there a new restaurant opening on main avenue next month?", "route": "research"}
+{"prompt": "restart my network adapter to fix wifi", "route": "system"}
+{"prompt": "delete the system_cache folder and restart my browser immediately", "route": "files"}
+{"prompt": "i'm confused about which route to take to get to the airport do you know?", "route": "chat"}
+{"prompt": "run a disk cleanup script if possible", "route": "system"}
+{"prompt": "my cat ate something weird and now he's acting crazy help", "route": "chat"}
+{"prompt": "turn on the external hard drive and format it", "route": "system"}
+{"prompt": "i need to delete that old backup zip file it's taking up space", "route": "files"}
+{"prompt": "optimize this sql query to avoid the full table scan", "route": "coding"}
+{"prompt": "find any txt notes mentioning my meeting schedule", "route": "files"}
+{"prompt": "organize all my receipts into one big pdf for tax time", "route": "files"}
+{"prompt": "can you help me write a cron job to run every night at 3am?", "route": "coding"}
+{"prompt": "check how much ram is left", "route": "system"}
+{"prompt": "monitor temperature sensors for my graphics card", "route": "system"}
+{"prompt": "what are some healthy snacks i can keep in my bag", "route": "chat"}
+{"prompt": "ok so basically i want to know why the sky is blue really.", "route": "chat"}
+{"prompt": "can you read the json file with my export data?", "route": "files"}
+{"prompt": "can you explain how a solar panel generates electricity simply", "route": "chat"}
+{"prompt": "what ingredients make the best spaghetti sauce according to experts?", "route": "chat"}
+{"prompt": "find where i saved the invoice for june", "route": "files"}
+{"prompt": "can you find and highlight every cell with a red value", "route": "files"}
+{"prompt": "open that spreadsheet and rename the column headers to something shorter", "route": "files"}
+{"prompt": "reorganize my music playlist folder by artist name", "route": "files"}
+{"prompt": "i need some advice on where to start learning guitar", "route": "chat"}
+{"prompt": "my script keeps throwing a syntax error when i try to handle null values", "route": "coding"}
+{"prompt": "turn off the wireless network card temporarily", "route": "system"}
+{"prompt": "i created a new excel sheet but i forgot the name, help me rename it to budget_2024", "route": "files"}
+{"prompt": "stop those background services eating bandwidth", "route": "system"}
+{"prompt": "please rename \"invoice_2019\" to \"final_invoice_v2\"", "route": "files"}
+{"prompt": "need some unit tests for my new search algorithm in javascript", "route": "coding"}
+{"prompt": "i'm trying to implement rate limiting in my api using node.js, what code should i use for the middleware?", "route": "coding"}
+{"prompt": "tell me something interesting", "route": "chat"}
+{"prompt": "if you drop a magnet in water what happens to it?", "route": "chat"}
+{"prompt": "merge those two contact lists into one file please", "route": "files"}
+{"prompt": "open settings and change the power plan to high performance", "route": "system"}
+{"prompt": "enable guest wifi settings temporarily", "route": "system"}
+{"prompt": "move all videos from temp folder to media library", "route": "files"}
+{"prompt": "find out if the 2024 olympic games schedule is changed yet", "route": "research"}
+{"prompt": "turn off external hard drive power supply", "route": "system"}
+{"prompt": "start the print server service so i can print from another device", "route": "system"}
+{"prompt": "my vue component is not rendering the dynamic list items, can you check if there is a lifecycle hook issue?", "route": "coding"}
+{"prompt": "search for all notes tagged with \"urgent\" in my text editor", "route": "files"}
+{"prompt": "check if my package delivery has been delayed by the carrier", "route": "research"}
+{"prompt": "how much does an adult ticket cost to get into the museum?", "route": "research"}
+{"prompt": "create a gcloud CLI snippet to list all active projects", "route": "coding"}
+{"prompt": "can you help me implement authentication with jwt in my django project?", "route": "coding"}
+{"prompt": "how do i calculate the future value of an investment with compound interest", "route": "chat"}
+{"prompt": "implement pagination for the user list endpoint", "route": "coding"}
+{"prompt": "my cat ate the plants what should i do", "route": "chat"}
+{"prompt": "is there a new movie opening friday night called shadow play?", "route": "research"}
+{"prompt": "create a lambda function handler that processes event notifications and logs them", "route": "coding"}
+{"prompt": "find all photos tagged with beach and show me them", "route": "files"}
+{"prompt": "i need current info on when the bus service returns next monday.", "route": "research"}
+{"prompt": "unzip that archive and put the contents in my library", "route": "files"}
+{"prompt": "write a python script to scrape emails from that website", "route": "coding"}
+{"prompt": "turn on the monitor", "route": "system"}
+{"prompt": "what is the current status of flight 249 from jfk to lga", "route": "research"}
+{"prompt": "what should i pack for a trip to japan in october?", "route": "chat"}
+{"prompt": "rename my folder notes to personal_notes", "route": "files"}
+{"prompt": "close every open application and lock the screen", "route": "system"}
+{"prompt": "can you explain quantum entanglement like im five", "route": "chat"}
+{"prompt": "can you summarize this document for me", "route": "chat"}
+{"prompt": "delete those old backup files on desktop", "route": "files"}
+{"prompt": "i think the weather will be nice tomorrow, don't you think?", "route": "chat"}
+{"prompt": "generate a simple regex pattern to validate email addresses with a company domain suffix", "route": "coding"}
+{"prompt": "organize my home folders by category into a new structure", "route": "files"}
+{"prompt": "search for the latest updates on the subway construction project status.", "route": "research"}
+{"prompt": "what's the current exchange rate between the dollar and the euro today?", "route": "research"}
+{"prompt": "should i wear my red tie today or blue", "route": "chat"}
+{"prompt": "please open and read the large txt log file so i can understand what happened yesterday", "route": "files"}
+{"prompt": "what are the current hours for the library during winter break", "route": "research"}
+{"prompt": "how much are tickets for the movie tonight and where does it show?", "route": "research"}
+{"prompt": "its raining outside", "route": "chat"}
+{"prompt": "can you write a bash script that automates the backup process for my database?", "route": "coding"}
+{"prompt": "help me choose a movie for tonight", "route": "chat"}
+{"prompt": "how often are flights from here to london scheduled to take off?", "route": "research"}
+{"prompt": "rewrite the algorithm to use async/await instead of promises for better readability", "route": "coding"}
+{"prompt": "close all open windows and log out", "route": "system"}
+{"prompt": "rename this json config file to something more descriptive", "route": "files"}
+{"prompt": "why did the rooster really crow at midnight", "route": "chat"}
+{"prompt": "turn off the bluetooth adapter to save battery", "route": "system"}
+{"prompt": "disable sound output to fix the audio glitches", "route": "system"}
+{"prompt": "shutdown the laptop now", "route": "system"}
+{"prompt": "im bored what should we watch tonight", "route": "chat"}
+{"prompt": "can you find the latest schedule for the community center events?", "route": "research"}
+{"prompt": "create a new json file with today's weather data and save it", "route": "files"}
+{"prompt": "find my invoice from last friday", "route": "files"}
+{"prompt": "find all images in the home folder and save them here", "route": "files"}
+{"prompt": "show me how to rewrite this c++ function to use smart pointers properly", "route": "coding"}
+{"prompt": "where did i save the project notes?", "route": "files"}
+{"prompt": "turn on auto-update for all system software", "route": "system"}
+{"prompt": "does amazon deliver to this zip code in 24 hours", "route": "research"}
+{"prompt": "tell me a joke", "route": "chat"}
+{"prompt": "did you see what happened yesterday?", "route": "chat"}
+{"prompt": "find the last backup i made and show me what files are inside", "route": "files"}
+{"prompt": "find a licensed plumber available for emergency repair in downtown.", "route": "research"}
+{"prompt": "what are the opening hours for the new restaurant on main street?", "route": "research"}
+{"prompt": "what are the latest news headlines about the solar flare warning?", "route": "research"}
+{"prompt": "generate sample input data that triggers the error we found yesterday", "route": "coding"}
+{"prompt": "copy that csv of contacts into a new document for my client", "route": "files"}
+{"prompt": "where did i put the script for the weekly budget report?", "route": "files"}
+{"prompt": "i accidentally saved two copies of the same file, remove one", "route": "files"}
+{"prompt": "how much free ram do i have left", "route": "system"}
+{"prompt": "how do i bake a chocolate cake", "route": "chat"}
+{"prompt": "did they update the parking regulations downtown after the storm?", "route": "research"}
+{"prompt": "how do i rewrite this bash script to use arrays instead of variable expansion for performance?", "route": "coding"}
+{"prompt": "help me rename these folders to be more descriptive", "route": "files"}
+{"prompt": "i want to open chrome but only if all other browser instances are closed", "route": "system"}
+{"prompt": "can you write a function to calculate the fibonacci sequence using recursion?", "route": "coding"}
+{"prompt": "generate some test cases for this new api endpoint i built", "route": "coding"}
+{"prompt": "find any txt documents older than 6 months in the desktop", "route": "files"}
+{"prompt": "fix the syntax error in my python script where i keep getting a nameerror", "route": "coding"}
+{"prompt": "yo just woke up how is it going", "route": "chat"}
+{"prompt": "if i left my phone in the dryer for an hour will it explode?", "route": "chat"}
+{"prompt": "the code is running slow, how do i optimize this loop", "route": "coding"}
+{"prompt": "could you tell me the steps to make a peanut butter sandwich", "route": "chat"}
+{"prompt": "check my ip address and see which gateway i'm connected to", "route": "system"}
+{"prompt": "check if the system is overheating", "route": "system"}
+{"prompt": "do you think dogs and cats can truly understand human emotions or are they just mimicking us?", "route": "chat"}
+{"prompt": "where are the ticket prices for today's soccer game", "route": "research"}
+{"prompt": "check how much battery power left in the device", "route": "system"}
+{"prompt": "convert this image to text and save it as output.txt", "route": "files"}
+{"prompt": "close chrome if it has more than five tabs open", "route": "system"}
+{"prompt": "how does photosynthesis work step by step", "route": "chat"}
+{"prompt": "debug the race condition causing data inconsistency when two users update inventory", "route": "coding"}
+{"prompt": "can you draft the typescript interfaces needed for this new api endpoint?", "route": "coding"}
+{"prompt": "my script always returns the wrong output for large numbers, can you help me debug it?", "route": "coding"}
+{"prompt": "how do i reset my router?", "route": "chat"}
+{"prompt": "find and open that list of grocery items i made yesterday", "route": "files"}
+{"prompt": "delete this corrupted log file that won't let me move on", "route": "files"}
+{"prompt": "give me a list of all pdfs in the documents folder", "route": "files"}
+{"prompt": "fix the indentation in this java class so it compiles", "route": "coding"}
+{"prompt": "what are the current exchange rates between the euro and yen", "route": "research"}
+{"prompt": "open the device manager and look for unknown hardware", "route": "system"}
+{"prompt": "find out what time the fireworks display starts tonight and where to view it", "route": "research"}
+{"prompt": "i need to generate a backup script using rsync and schedule it with cron", "route": "coding"}
+{"prompt": "open the terminal and run sysinfo", "route": "system"}
+{"prompt": "write a rust struct to hold user credentials and a constructor function for it.", "route": "coding"}
+{"prompt": "how many open windows are there right now", "route": "system"}
+{"prompt": "can you search for the official policy on remote work for q3", "route": "research"}
+{"prompt": "what time is it on my phone?", "route": "system"}
+{"prompt": "where can i see today's weather forecast in detail?", "route": "research"}
+{"prompt": "generate a dockerfile that minimizes image size and includes multi-stage builds", "route": "coding"}
+{"prompt": "create a new blank txt file named notes_today", "route": "files"}
+{"prompt": "i need to restart my browser", "route": "system"}
+{"prompt": "please show me all files that end in .log from the past month.", "route": "files"}
+{"prompt": "how much does a round trip ticket cost to orlando right now", "route": "research"}
+{"prompt": "is it true that honey never spoils?", "route": "chat"}
+{"prompt": "please rename my project document to final_draft.pdf", "route": "files"}
+{"prompt": "create a folder named \"project alpha\" inside documents so i can put everything there", "route": "files"}
+{"prompt": "reboot my desktop into safe mode", "route": "system"}
+{"prompt": "i heard that coffee helps you wake up but is it true", "route": "chat"}
+{"prompt": "how do i fix a leaky faucet without getting my hands dirty", "route": "chat"}
+{"prompt": "kill that chrome process it won't stop shutting down", "route": "system"}
+{"prompt": "delete the temp folder on desktop", "route": "files"}
+{"prompt": "disable the guest network setting", "route": "system"}
+{"prompt": "is there any information on the new zoning laws for the residential area?", "route": "research"}
+{"prompt": "where is the document about my insurance policy?", "route": "files"}
+{"prompt": "restart the audio driver services", "route": "system"}
+{"prompt": "what do you think about global warming?", "route": "chat"}
+{"prompt": "is there any documentation on how to apply for that grant again?", "route": "research"}
+{"prompt": "did they update the rules for dog parks last month", "route": "research"}
+{"prompt": "generate a graphql mutation for updating user roles in the db", "route": "coding"}
+{"prompt": "why is the sky blue and what causes that effect", "route": "chat"}
+{"prompt": "update the dockerfile to include these new dependencies from pypi", "route": "coding"}
+{"prompt": "here is the new requirement for the payment processor, update the code", "route": "coding"}
+{"prompt": "where can i find the latest schedule for the metro?", "route": "research"}
+{"prompt": "what is the weather like today in oregon?", "route": "research"}
+{"prompt": "create a quick script in python that scrapes product prices from amazon", "route": "coding"}
+{"prompt": "hey whats your opinion on remote work being better than offices", "route": "chat"}
+{"prompt": "please read the json file at /home/user/data/config.json and show me the content", "route": "files"}
+{"prompt": "write a bash script to back up all files in /var/log", "route": "coding"}
+{"prompt": "start chrome and wait for it to load", "route": "system"}
+{"prompt": "where are you from", "route": "chat"}
+{"prompt": "organize all my documents from last month", "route": "files"}
+{"prompt": "disable the automatic updates service until i can manually approve them", "route": "system"}
+{"prompt": "where is that pdf invoice from last week?", "route": "files"}
+{"prompt": "how to make a peanut butter sandwich please", "route": "chat"}
+{"prompt": "open system preferences and change wallpaper", "route": "system"}
+{"prompt": "create a bash script that backs up files daily", "route": "coding"}
+{"prompt": "i need to know the ingredients list for this specific brand of yogurt i bought last week", "route": "research"}
+{"prompt": "check if there is parking available near the convention center", "route": "research"}
+{"prompt": "has there been any update on the construction progress at the highway overpass?", "route": "research"}
+{"prompt": "is the new parkland hospital open or closed for renovations?", "route": "research"}
+{"prompt": "who is running for mayor in the next election and when is the first debate?", "route": "research"}
+{"prompt": "create a shell script that zips up all images in the current directory named picture*.jpg into archive.zip.", "route": "coding"}
+{"prompt": "open the settings app so we can turn on dark mode", "route": "system"}
+{"prompt": "can you confirm if the bridge repair project started this month?", "route": "research"}
+{"prompt": "hey whats new with your day", "route": "chat"}
+{"prompt": "open my shopping list from last night", "route": "files"}
+{"prompt": "check battery level and plug it in if low", "route": "system"}
+{"prompt": "read out loud the json data about employee salaries", "route": "files"}
+{"prompt": "i forgot how to import external modules in rust, help me out", "route": "coding"}
+{"prompt": "verify if the system is overheating right now", "route": "system"}
+{"prompt": "look up the flight status for aa 123 from jfk to lga", "route": "research"}
+{"prompt": "reset network adapter by toggling power cycle", "route": "system"}
+{"prompt": "just wondering if gravity pulls harder at the poles than the equator", "route": "chat"}
+{"prompt": "move the backup zip file to an external hard drive folder", "route": "files"}
+{"prompt": "show me the structure of the database export", "route": "files"}
+{"prompt": "i need help fixing the syntax error in my javascript function that calculates the total cost.", "route": "coding"}
+{"prompt": "what are the operating hours of the museum tonight?", "route": "research"}
+{"prompt": "check if there is free ram left", "route": "system"}
+{"prompt": "check if my antivirus service is still active", "route": "system"}
+{"prompt": "turn on the keyboard backlight system-wide", "route": "system"}
+{"prompt": "delete everything in trash bin", "route": "files"}
+{"prompt": "reboot into recovery mode", "route": "system"}
+{"prompt": "where do i buy groceries here in town?", "route": "chat"}
+{"prompt": "what is the current ip address of this machine", "route": "system"}
+{"prompt": "check the current price of organic almonds in my local grocery store", "route": "research"}
+{"prompt": "how does a rocket actually launch to space?", "route": "chat"}
+{"prompt": "help me find the contact info for the animal rescue group that posts in this area.", "route": "research"}
+{"prompt": "is there a readme file i can read right now?", "route": "files"}
+{"prompt": "i want to optimize this sql query so it runs faster by adding an index on the user table", "route": "coding"}
+{"prompt": "create a new text file called notes", "route": "files"}
+{"prompt": "please organize my cloud storage so documents are in docs and videos in media", "route": "files"}
+{"prompt": "open my terminal", "route": "system"}
+{"prompt": "write a regex pattern to extract email addresses from text", "route": "coding"}
+{"prompt": "my unit tests are flaky, how can i add better assertions", "route": "coding"}
+{"prompt": "whats the best way to organize a messy desk in five minutes", "route": "chat"}
+{"prompt": "can you search for the best-rated vegan restaurant in downtown", "route": "research"}
+{"prompt": "open system tray settings menu", "route": "system"}
+{"prompt": "what are the opening hours of the post office on wednesday morning?", "route": "research"}
+{"prompt": "why do we need to brush our teeth twice a day scientifically speaking?", "route": "chat"}
+{"prompt": "toggle airplane mode off since i forgot it was on", "route": "system"}
+{"prompt": "why did world war two end in 1945?", "route": "chat"}
+{"prompt": "did you see what i posted online yesterday", "route": "chat"}
+{"prompt": "i want to see if there's any news about the power outage last night on this channel.", "route": "research"}
+{"prompt": "what is the definition of a marathon runner", "route": "chat"}
+{"prompt": "restart my router please", "route": "system"}
+{"prompt": "i dropped my phone what could i have done differently?", "route": "chat"}
+{"prompt": "delete the old backup folder but keep everything in the current one intact", "route": "files"}
+{"prompt": "rename \"final_report\" to \"final_report_v2.pdf\"", "route": "files"}
+{"prompt": "i heard they found a cure for cancer that's insane", "route": "chat"}
+{"prompt": "rewrite this sql query to optimize the search performance on large tables", "route": "coding"}
+{"prompt": "create a folder structure for my new blog posts", "route": "files"}
+{"prompt": "delete these three image files they are corrupted", "route": "files"}
+{"prompt": "did the school district announce any changes to the bus routes this week?", "route": "research"}
+{"prompt": "unzip the download.zip and extract everything to the desktop", "route": "files"}
+{"prompt": "can you list all the csv reports older than 2018?", "route": "files"}
+{"prompt": "write a terraform script to provision three new kubernetes nodes", "route": "coding"}
+{"prompt": "i need to delete these old csv backups from my desktop folder", "route": "files"}
+{"prompt": "close all those running spotify tabs", "route": "system"}
+{"prompt": "can you help me automate the deployment process with terraform?", "route": "coding"}
+{"prompt": "check out the reviews for the new sushi place on 5th street", "route": "research"}
+{"prompt": "can you rewrite that javascript code to be more readable?", "route": "coding"}
+{"prompt": "i just saw a hawk on the hill", "route": "chat"}
+{"prompt": "where is the csv file with last week sales data located", "route": "files"}
+{"prompt": "open task manager", "route": "system"}
+{"prompt": "what are the operating hours for the post office next monday?", "route": "research"}
+{"prompt": "create a note about tomorrow's dentist appointment", "route": "files"}
+{"prompt": "rename my vacation photo album to summer 2023", "route": "files"}
+{"prompt": "open a new terminal window for me", "route": "system"}
+{"prompt": "write a typescript interface that validates user input before it hits the database", "route": "coding"}
+{"prompt": "help me write a bash script to backup my database every night", "route": "coding"}
+{"prompt": "restart my bluetooth connectivity without rebooting", "route": "system"}
+{"prompt": "delete anything ending in .tmp from my desktop", "route": "files"}
+{"prompt": "fix the memory leak in my go microservice by optimizing the connection pool code", "route": "coding"}
+{"prompt": "what are some good books on learning python?", "route": "chat"}
+{"prompt": "i need help debugging why my bash script keeps hanging on the loop", "route": "coding"}
+{"prompt": "move my project notes from desktop to downloads folder", "route": "files"}
+{"prompt": "please create a python class to manage user authentication tokens", "route": "coding"}
+{"prompt": "what time does the movie star wars come out at the multiplex?", "route": "research"}
+{"prompt": "i'm looking for a specific article about climate change from last year", "route": "research"}
+{"prompt": "did the weather change today in my neighborhood?", "route": "research"}
+{"prompt": "convert these legacy bash commands into node scripts", "route": "coding"}
+{"prompt": "hi there how are you doing today", "route": "chat"}
+{"prompt": "turn off wifi but keep cellular active", "route": "system"}
+{"prompt": "are there any open spots at the local library during the holidays?", "route": "research"}
+{"prompt": "convert this c++ class to rust using serde attributes", "route": "coding"}
+{"prompt": "close chrome and firefox", "route": "system"}
+{"prompt": "i need help writing a graphql mutation to update a user's address", "route": "coding"}
+{"prompt": "create an empty directory called logs for future use", "route": "files"}
+{"prompt": "open task manager so we can kill that slow app", "route": "system"}
+{"prompt": "shut down my laptop completely", "route": "system"}
+{"prompt": "my node app is throwing an error, check line 42 of index.js and tell me what's wrong", "route": "coding"}
+{"prompt": "my current code is crashing whenever i run the server", "route": "coding"}
+{"prompt": "could you copy the meeting minutes file to shared drive?", "route": "files"}
+{"prompt": "look up the contact details for the plumbing company they advertised online", "route": "research"}
+{"prompt": "stop the network manager service temporarily", "route": "system"}
+{"prompt": "move the csv file to shared drive", "route": "files"}
+{"prompt": "hello friend, how are things?", "route": "chat"}
+{"prompt": "turn off my screen", "route": "system"}
+{"prompt": "how do i update my drivers", "route": "system"}
+{"prompt": "close the terminal window and shut down", "route": "system"}
+{"prompt": "turn on the wifi", "route": "system"}
+{"prompt": "monitor the current temperature of the mainboard sensors", "route": "system"}
+{"prompt": "generate a makefile target to build and run the test suite", "route": "coding"}
+{"prompt": "write a regex pattern to sanitize input fields against sql injection attempts", "route": "coding"}
+{"prompt": "why is the docker container dying immediately after starting? oh wait, that's not it", "route": "coding"}
+{"prompt": "why is my production script throwing a type error?", "route": "coding"}
+{"prompt": "generate a shell command that renames files from snake_case to kebab-case", "route": "coding"}
+{"prompt": "can you tell me the opening hours for the new museum downtown?", "route": "research"}
+{"prompt": "check if there are any text files larger than 5mb on my drive", "route": "files"}
+{"prompt": "i need the latest specs for the new sony cameras before i buy one.", "route": "research"}
+{"prompt": "can you look up the current price of a used honda civic in texas?", "route": "research"}
+{"prompt": "how does photosynthesis work exactly?", "route": "chat"}
+{"prompt": "what are the requirements to get a permit for building that fence?", "route": "research"}
+{"prompt": "find the opening hours for the museum of modern art", "route": "research"}
+{"prompt": "i need to look up the address for the library branch in westside.", "route": "research"}
+{"prompt": "rewrite this script to use async/await instead of callbacks", "route": "coding"}
+{"prompt": "run sysinfo and paste the output here please", "route": "system"}
+{"prompt": "write a test case for the new login endpoint", "route": "coding"}
+{"prompt": "turn the display brightness to maximum", "route": "system"}
+{"prompt": "good morning sunshine!", "route": "chat"}
+{"prompt": "what's the capital city of germany?", "route": "chat"}
+{"prompt": "disable auto-update notifications", "route": "system"}
+{"prompt": "why does the sky change color at sunset", "route": "chat"}
+{"prompt": "open that huge zip file and let me search inside it", "route": "files"}
+{"prompt": "please generate a regular expression that validates email addresses", "route": "coding"}
+{"prompt": "what are the hours for the post office downtown?", "route": "research"}
+{"prompt": "is the stock price of tesla up or down this morning?", "route": "research"}
+{"prompt": "close vscode and firefox for me", "route": "system"}
+{"prompt": "restart my printer driver without rebooting the whole pc", "route": "system"}
+{"prompt": "what did the city council vote on regarding park fees?", "route": "research"}
+{"prompt": "can you write a python script to scrape all the product prices from amazon.com?", "route": "coding"}
+{"prompt": "search for any txt file that mentions \"budget\"", "route": "files"}
+{"prompt": "can you tell me how to make a paper airplane?", "route": "chat"}
+{"prompt": "fix the memory leak in this vue application", "route": "coding"}
+{"prompt": "how much does the new mobile app cost to download?", "route": "research"}
+{"prompt": "hello my name is sam and i am new in town", "route": "chat"}
+{"prompt": "find all images larger than 5mb", "route": "files"}
+{"prompt": "please read my project notes from yesterday", "route": "files"}
+{"prompt": "run a process list and find zombie ones", "route": "system"}
+{"prompt": "how much does it cost to drive my van from albuquerque to las vegas?", "route": "research"}
+{"prompt": "optimize this loop to reduce memory allocation overhead", "route": "coding"}
+{"prompt": "disable cloud sync to save space on my desktop", "route": "system"}
+{"prompt": "where can i buy a one-way ticket to London cheaply these days?", "route": "research"}
+{"prompt": "i need to debug this error log but i don't know which part of the code caused it", "route": "coding"}
+{"prompt": "what was 2+2 again?", "route": "chat"}
+{"prompt": "how do i refactor this function to handle null values better", "route": "coding"}
+{"prompt": "i am really confused about this math problem can you explain it like im five?", "route": "chat"}
+{"prompt": "show me some links about how to reset my password since I lost it", "route": "research"}
+{"prompt": "refactor the monolithic config file into separate modules for easier maintenance", "route": "coding"}
+{"prompt": "turn off my laptop", "route": "system"}
+{"prompt": "generate a unit test suite for the payment gateway integration using jest", "route": "coding"}
+{"prompt": "can you write me a poem about autumn leaves falling?", "route": "chat"}
+{"prompt": "what is the current exchange rate between the euro and pound sterling?", "route": "research"}
+{"prompt": "can you write a python script to scrape the weather from that api endpoint?", "route": "coding"}
+{"prompt": "i need to delete those temporary logs from yesterday", "route": "files"}
+{"prompt": "disable the automatic updates for tonight to save bandwidth", "route": "system"}
+{"prompt": "can you list all the planets in our solar system starting with mercury?", "route": "chat"}
+{"prompt": "can you look up who owns the building at 123 oak street?", "route": "research"}
+{"prompt": "check if any processes are using 100% cpu", "route": "system"}
+{"prompt": "can you break down the chemical structure of water for me?", "route": "chat"}
+{"prompt": "tell me the current stock price of apple inc.", "route": "research"}
+{"prompt": "look up the steps to renew my driver license online.", "route": "research"}
+{"prompt": "how do i fix the syntax error in my python script when it says unexpected indent?", "route": "coding"}
+{"prompt": "open a terminal and run top to see cpu usage", "route": "system"}
+{"prompt": "open my project_notes.txt", "route": "files"}
+{"prompt": "write a go routine that monitors log files for specific error patterns", "route": "coding"}
+{"prompt": "read the master schedule.csv and tell me if it looks correct", "route": "files"}
+{"prompt": "what are the current ticket prices for last night's concert at arena hall?", "route": "research"}
+{"prompt": "open the settings menu and change the default browser", "route": "system"}
+{"prompt": "reboot the machine without asking", "route": "system"}
+{"prompt": "close every window open except for firefox", "route": "system"}
+{"prompt": "create a shell script that backs up the entire /var/www folder daily.", "route": "coding"}
+{"prompt": "find all files starting with report and put them in one place", "route": "files"}
+{"prompt": "why did my dog chase that red ball again?", "route": "chat"}
+{"prompt": "reset all network adapters back to factory defaults", "route": "system"}
+{"prompt": "search for all files modified after june 1st this year", "route": "files"}
+{"prompt": "i need a script to backup all files in /var/log before restart", "route": "coding"}
+{"prompt": "fix the syntax error in my c++ function, i dont know why it doesnt compile", "route": "coding"}
+{"prompt": "how are you doing", "route": "chat"}
+{"prompt": "what's new with you", "route": "chat"}
+{"prompt": "please move this folder to the documents directory", "route": "files"}
+{"prompt": "what is the current disk space on the c drive", "route": "system"}
+{"prompt": "just chat with me for a second", "route": "chat"}
+{"prompt": "can you move my todo list from cloud drive to local storage?", "route": "files"}
+{"prompt": "can you show me the latest news about the city hall renovation schedule?", "route": "research"}
+{"prompt": "disable the printer service temporarily", "route": "system"}
+{"prompt": "close all running programs", "route": "system"}
+{"prompt": "what is the capital of australia?", "route": "chat"}
+{"prompt": "show me the disk usage graph", "route": "system"}
+{"prompt": "do you know what those emojis mean", "route": "chat"}
+{"prompt": "i forgot how to write a simple tcp client in java, please show me", "route": "coding"}
+{"prompt": "fix this syntax error in my graphql query string", "route": "coding"}
+{"prompt": "generate a php function to sanitize user input against sql injection attacks", "route": "coding"}
+{"prompt": "run this command: ping google.com", "route": "system"}
+{"prompt": "just saying hi mate", "route": "chat"}
+{"prompt": "monitor my cpu usage right now", "route": "system"}
