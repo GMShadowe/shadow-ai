@@ -30,3 +30,15 @@ def test_a_greeting_reaches_the_model_without_remembered_facts(monkeypatch):
     assert searched == []
     assert "Likes filter coffee" not in system
     assert BACKGROUND_RULE in system
+
+
+def test_the_weather_only_comes_with_a_message_about_it(monkeypatch):
+    import awareness
+    from assistants import update_profile
+    update_profile({"location": "Pune"})
+    monkeypatch.setattr(awareness, "_weather", lambda location: "Sunny +31°C")
+
+    assert "+31" not in awareness.compact(message="hi lol")
+    assert "The user is in Pune" in awareness.compact(message="hi lol")
+    assert "+31" in awareness.compact(message="whats the weather like")
+    assert "+31" in awareness.compact(message="should i take a jacket outside?")

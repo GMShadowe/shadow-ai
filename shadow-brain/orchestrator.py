@@ -227,10 +227,10 @@ def add_skill_tools(allowed: list[str], ask: list[str], blocked: list[str],
 
 
 def build_system_prompt(adapters, blocked, ask, image_count=0, tier=None, effort=None,
-                        allowed=None, skill=None, profile=None):
+                        allowed=None, skill=None, profile=None, message=None):
     p = profile or get_profile()
     prompt = (
-        f"{compact(tier, effort, allowed, ask, p)}\n\n"
+        f"{compact(tier, effort, allowed, ask, p, message)}\n\n"
         f"{TONES.get(p['tone'], '')} {LENGTHS.get(p['response_length'], '')}\n\n"
         f"{RULES}\n\n{BACKGROUND_RULE}"
     )
@@ -423,7 +423,7 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
 
     tools_used: list[dict] = []
     system_prompt = build_system_prompt(adapters, blocked, ask, len(images), tier, effort,
-                                        allowed, skill, profile)
+                                        allowed, skill, profile, user_input)
     if no_tools_reason:
         system_prompt += "\n\n" + no_tools_reason
     if any(t in allowed for t in WEB_TOOLS):

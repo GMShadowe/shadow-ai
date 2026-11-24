@@ -2,6 +2,7 @@
 A compact version goes into every prompt; the full version is a tool."""
 
 import platform
+import re
 import threading
 import time
 from datetime import datetime
@@ -69,9 +70,14 @@ def _fetch_weather(location: str) -> None:
         _weather_fetching.discard(location)
 
 
+WEATHER_RE = re.compile(
+    r"\b(weather|temperature|forecast|rain\w*|sunny|hot|cold|humid\w*|wind\w*|snow\w*|degrees?|"
+    r"umbrella|jacket|outside|outdoors?|walk|run|commute)\b", re.I)
+
+
 def compact(tier: str | None = None, effort: str | None = None,
             allowed: list[str] | None = None, ask: list[str] | None = None,
-            profile: dict | None = None) -> str:
+            profile: dict | None = None, message: str | None = None) -> str:
     """The short block that goes into every system prompt."""
     profile = profile or get_profile()
     cfg = load_tier_config(tier)
@@ -88,7 +94,12 @@ def compact(tier: str | None = None, effort: str | None = None,
     # lookup, so nothing leaves the machine.
     location = (profile.get("location") or "").strip()
     if location:
+        # Fetched every turn so the cache is warm, shown only when the message is
+        # about it: in every prompt, the 4B brought it into greetings and argued
+        # with a user who said it was cold.
         weather = _weather(location)
+        if message is not None and not WEATHER_RE.search(message):
+            weather = None
         lines.append(f"The user is in {location}." + (f" Weather: {weather}." if weather else ""))
 
     lines.append(
