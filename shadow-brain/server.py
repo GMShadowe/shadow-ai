@@ -23,6 +23,7 @@ import errors
 import permissions
 import storage
 from orchestrator import handle_turn, stream_turn, LOG_PATH
+import cool
 import custom
 import providers
 import export
@@ -389,6 +390,7 @@ def _settings_payload() -> dict:
         "usage": usage_store.all_summaries(),
         "hardware": hardware,
         "recommended_model": recommend_tier(hardware),
+        "cool": cool.report(hardware),
         "tools": _tool_list(),
         "laya_loaded": _laya_loaded(),
         "log": {"turns": _log_turns()},
