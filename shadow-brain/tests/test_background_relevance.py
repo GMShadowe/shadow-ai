@@ -38,7 +38,8 @@ def test_the_weather_only_comes_with_a_message_about_it(monkeypatch):
     update_profile({"location": "Pune"})
     monkeypatch.setattr(awareness, "_weather", lambda location: "Sunny +31°C")
 
-    assert "+31" not in awareness.compact(message="hi lol")
-    assert "The user is in Pune" in awareness.compact(message="hi lol")
+    assert "Pune" not in awareness.compact(message="hi hru")
+    assert "Pune" in awareness.compact(message="which city am i in?")
+    assert "+31" not in awareness.compact(message="any good restaurants near me?")
     assert "+31" in awareness.compact(message="whats the weather like")
     assert "+31" in awareness.compact(message="should i take a jacket outside?")

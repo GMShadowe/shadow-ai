@@ -75,6 +75,11 @@ WEATHER_RE = re.compile(
     r"umbrella|jacket|outside|outdoors?|walk|run|commute)\b", re.I)
 
 
+PLACE_RE = re.compile(
+    r"\b(where|city|town|country|near|nearby|local|locally|around here|location|visit|places?|"
+    r"restaurants?|cafes?|shops?|travel|trip|time ?zone)\b", re.I)
+
+
 def compact(tier: str | None = None, effort: str | None = None,
             allowed: list[str] | None = None, ask: list[str] | None = None,
             profile: dict | None = None, message: str | None = None) -> str:
@@ -94,13 +99,13 @@ def compact(tier: str | None = None, effort: str | None = None,
     # lookup, so nothing leaves the machine.
     location = (profile.get("location") or "").strip()
     if location:
-        # Fetched every turn so the cache is warm, shown only when the message is
-        # about it: in every prompt, the 4B brought it into greetings and argued
-        # with a user who said it was cold.
+        # Fetched every turn so the cache is warm; the location and the weather
+        # are shown only when the message is about them. In every prompt, the 4B
+        # brought both into greetings and argued with a user who said it was cold.
         weather = _weather(location)
-        if message is not None and not WEATHER_RE.search(message):
-            weather = None
-        lines.append(f"The user is in {location}." + (f" Weather: {weather}." if weather else ""))
+        about_weather = message is None or bool(WEATHER_RE.search(message))
+        if about_weather or PLACE_RE.search(message):
+            lines.append(f"The user is in {location}." + (f" Weather: {weather}." if weather and about_weather else ""))
 
     lines.append(
         f"This machine runs {platform.system()} on {platform.machine()}. "
