@@ -10,8 +10,38 @@ interface SetupReport {
   tools?: ToolInfo[];
   recommended_model?: string;
   hardware?: { os?: string; machine?: string; cpu_cores?: number; ram_total_gb?: number; disk_free_gb?: number };
+  cool?: { on: boolean; default: boolean; frees_cpu: boolean };
 }
+import { Toggle } from "@/features/settings/controls";
 import PullProgress from "./PullProgress";
+
+/* Someone who doesn't know a model is running can read a hot, loud laptop
+   as something wrong with it. Said before the first answer, not after. */
+function Heat({ cool, freesCpu, onCool }: { cool: boolean; freesCpu: boolean; onCool: (on: boolean) => void }) {
+  return (
+    <div className="glass mt-4 divide-y divide-line rounded-2xl">
+      <div className="px-4 py-3">
+        <div className="text-sm text-ink">What to expect</div>
+        <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">
+          While it answers, this computer does the work a data centre would. The fans may spin up and it may get
+          warm. That's the model running here, and it settles once the answer is done.
+        </p>
+      </div>
+      <div className="flex items-center justify-between gap-4 px-4 py-3">
+        <div>
+          <div className="text-sm text-ink">Cool mode</div>
+          <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">
+            {freesCpu
+              ? "Does less at once and leaves some of the processor free, so it runs quieter and cooler."
+              : "Does less at once, so it runs quieter and cooler."}{" "}
+            Answers take a little longer.
+          </p>
+        </div>
+        <Toggle checked={cool} onChange={onCool} label="Cool mode" />
+      </div>
+    </div>
+  );
+}
 
 /* First run. Four steps: what this is, who your assistant is, the download,
    and done.
@@ -78,12 +108,14 @@ export default function Onboarding({ onFinished }: { onFinished: () => void }) {
   const [missing, setMissing] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [cool, setCool] = useState(false);
 
   useEffect(() => {
     getSettings()
       .then((s: SetupReport) => {
         setStatus(s);
         setProfile((p) => ({ ...p, model: s.recommended_model ?? "default" }));
+        setCool(!!s.cool?.on);
       })
       .catch((e: Error) => setError(e.message));
   }, []);
@@ -100,7 +132,7 @@ export default function Onboarding({ onFinished }: { onFinished: () => void }) {
     setSaving(true);
     setError(null);
     try {
-      await updateSettings({ ...profile, name });
+      await updateSettings({ ...profile, name, cool_mode: cool });
       const needed = await getNeededModels(profile.model);
       if (!needed.ollama_up) {
         setError(
@@ -185,6 +217,7 @@ export default function Onboarding({ onFinished }: { onFinished: () => void }) {
               tools={status?.tools ?? []}
               recommended={status?.recommended_model}
             />
+            <Heat cool={cool} freesCpu={!!status?.cool?.frees_cpu} onCool={setCool} />
             {banner}
             <div className="mt-7 flex items-center gap-2">
               <Button onClick={saveAndContinue} disabled={!name || saving}>
@@ -216,9 +249,10 @@ export default function Onboarding({ onFinished }: { onFinished: () => void }) {
               <span className="text-ink">
                 {models.find((m) => m.id === profile.model)?.label ?? profile.model}
               </span>
-              , medium effort, a friendly tone, and leaves anything that can run a command set to
-              ask you first.
+              , medium effort, a friendly tone{cool ? ", Cool mode" : ""}, and leaves anything that can
+              run a command set to ask you first.
             </div>
+            <Heat cool={cool} freesCpu={!!status?.cool?.frees_cpu} onCool={setCool} />
             {banner}
             <div className="mt-7 flex items-center gap-2">
               <Button onClick={saveAndContinue} disabled={!name || saving}>
