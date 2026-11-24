@@ -1,6 +1,6 @@
 {
   "label": "Default",
-  "description": "Quick and cool. Fine for most things. The floor Shadow is tuned for.",
+  "description": "Quick and cool. Fine for most things.",
   "base_model": "qwen3.5:4b",
   "requires": {
     "ram": 8
