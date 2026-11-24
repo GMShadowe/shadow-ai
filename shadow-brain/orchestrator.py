@@ -4,6 +4,7 @@ search, then streams the model's work as events."""
 import json
 import os
 import re
+import time
 from datetime import datetime
 
 from model import stream_model
@@ -358,10 +359,53 @@ def merge_temperature(adapters: list[dict]) -> float | None:
     return min(temps) if temps else None
 
 
+class TurnTiming:
+    def __init__(self, started: float):
+        self.started = started
+        self.first_token_at: float | None = None
+        self.model_started: float | None = None
+        self.ended: float | None = None
+        self.steps: list[dict] = []
+
+    def model_start(self) -> None:
+        self.model_started = time.monotonic()
+
+    def first_token(self) -> None:
+        if self.first_token_at is None:
+            self.first_token_at = time.monotonic()
+
+    def add_step(self, stats: dict) -> None:
+        self.steps.append({k: v for k, v in stats.items() if k != "type"})
+
+    def finish(self) -> None:
+        self.ended = time.monotonic()
+
+    def summary(self) -> dict:
+        ms = lambda t: round((t - self.started) * 1000) if t is not None else None
+        return {
+            "before_model_ms": ms(self.model_started),
+            "first_token_ms": ms(self.first_token_at),
+            "total_ms": ms(self.ended),
+            "steps": len(self.steps),
+            "load_ms": sum(s["load_ms"] for s in self.steps),
+            "prompt_ms": sum(s["prompt_ms"] for s in self.steps),
+            "prompt_tokens": self.steps[0]["prompt_tokens"] if self.steps else 0,
+            "output_tokens": sum(s["output_tokens"] for s in self.steps),
+        }
+
+    def line(self) -> str:
+        s = self.summary()
+        return (f"before model {s['before_model_ms']}ms, first word {s['first_token_ms']}ms, "
+                f"total {s['total_ms']}ms, {s['steps']} step(s), load {s['load_ms']}ms, "
+                f"prompt {s['prompt_tokens']} tokens read in {s['prompt_ms']}ms, "
+                f"{s['output_tokens']} tokens written")
+
+
 def stream_turn(user_input: str, memory: ShortTermMemory,
                 tier: str | None = None, effort: str | None = None,
                 images: list[str] | None = None, skill_name: str | None = None,
                 aid: str | None = None, voice: bool = False):
+    started = time.monotonic()
     images = images or []
     # Resolved once: the user can switch assistants while this turn streams.
     aid = aid or active_id()
@@ -507,11 +551,18 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     reply = ""
     pending: dict | None = None
     spend = None
+    timing = TurnTiming(started)
+    timing.model_start()
     for event in stream_model(working, allowed or None, max_steps(effort),
                               merge_temperature(adapters), tier_cfg["base_model"], ask,
                               tier_cfg if tier_cfg.get("custom") else None, aid,
                               question=user_message):
         kind = event["type"]
+        if kind == "stats":
+            timing.add_step(event)
+            continue
+        if kind == "token":
+            timing.first_token()
         if kind == "final":
             reply = event["text"]
             continue
@@ -536,6 +587,8 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
             pending = None
         yield event
 
+    timing.finish()
+    print(f"[timing] {timing.line()}")
     memory.add("user", user_input, images)
     memory.add("assistant", reply, adapters=carried_adapters(adapters, sticky, tools_used))
     log_turn(user_input, route_label, decision, reply, len(images),
@@ -564,7 +617,8 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     yield {"type": "done", "reply": reply, "route": route_label, "tools": tools_used,
            "assistant": aid,
            "router": decision, "model": tier_cfg["label"], "effort": effort,
-           "skill": skill["name"] if skill else None, "usage": spend, "voice": voice}
+           "skill": skill["name"] if skill else None, "usage": spend, "voice": voice,
+           "timing": timing.summary()}
 
 
 def handle_turn(user_input: str, memory: ShortTermMemory,

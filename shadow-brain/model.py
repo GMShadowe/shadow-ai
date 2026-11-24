@@ -117,6 +117,18 @@ def parse_arguments(raw) -> tuple[dict, str | None]:
                 f"{type(raw).__name__}, so nothing ran. Call the tool again with a JSON object of arguments.")
 
 
+def step_stats(chunk) -> dict:
+    """What Ollama reports on a step's last chunk. The prompt count is the
+    whole prompt even when most of it came from the cache, so the time spent
+    reading it is what shows whether the cache was used."""
+    ms = lambda name: round((getattr(chunk, name, None) or 0) / 1e6)
+    return {"type": "stats", "load_ms": ms("load_duration"),
+            "prompt_tokens": getattr(chunk, "prompt_eval_count", None) or 0,
+            "prompt_ms": ms("prompt_eval_duration"),
+            "output_tokens": getattr(chunk, "eval_count", None) or 0,
+            "output_ms": ms("eval_duration")}
+
+
 def _is_byok(provider: dict | None) -> bool:
     return bool(provider) and provider.get("kind") == "byok"
 
@@ -187,6 +199,8 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
                        "today": usage.today_total(provider["tier"]),
                        "endpoint": provider["tier"],
                        "host": provider.get("host", "")}
+            if getattr(chunk, "done", False):
+                yield step_stats(chunk)
 
         if not tool_calls:
             if content.strip() and not ran_tool and not honesty_checked and claims_action(content):
@@ -278,6 +292,8 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
         if chunk.message.content:
             content += chunk.message.content
             yield {"type": "token", "text": chunk.message.content}
+        if getattr(chunk, "done", False):
+            yield step_stats(chunk)
         reported = getattr(chunk, "usage", None)
         if byok and reported is not None:
             spent += _record(provider, reported)
