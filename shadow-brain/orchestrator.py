@@ -5,6 +5,7 @@ import json
 import os
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
 from model import stream_model
@@ -383,6 +384,19 @@ def wants_memories(text: str) -> bool:
     return len(words) > 3 or bool(ABOUT_THE_USER & set(words))
 
 
+_BACKGROUND = ThreadPoolExecutor(max_workers=2, thread_name_prefix="turn")
+
+
+def recall(text: str, aid: str) -> list[str]:
+    if not wants_memories(text):
+        return []
+    try:
+        return long_term.search(text, aid=aid)
+    except Exception as e:
+        print(f"[memory] search failed: {e}")
+        return []
+
+
 def merge_temperature(adapters: list[dict]) -> float | None:
     temps = [a["temperature"] for a in adapters if "temperature" in a]
     return min(temps) if temps else None
@@ -453,6 +467,9 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     history = memory.get()
     previous = next((m["content"] for m in reversed(history) if m["role"] == "user"), None)
 
+    # The memory search waits on an Ollama embedding, routing on Laya; neither
+    # needs the other, so they run side by side.
+    recalled = _BACKGROUND.submit(recall, user_input, aid)
     decision = classify_detailed(user_input, previous, bool(images))
     adapters = [a for a in (get_adapter(n) for n in decision["adapters"]) if a]
     route_label = "+".join(a["name"] for a in adapters) or "chat"
@@ -508,13 +525,9 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     if voice:
         turn_note += "\n\n" + VOICE_NOTE
 
-    # Pull relevant long-term memories into the prompt.
-    try:
-        memories = long_term.search(user_input, aid=aid) if wants_memories(user_input) else []
-        if memories:
-            turn_note += "\n\nThings you remember about the user:\n" + "\n".join(f"- {m}" for m in memories)
-    except Exception as e:
-        print(f"[memory] search failed: {e}")
+    memories = recalled.result()
+    if memories:
+        turn_note += "\n\nThings you remember about the user:\n" + "\n".join(f"- {m}" for m in memories)
 
     # Research mode: for full questions, search the user's own words first so the
     # model can't bias the query. Skipped when web_search needs approval, and when
