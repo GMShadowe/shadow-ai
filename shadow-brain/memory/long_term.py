@@ -127,6 +127,6 @@ def clear() -> None:
         conn.execute("DELETE FROM memories")
 
 
-def count() -> int:
-    with _db() as conn:
+def count(aid: str | None = None) -> int:
+    with _db(aid) as conn:
         return conn.execute("SELECT COUNT(*) FROM memories").fetchone()[0]

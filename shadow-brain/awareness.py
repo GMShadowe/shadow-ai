@@ -128,11 +128,11 @@ def compact(tier: str | None = None, effort: str | None = None,
             lines.append(NO_TOOLS)
 
     try:
-        n = long_term.count()
+        n = long_term.count(profile["id"])
         if n:
             lines.append(f"You remember {n} thing(s) about the user long-term; relevant ones are shown below when they apply.")
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[memory] couldn't count memories: {e}")
 
     if effort:
         lines.append(f"Effort is set to {effort}: you can take up to {EFFORT_STEPS.get(effort, 6)} tool steps this turn.")
