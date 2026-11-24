@@ -23,6 +23,10 @@ EXPLICIT = {
                "calories burned", "zone minutes", "my workout", "my workouts", "breathing rate"],
 }
 FILE_WORDS = ["file", "folder", "directory"]
+# Asking about the world, not about the user: "news on my job application"
+# is private and must not reach a search engine (#5).
+ABOUT_THE_WORLD_RE = re.compile(
+    r"\b(?:news (?:about|on)|latest on|search (?:on|in)|try searching)\s+(?!my\b|our\b|me\b|us\b)", re.I)
 # Anchored to the start: "I don't remember the filename" is not a memory save.
 REMEMBER_RE = re.compile(
     r"^\s*(?:(?:hey|ok|okay|so|and|also|please|pls)[\s,]+)*"
@@ -102,7 +106,7 @@ def _explicit_routes(text: str) -> list[str]:
     lowered = text.lower()
     routes = []
     for route, phrases in EXPLICIT.items():
-        if any(p in lowered for p in phrases):
+        if any(p in lowered for p in phrases) or (route == "research" and ABOUT_THE_WORLD_RE.search(text)):
             if route == "research" and any(w in lowered for w in FILE_WORDS) and "web" not in lowered:
                 continue
             routes.append(route)
