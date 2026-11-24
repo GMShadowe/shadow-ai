@@ -1,7 +1,8 @@
 {
   "label": "Plus",
-  "description": "Better quality, slower. Needs a stronger computer.",
+  "description": "Better answers, runs warmer.",
   "base_model": "qwen3.5:9b",
-  "min_ram_gb": 16,
+  "requires": {"ram": 16},
+  "needs": "16 GB of memory",
   "vision": true
 }

@@ -10,7 +10,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Three tiers, and the ids match the labels the user sees - the old
 # potato/medium/good ids against Efficient/Default/Plus labels were a
 # standing source of confusion.
-TIER_ORDER = ["default", "plus", "primal"]
+TIER_ORDER = ["default", "plus", "primal", "inkling", "gpt-oss"]
 
 # Old ids, so saved profiles and remembered preferences keep working.
 # "potato" was the 2B tier, dropped because its failures were tool-use
@@ -85,7 +85,6 @@ def load_tier_config(name: str | None = None) -> dict:
             "base_model": entry["model"],
             "vision": bool(entry.get("vision")),
             "tools": bool(entry.get("tools", True)),
-            "min_ram_gb": 0,
             "custom": True,
         }
         if entry["kind"] == "byok":

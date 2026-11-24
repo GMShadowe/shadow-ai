@@ -39,7 +39,7 @@ from config import (TIER_ORDER, EFFORT_STEPS, all_tiers, get_workspace, is_place
                     load_tier_config, normalize_tier)
 from settings import SettingsError, get_settings, update_settings
 from tools.state import default_state, offline, tool_state
-from hardware import get_hardware, recommend_tier
+from hardware import fits, get_hardware, recommend_tier
 from adapters.registry import list_adapters
 from tools import shell
 from tools.registry import TOOLS
@@ -302,10 +302,14 @@ def _have_model(name: str, installed: set[str]) -> bool:
     return False
 
 
-def _models(ram_gb: float | None) -> list[dict]:
+def _models(hw: dict) -> list[dict]:
     installed = _installed_models()
     models = []
     for cfg in all_tiers():
+        # The strong tier is a different model per platform, and is only
+        # listed on a computer that can run it.
+        if cfg.get("hidden") and not fits(hw, cfg.get("requires")):
+            continue
         reason = None
         if cfg.get("kind") == "byok" and offline():
             reason = "Offline mode is on, so nothing may leave this computer."
@@ -318,8 +322,8 @@ def _models(ram_gb: float | None) -> list[dict]:
             reason = cfg.get("placeholder_reason") or "No model chosen for this tier yet."
         elif installed is not None and not _have_model(cfg["base_model"], installed):
             reason = f"Not downloaded. Run: ollama pull {cfg['base_model']}"
-        elif ram_gb is not None and ram_gb < cfg["min_ram_gb"]:
-            reason = f"Needs {cfg['min_ram_gb']}GB RAM"
+        elif hw.get("ram_total_gb") is not None and not fits(hw, cfg.get("requires")):
+            reason = f"Needs {cfg['needs']}"
         # Deliberately field by field: a BYOK config carries an API key and
         # it must never reach a response.
         models.append({
@@ -377,14 +381,14 @@ def _settings_payload() -> dict:
         "version": VERSION,
         "settings": get_settings(),
         "profile": assistants.get_profile(),
-        "models": _models(hardware["ram_total_gb"]),
+        "models": _models(hardware),
         # Never includes an API key: custom.public() strips it to a hint.
         "custom_models": custom.public(),
         # Tokens each BYOK endpoint has used. Counts only - never a price,
         # because rates differ per provider and a wrong number is worse.
         "usage": usage_store.all_summaries(),
         "hardware": hardware,
-        "recommended_model": recommend_tier(hardware["ram_total_gb"]),
+        "recommended_model": recommend_tier(hardware),
         "tools": _tool_list(),
         "laya_loaded": _laya_loaded(),
         "log": {"turns": _log_turns()},
@@ -502,7 +506,7 @@ def status():
     profile = assistants.get_profile()
     hardware = get_hardware(get_workspace())
     return {
-        "models": _models(hardware["ram_total_gb"]),
+        "models": _models(hardware),
         "default_model": profile["model"],
         "efforts": list(EFFORT_STEPS.keys()),
         "default_effort": profile["effort"],

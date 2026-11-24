@@ -1,7 +1,8 @@
 {
   "label": "Default",
-  "description": "Balanced speed and quality. The floor Shadow is tuned for.",
+  "description": "Quick and cool. Fine for most things. The floor Shadow is tuned for.",
   "base_model": "qwen3.5:4b",
-  "min_ram_gb": 8,
+  "requires": {"ram": 8},
+  "needs": "8 GB of memory",
   "vision": true
 }
