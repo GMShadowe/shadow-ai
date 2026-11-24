@@ -342,6 +342,13 @@ def _models(hw: dict) -> list[dict]:
             "host": cfg.get("host", ""),
             "available": reason is None,
             "reason": reason,
+            # Whether this computer can run it at all, apart from whether it
+            # is downloaded yet: setup offers a tier that fits and isn't pulled.
+            "fits": fits(hw, cfg.get("requires")),
+            "needs": cfg.get("needs"),
+            "strong": bool(cfg.get("hidden")),
+            "download_gb": cfg.get("download_gb"),
+            "download_approx": bool(cfg.get("download_approx")),
         })
     return models
 

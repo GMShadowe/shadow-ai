@@ -53,3 +53,12 @@ def test_a_tier_that_doesnt_fit_says_what_it_needs(client, monkeypatch):
     primal = next(m for m in server._models(THIS_MAC) if m["id"] == "primal")
     assert not primal["available"]
     assert primal["reason"] == "Needs 22 GB of memory, or 16 GB with a 12 GB NVIDIA card"
+
+
+def test_setup_learns_what_fits_apart_from_what_is_downloaded(client, monkeypatch):
+    import server
+    monkeypatch.setattr(server, "_installed_models", lambda: set())
+    models = {m["id"]: m for m in server._models(THIS_MAC)}
+    assert models["plus"]["fits"] and not models["plus"]["available"]
+    assert not models["primal"]["fits"]
+    assert models["default"]["download_gb"] == 3.3

@@ -2,7 +2,10 @@
   "label": "Plus",
   "description": "Better answers, runs warmer.",
   "base_model": "qwen3.5:9b",
-  "requires": {"ram": 16},
+  "requires": {
+    "ram": 16
+  },
   "needs": "16 GB of memory",
-  "vision": true
+  "vision": true,
+  "download_gb": 7.6
 }

@@ -2,9 +2,14 @@
   "label": "gpt-oss",
   "description": "For strong PCs. Text only.",
   "base_model": "gpt-oss:20b",
-  "requires": {"nvidia_vram": 16, "platform": "not-mac"},
+  "requires": {
+    "nvidia_vram": 16,
+    "platform": "not-mac"
+  },
   "needs": "an NVIDIA card with 16 GB",
   "vision": false,
   "adapters": false,
-  "hidden": true
+  "hidden": true,
+  "download_gb": 14,
+  "download_approx": true
 }

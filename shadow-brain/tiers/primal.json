@@ -2,8 +2,18 @@
   "label": "Primal",
   "description": "Strongest of the three, and reads images.",
   "base_model": "gemma4:12b",
-  "requires": [{"ram": 22}, {"ram": 16, "nvidia_vram": 12}],
+  "requires": [
+    {
+      "ram": 22
+    },
+    {
+      "ram": 16,
+      "nvidia_vram": 12
+    }
+  ],
   "needs": "22 GB of memory, or 16 GB with a 12 GB NVIDIA card",
   "vision": true,
-  "adapters": false
+  "adapters": false,
+  "download_gb": 7.6,
+  "download_approx": true
 }
