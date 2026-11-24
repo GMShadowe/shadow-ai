@@ -494,7 +494,8 @@ def _save_user_message(cid: str, text: str, images: list[str], aid: str) -> None
 def _save_reply(cid: str, event: dict, aid: str) -> None:
     # "skill" is the only thing a skill leaves behind: the name, so a later
     # "do that again with the same skill" resolves to something real.
-    meta = {k: event.get(k) for k in ("route", "router", "model", "effort", "tools", "skill")}
+    meta = {k: event.get(k) for k in ("route", "router", "model", "effort", "tools", "skill",
+                                      "timing", "steps", "cool")}
     if event.get("voice"):
         meta["voice"] = True
     storage.add_message(cid, "assistant", event["reply"], meta, aid=aid)
@@ -1191,7 +1192,7 @@ class _Partial:
     def see(self, event: dict) -> None:
         kind = event["type"]
         if kind == "route":
-            self.meta = {k: event.get(k) for k in ("route", "router", "model", "effort", "skill")}
+            self.meta = {k: event.get(k) for k in ("route", "router", "model", "effort", "skill", "steps", "cool")}
         elif kind == "token":
             self.text += event["text"]
         elif kind == "tool_start":

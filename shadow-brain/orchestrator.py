@@ -19,7 +19,9 @@ from assistants import active_id, get_profile
 from tools.state import WEB_TOOLS, offline, tool_state
 from settings import get_settings
 
+import cool
 import permissions
+import providers
 import skills
 from awareness import identity, turn_facts
 
@@ -384,6 +386,14 @@ def wants_memories(text: str) -> bool:
     return len(words) > 3 or bool(ABOUT_THE_USER & set(words))
 
 
+def _loaded(model: str) -> bool:
+    try:
+        return providers.is_loaded(model)
+    except Exception as e:
+        print(f"[model] couldn't ask Ollama what is loaded: {e}")
+        return True
+
+
 _BACKGROUND = ThreadPoolExecutor(max_workers=2, thread_name_prefix="turn")
 
 
@@ -473,9 +483,11 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     decision = classify_detailed(user_input, previous, bool(images))
     adapters = [a for a in (get_adapter(n) for n in decision["adapters"]) if a]
     route_label = "+".join(a["name"] for a in adapters) or "chat"
+    steps = max_steps(effort)
+    cooling = cool.on()
     yield {"type": "route", "route": route_label, "router": decision,
            "model": tier_cfg["label"], "effort": effort,
-           "skill": skill["name"] if skill else None}
+           "skill": skill["name"] if skill else None, "steps": steps, "cool": cooling}
 
     # Tools stay for a few turns after a task uses them. Laya reads one message
     # at a time, so "yes, go ahead" after "shall I code it?" routes as chat and
@@ -593,8 +605,10 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     pending: dict | None = None
     spend = None
     timing = TurnTiming(started)
+    if tier_cfg.get("kind") != "byok" and not _loaded(tier_cfg["base_model"]):
+        yield {"type": "status", "text": "Loading the model"}
     timing.model_start()
-    for event in stream_model(working, allowed or None, max_steps(effort),
+    for event in stream_model(working, allowed or None, steps,
                               merge_temperature(adapters), tier_cfg["base_model"], ask,
                               tier_cfg if tier_cfg.get("custom") else None, aid,
                               question=user_message):
@@ -649,7 +663,7 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
            "assistant": aid,
            "router": decision, "model": tier_cfg["label"], "effort": effort,
            "skill": skill["name"] if skill else None, "usage": spend, "voice": voice,
-           "timing": timing.summary()}
+           "timing": timing.summary(), "steps": steps, "cool": cooling}
 
 
 def handle_turn(user_input: str, memory: ShortTermMemory,

@@ -56,6 +56,8 @@ def quiet_turn(monkeypatch, *steps, facts=None):
     fake = scripted(*steps)
     saved = []
     monkeypatch.setattr(model, "_chat_stream", fake)
+    import providers
+    monkeypatch.setattr(providers, "is_loaded", lambda name: True)
     monkeypatch.setattr(long_term, "search", lambda q, k=5, aid=None: [])
     monkeypatch.setattr(long_term, "add", lambda text, source="user", aid=None: saved.append((text, source)) or True)
     monkeypatch.setattr(extract, "extract_facts", lambda text, tier=None: list(facts or []))

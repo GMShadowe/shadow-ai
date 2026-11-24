@@ -282,6 +282,7 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
         # the chip flat out from start to finish.
         rest = cool.pause()
         if rest:
+            yield {"type": "status", "text": "Resting a moment to stay cool"}
             time.sleep(rest)
 
         # Checked here rather than at the top of the loop, because what has to
