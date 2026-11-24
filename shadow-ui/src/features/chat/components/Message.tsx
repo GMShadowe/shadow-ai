@@ -219,14 +219,16 @@ export default function Message({
   const rows = tools.filter((_, i) => !panels[i]);
   const waiting = message.streaming && !message.content && rows.every((t) => t.kind === "permission" || t.result !== null);
   const steps = rows.filter((t) => t.kind !== "permission").length;
-  const budget = message.effort ? STEP_BUDGET[message.effort] : undefined;
+  const budget = message.steps ?? (message.effort ? STEP_BUDGET[message.effort] : undefined);
   const phase = message.resumed
     ? "Still answering from before the page reloaded"
-    : !message.route
-      ? "Routing"
-      : steps
-        ? "Reading the results"
-        : "Thinking";
+    : message.status
+      ? message.status
+      : !message.route
+        ? "Routing"
+        : steps
+          ? "Reading the results"
+          : "Thinking";
 
   return (
     <div className="group animate-rise space-y-3">
@@ -274,7 +276,13 @@ export default function Message({
         <div className="space-y-3">{panels.map((panel, i) => panel && <DisplayCard key={i} panel={panel} />)}</div>
       )}
 
-      {waiting && <ThinkingIndicator startedAt={message.startedAt} phase={phase} />}
+      {waiting && (
+        <ThinkingIndicator
+          startedAt={message.startedAt}
+          phase={phase}
+          slowHint={message.cool ? "Cool mode is on, so it takes a little longer and stays cooler" : undefined}
+        />
+      )}
 
       {message.content && (
         <div className={message.streaming ? "is-streaming" : undefined}>

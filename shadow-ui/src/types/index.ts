@@ -61,6 +61,18 @@ export interface Message {
   rating?: Rating;
   rating_reason?: string | null;
   rating_reason_code?: string | null;
+  /** What the turn is waiting on right now, from a status event. */
+  status?: string | null;
+  /** The step budget this turn ran with: Cool mode can cap it below the effort's. */
+  steps?: number;
+  cool?: boolean;
+  timing?: Timing | null;
+}
+
+export interface Timing {
+  first_token_ms: number | null;
+  total_ms: number | null;
+  steps: number;
 }
 
 export interface Conversation {
@@ -150,13 +162,23 @@ export interface SearchHit {
 
 /** Every event a turn can stream back over SSE. */
 export type StreamEvent =
-  | { type: "route"; route: string; router: RouterDecision; model?: string; effort?: string; skill?: string | null }
+  | {
+      type: "route";
+      route: string;
+      router: RouterDecision;
+      model?: string;
+      effort?: string;
+      skill?: string | null;
+      steps?: number;
+      cool?: boolean;
+    }
+  | { type: "status"; text: string }
   | { type: "permission"; id: string; name: string; args?: Record<string, unknown>; preview?: string | null }
   | { type: "permission_result"; id: string; decision: Decision }
   | { type: "tool_start"; name: string; args?: Record<string, unknown> }
   | { type: "tool_end"; name: string; result: string }
   | { type: "token"; text: string }
-  | { type: "done"; reply: string }
+  | { type: "done"; reply: string; timing?: Timing | null }
   | { type: "usage"; turn: number; today: number; host: string }
   | { type: "error"; message: string; kind?: string; action?: string; model?: string };
 
