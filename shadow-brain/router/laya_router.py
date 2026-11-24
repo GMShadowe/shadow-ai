@@ -22,6 +22,44 @@ LAYA_SHA256 = {
 
 LAYA_FILES = ["rl_agent_config.json", "model.safetensors", "tokenizer/*", "encoder/*"]
 
+# A checkpoint fine-tuned with laya-train/ and put here by laya-train/install.py,
+# which records its digests. Used instead of the pinned one when present.
+TUNED_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "laya")
+TUNED_RECORD = "installed.json"
+
+
+def _sha256(path: str) -> str:
+    import hashlib
+    digest = hashlib.sha256()
+    with open(path, "rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def tuned_checkpoint() -> str | None:
+    """The installed fine-tune, if there is one and every file still matches
+    the digest recorded when it was installed. Otherwise the pinned Laya."""
+    record = os.path.join(TUNED_DIR, TUNED_RECORD)
+    if not os.path.exists(record):
+        return None
+    import json
+    try:
+        with open(record, encoding="utf-8") as f:
+            digests = json.load(f)["sha256"]
+        changed = [name for name, expected in digests.items()
+                   if _sha256(os.path.join(TUNED_DIR, name)) != expected]
+    except Exception as e:
+        print(f"[Laya] The fine-tuned checkpoint in {TUNED_DIR} can't be read ({e}); using the pinned Laya. "
+              "Reinstall it with laya-train/install.py, or remove it with --remove.")
+        return None
+    if changed:
+        print(f"[Laya] {', '.join(changed)} in {TUNED_DIR} changed since it was installed; using the pinned "
+              "Laya. Reinstall it with laya-train/install.py.")
+        return None
+    return TUNED_DIR
+
+
 _agent = None
 _device = None
 _load_lock = threading.Lock()
@@ -133,6 +171,14 @@ def load():
                 else:
                     print(f"[Laya] Device: {_device}")
 
+                import laya
+
+                tuned = tuned_checkpoint()
+                if tuned:
+                    print(f"[Laya] Using the fine-tuned checkpoint in {tuned}")
+                    _agent = laya.load(tuned, device=_device)
+                    return _agent
+
                 source = cached_snapshot()
                 if source is None:
                     from settings import get_settings
@@ -140,8 +186,6 @@ def load():
                         raise RuntimeError(
                             "The Laya router hasn't been downloaded yet and offline mode is on, so "
                             "routing uses keywords. Turn offline mode off once to download it.")
-
-                import laya
 
                 _agent = laya.load(
                     source or LAYA_REPO,
