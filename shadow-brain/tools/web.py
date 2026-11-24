@@ -10,6 +10,27 @@ OFFLINE = ("Blocked: offline mode is on, so nothing may leave this computer. "
            "Tell the user they can turn it off in Settings - Privacy.")
 
 
+NEWS_RE = re.compile(r"\b(news|headlines?)\b", re.I)
+
+
+def _news(query: str) -> list[dict]:
+    """Dated articles, in the same shape as a text result. Empty on failure,
+    so a news search falls back to the ordinary one."""
+    from ddgs import DDGS
+    try:
+        found = DDGS().news(query, max_results=5) or []
+    except Exception as e:
+        print(f"[web] news search failed, using a normal search: {e}")
+        return []
+    out = []
+    for r in found:
+        when = (r.get("date") or "")[:10]
+        stamp = ", ".join(x for x in (r.get("source"), when) if x)
+        out.append({"title": r.get("title", ""), "href": r.get("url", ""),
+                    "body": (f"({stamp}) " if stamp else "") + (r.get("body") or "")})
+    return out
+
+
 def web_search(query: str) -> str:
     if offline():
         return OFFLINE
@@ -17,10 +38,12 @@ def web_search(query: str) -> str:
         from ddgs import DDGS
     except ImportError:
         return "Error: web search needs the 'ddgs' package. Run: pip install ddgs"
-    try:
-        results = DDGS().text(query, max_results=5)
-    except Exception as e:
-        return f"Error searching the web: {e}"
+    results = _news(query) if NEWS_RE.search(query or "") else []
+    if not results:
+        try:
+            results = DDGS().text(query, max_results=5)
+        except Exception as e:
+            return f"Error searching the web: {e}"
     if not results:
         return f"No results for '{query}'."
 
