@@ -27,22 +27,46 @@ EMPTY_NUDGE = (
 # A reply that says it did something, in a turn where no tool ran. Small
 # models write "I've created the file" without calling write_file; the
 # nudge makes them either do it or say they didn't (CLAUDE.md, Honesty).
+_DID = (r"created|wrote|written|saved|made|deleted|removed|moved|renamed|ran|run|executed|opened|"
+        r"installed|updated|edited|fixed|killed|stopped|searched|checked|looked up|fetched|downloaded|"
+        r"sent|emailed|ordered|booked|placed|submitted|posted|started|launched|tested")
 CLAIMED_ACTION = re.compile(
-    r"\bI(?:'ve| have)? (?:just )?(?:created|wrote|written|saved|made|deleted|removed|moved|renamed|"
-    r"ran|run|executed|opened|installed|updated|edited|fixed|killed|stopped)\b"
-    r"|\b(?:has|have) been (?:created|saved|written|deleted|removed|moved|renamed|updated|opened)\b"
-    r"|\bis now open\b",
+    rf"\bI(?:['’]ve| have)? (?:just |already |now )?(?:{_DID})\b"
+    r"|\bI(?:['’]ve| have)? (?:just |already )?found(?! it\b| that\b| this\b)"
+    r"|\b(?:has|have) been (?:created|saved|written|deleted|removed|moved|renamed|updated|opened|"
+    r"sent|placed|booked|ordered|submitted|emailed)\b"
+    r"|\bis now open\b|\bis on (?:its|the) way\b",
     re.I,
 )
+# "Done. Ran the script..." claims the same thing with the "I" left off.
+# Case-sensitive, and only before an object, so "Created by Guido..." isn't one.
+CLAIMED_BARE = re.compile(
+    r"(?:^|[.!?]\s+|\n\s*)(?:Done[.!,:]?\s+)?"
+    r"(?:Ran|Executed|Sent|Saved|Created|Deleted|Opened|Installed|Searched|Ordered|Booked|Emailed|"
+    r"Submitted|Started|Launched|Fetched|Downloaded)\s+(?:the|a|an|your|it|them|that|this|\d)\b"
+)
+
+
+def _tool_ran_after(messages: list[dict], question: dict | None) -> bool:
+    seen = False
+    for m in messages:
+        if m is question:
+            seen = True
+        elif seen and m.get("role") == "tool":
+            return True
+    return False
+
+
+def claims_action(text: str) -> bool:
+    text = text or ""
+    return bool(CLAIMED_ACTION.search(text) or CLAIMED_BARE.search(text))
+
+
 HONESTY_NUDGE = (
     "No tool ran in this reply, but your answer says you did something. If you meant something "
     "from an earlier reply, say that plainly. Otherwise do it now with a tool, or tell the user "
     "honestly that you haven't done it."
 )
-
-
-def claims_action(text: str) -> bool:
-    return bool(CLAIMED_ACTION.search(text or ""))
 
 
 EMPTY_FALLBACK = (
@@ -130,10 +154,11 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
     schemas = get_schemas(tool_names) if tool_names else None
     nudged = False
     honesty_checked = False
-    ran_tool = False
     # The user's question for this turn. Pinned so the compressor can never
     # drop it, however many tool results pile up behind it.
     question = question if question is not None else (messages[-1] if messages else None)
+    # A search the orchestrator ran before the model counts: "I searched" is true then.
+    ran_tool = _tool_ran_after(messages, question)
 
     # A BYOK turn is billed to the user, one call per step. Counted as it goes
     # so a cap can stop it part-way instead of reporting the damage after.
