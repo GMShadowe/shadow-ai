@@ -12,6 +12,13 @@ from settings import get_settings
 from memory import long_term
 from tools.state import offline, tool_state
 
+STALE_KNOWLEDGE = (
+    "What you know comes from training that ended long before today, so it is out of date. "
+    "For news, prices, scores, releases or anything else that changes, use web_search if you have it. "
+    "If you don't, say you can't check that right now and that asking you to search online will. "
+    "Never give recent figures from memory as if they were current."
+)
+
 NO_TOOLS = (
     "No file, shell or web tools are loaded for this message, so you can only talk this turn. "
     "If the user wants a file read, a command run or the web searched, say plainly that you "
@@ -73,7 +80,7 @@ def compact(tier: str | None = None, effort: str | None = None,
     lines = [
         f"You are {profile['name']}, running the {cfg['label']} model ({cfg['base_model']}) "
         f"locally on this computer via Ollama.",
-        f"Right now: {now.strftime('%A, %d %B %Y, %H:%M')}.",
+        f"Right now: {now.strftime('%A, %d %B %Y, %H:%M')}. {STALE_KNOWLEDGE}",
     ]
 
     # Location is per assistant, so it lives in the profile, not in global
