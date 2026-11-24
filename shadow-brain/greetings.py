@@ -4,8 +4,7 @@ using the assistant's name and a few things it remembers about the user."""
 import random
 import re
 
-import ollama
-
+import providers
 from assistants import get_profile
 from config import load_tier_config
 from memory import long_term
@@ -102,12 +101,11 @@ def _generated(name: str, facts: list[str]) -> list[str]:
     if not model:
         return []
     try:
-        resp = ollama.chat(
-            model=model,
-            messages=[{"role": "user", "content": PROMPT.format(
+        resp = providers.ollama_chat(
+            model,
+            [{"role": "user", "content": PROMPT.format(
                 name=name, facts="\n".join(f"- {f}" for f in facts))}],
-            think=False,
-            options={"temperature": 0.9},
+            temperature=0.9,
         )
     except Exception as e:
         # A greeting is decoration, so a failure here must never break the

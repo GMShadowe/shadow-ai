@@ -60,17 +60,44 @@ class Chunk:
 
 # ---- Ollama -----------------------------------------------------------------
 
-def ollama_stream(model: str, messages: list[dict], schemas, temperature, num_ctx: int):
-    import ollama
+NUM_CTX = 16384
+KEEP_ALIVE = "30m"
+# Long enough for a slow machine to read a full 16K prompt, or for a model
+# to write a whole file into one tool call, both of which send nothing.
+OLLAMA_TIMEOUT = httpx.Timeout(connect=10.0, read=600.0, write=60.0, pool=10.0)
 
-    options = {"num_ctx": num_ctx}
+_ollama_client = None
+
+
+def ollama_client():
+    global _ollama_client
+    if _ollama_client is None:
+        import ollama
+        _ollama_client = ollama.Client(timeout=OLLAMA_TIMEOUT)
+    return _ollama_client
+
+
+def ollama_options(temperature: float | None = None) -> dict:
+    # Every call to a chat model must send the same num_ctx: Ollama reloads
+    # the whole model when it changes, and a greeting or a memory save sent
+    # without it cost two reloads.
+    options = {"num_ctx": NUM_CTX}
     if temperature is not None:
         options["temperature"] = temperature
-    kwargs = {"model": model, "messages": messages, "think": False,
-              "stream": True, "options": options}
+    return options
+
+
+def ollama_chat(model: str, messages: list[dict], schemas=None, temperature: float | None = None,
+                stream: bool = False):
+    kwargs = {"model": model, "messages": messages, "think": False, "stream": stream,
+              "options": ollama_options(temperature), "keep_alive": KEEP_ALIVE}
     if schemas:
         kwargs["tools"] = schemas
-    return ollama.chat(**kwargs)
+    return ollama_client().chat(**kwargs)
+
+
+def ollama_stream(model: str, messages: list[dict], schemas, temperature, num_ctx: int = NUM_CTX):
+    return ollama_chat(model, messages, schemas, temperature, stream=True)
 
 
 # ---- OpenAI-compatible ------------------------------------------------------

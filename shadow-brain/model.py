@@ -13,7 +13,7 @@ import assistants
 from tools.registry import get_schemas, call_tool, preview
 
 MODEL_NAME = load_tier_config()["base_model"]  # default, used by the terminal chat
-NUM_CTX = 16384  # must match the num_ctx sent to Ollama below
+NUM_CTX = providers.NUM_CTX
 
 OUT_OF_STEPS = (
     "You have used all your tool steps for this request. Without calling any tools, "
@@ -96,7 +96,7 @@ def _chat_stream(model, messages, schemas, temperature, provider=None):
     """
     if provider and provider.get("kind") == "byok":
         return providers.openai_stream(provider, messages, schemas, temperature)
-    return providers.ollama_stream(model, messages, schemas, temperature, NUM_CTX)
+    return providers.ollama_stream(model, messages, schemas, temperature)
 
 
 def parse_arguments(raw) -> tuple[dict, str | None]:

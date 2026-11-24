@@ -12,10 +12,10 @@ def test_byok_greetings_stay_local(data_dir, monkeypatch):
     _facts(monkeypatch)
     monkeypatch.setattr(greetings, "load_tier_config", lambda tier=None: dict(BYOK))
 
-    def no_model(**kwargs):
-        raise AssertionError(f"asked a model for greetings: {kwargs.get('model')}")
+    def no_model(model, *args, **kwargs):
+        raise AssertionError(f"asked a model for greetings: {model}")
 
-    monkeypatch.setattr(greetings.ollama, "chat", no_model)
+    monkeypatch.setattr(greetings.providers, "ollama_chat", no_model)
     assert set(greetings.greetings()) <= set(greetings.GENERIC)
 
 
@@ -27,7 +27,7 @@ def test_local_models_still_personalize(data_dir, monkeypatch):
         class message:
             content = '["Hey, how is Mumbai?"]'
 
-    monkeypatch.setattr(greetings.ollama, "chat", lambda **kw: asked.append(kw["model"]) or Resp)
+    monkeypatch.setattr(greetings.providers, "ollama_chat", lambda model, *a, **kw: asked.append(model) or Resp)
     out = [greetings.greetings() for _ in range(20)]
     assert asked and asked[0] == "qwen3.5:4b"
     assert any("Hey, how is Mumbai?" in g for g in out)

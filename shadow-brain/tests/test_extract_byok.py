@@ -13,10 +13,10 @@ BYOK = {"tier": "byok:test", "kind": "byok", "custom": True, "label": "Test",
 def byok(monkeypatch):
     monkeypatch.setattr(extract, "load_tier_config", lambda tier=None: dict(BYOK))
 
-    def no_ollama(**kwargs):
-        raise AssertionError(f"asked Ollama for {kwargs.get('model')}")
+    def no_ollama(model, *args, **kwargs):
+        raise AssertionError(f"asked Ollama for {model}")
 
-    monkeypatch.setattr(extract.ollama, "chat", no_ollama)
+    monkeypatch.setattr(extract.providers, "ollama_chat", no_ollama)
 
 
 def test_byok_extraction_goes_to_the_provider(byok, monkeypatch):
@@ -52,6 +52,6 @@ def test_local_models_still_use_ollama(monkeypatch):
         class message:
             content = '["Prefers tabs"]'
 
-    monkeypatch.setattr(extract.ollama, "chat", lambda **kw: asked.append(kw["model"]) or Resp)
+    monkeypatch.setattr(extract.providers, "ollama_chat", lambda model, *a, **kw: asked.append(model) or Resp)
     facts = extract.extract_facts("remember I prefer tabs", "default")
     assert facts == ["Prefers tabs"] and asked == ["qwen3.5:4b"]
