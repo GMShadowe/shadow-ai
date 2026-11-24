@@ -96,6 +96,32 @@ def clean_query(text: str) -> str:
     return q or text
 
 
+# Words that ask for a search without saying what to search for.
+SEARCH_ASKS = {"try", "trying", "searching", "search", "online", "web", "internet", "just", "anything",
+               "again", "it", "that", "on", "in", "the", "for", "then", "ok", "okay", "yes", "yeah",
+               "do", "please", "google", "look", "up", "and", "can", "you", "a"}
+
+
+def thin_request(text: str) -> bool:
+    """"try searching on airbnb" carries one word worth searching for; the
+    rest of what to search for is in the conversation."""
+    words = re.findall(r"[\w']+", (text or "").lower())
+    return len([w for w in words if w not in SEARCH_ASKS]) <= 2
+
+
+# Sites whose pages are drawn by scripts or sit behind a login: fetching them returns nothing useful.
+UNREADABLE_HOSTS = ("youtube.com", "youtu.be", "x.com", "twitter.com", "instagram.com", "facebook.com",
+                    "tiktok.com", "linkedin.com", "reddit.com")
+
+
+def first_readable_url(results: str) -> str | None:
+    for match in re.finditer(r"^\s+(https?://\S+)\s*$", results or "", re.M):
+        host = re.sub(r"^https?://(www\.)?", "", match.group(1)).split("/")[0].lower()
+        if not any(host == h or host.endswith("." + h) for h in UNREADABLE_HOSTS):
+            return match.group(1)
+    return None
+
+
 # A web page can carry instructions, so these ask on any turn where web content can arrive.
 CHANGES_THINGS = ["write_file", "edit_file", "move_file", "delete_file", "delete_dir",
                   "run_command", "http_request", "kill_process", "open_app", "open_url"]
@@ -423,7 +449,7 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     # A picture request is its own lookup; searching the text first only adds a wait.
     auto_search = (wants_research and "web_search" not in ask and not images
                    and "show_images" not in display)
-    is_follow_up = previous is not None and len(user_input.split()) < 4
+    is_follow_up = previous is not None and (len(user_input.split()) < 4 or thin_request(user_input))
 
     # Never in the system prompt: web text there would carry the authority of the rules.
     search_messages: list[dict] = []
@@ -439,12 +465,28 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
              "tool_calls": [{"function": {"name": "web_search", "arguments": {"query": query}}}]},
             {"role": "tool", "tool_name": "web_search", "content": results},
         ]
+        # Five snippets rarely hold the answer, and the 4B seldom opens a
+        # page on its own, so the top result is read for it.
+        url = first_readable_url(results) if "fetch_url" in allowed and "fetch_url" not in ask else None
+        if url:
+            page_args = {"url": url, "auto": True}
+            yield {"type": "tool_start", "name": "fetch_url", "args": page_args}
+            page = call_tool("fetch_url", {"url": url})
+            yield {"type": "tool_end", "name": "fetch_url", "result": page}
+            tools_used.append({"name": "fetch_url", "args": page_args, "result": page})
+            search_messages += [
+                {"role": "assistant", "content": "",
+                 "tool_calls": [{"function": {"name": "fetch_url", "arguments": {"url": url}}}]},
+                {"role": "tool", "tool_name": "fetch_url", "content": page},
+            ]
         system_prompt += (
-            f"\n\nYou already searched the web for the user's own words: \"{query}\". "
-            "The results are in the web_search result after their message. "
-            "Answer from these results. If they show different things with the same name, "
-            "list them briefly by their real names and ask which one the user means. "
-            "Use fetch_url only if you need more detail from one specific result. Don't run the same search again."
+            f"\n\nYou already searched the web for the user's own words: \"{query}\"" +
+            (" and read the top result" if url else "") + ". "
+            "Those results come after their message. Answer from them, and say which page a fact came from. "
+            "If they show different things with the same name, list them briefly by their real names "
+            "and ask which one the user means. If they don't hold the answer, say what you searched "
+            "and what came back, then search again with better words or read another result with fetch_url. "
+            "Don't run the same search again."
         )
     elif wants_research and is_follow_up:
         system_prompt += (
