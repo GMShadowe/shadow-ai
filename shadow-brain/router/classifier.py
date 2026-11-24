@@ -23,6 +23,14 @@ EXPLICIT = {
                "calories burned", "zone minutes", "my workout", "my workouts", "breathing rate"],
 }
 FILE_WORDS = ["file", "folder", "directory"]
+# Naming a file action is as explicit as "search the web". Laya splits its
+# confidence six ways, so "read notes.md" scored under MIN_CONFIDENCE and
+# arrived as plain chat with no file tools.
+FILE_ACTION_RE = re.compile(
+    r"\b(?:read|open|list|show|delete|remove|rename|move|copy|edit|create|write|save|find|search)\b"
+    r".{0,40}?(?:\b(?:files?|folders?|director(?:y|ies)|workspace)\b|\b[\w\-]+\.(?:md|txt|py|js|ts|tsx|jsx|"
+    r"json|csv|html|css|pdf|log|yaml|yml|toml|sh|ipynb|docx?|xlsx?)\b)", re.I)
+
 # Asking about the world, not about the user: "news on my job application"
 # is private and must not reach a search engine (#5).
 ABOUT_THE_WORLD_RE = re.compile(
@@ -140,6 +148,10 @@ def classify_detailed(text: str, previous: str | None = None, has_images: bool =
             result["adapters"] = []
         result["adapters"] = [a for a in result["adapters"] if a != "research"]
         result["method"] += "+image"
+
+    if FILE_ACTION_RE.search(text) and "files" not in result["adapters"]:
+        result["adapters"].append("files")
+        result["method"] += "+explicit"
 
     # Explicit "search/look up" always wins.
     for route in _explicit_routes(text):
