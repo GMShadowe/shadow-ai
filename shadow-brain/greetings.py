@@ -96,10 +96,7 @@ def _local_model() -> str | None:
     return cfg.get("base_model")
 
 
-def _generated(name: str, facts: list[str]) -> list[str]:
-    model = _local_model()
-    if not model:
-        return []
+def _generated(name: str, facts: list[str], model: str) -> list[str]:
     try:
         resp = providers.ollama_chat(
             model,
@@ -119,6 +116,26 @@ def _generated(name: str, facts: list[str]) -> list[str]:
     return out
 
 
+_made: dict[tuple, list[str]] = {}
+
+
+def _cached(name: str, facts: list[str]) -> list[str]:
+    # The empty-chat screen asks on every new chat. A model call each time
+    # heats the machine to say the same hello, so a set is made once per
+    # name, model and memories, and only remade when one of them changes.
+    model = _local_model()
+    if not model:
+        return []
+    key = (get_profile().get("id"), name, model, tuple(facts))
+    if key not in _made:
+        made = _generated(name, facts, model)
+        if not made:
+            return []
+        _made.clear()
+        _made[key] = made
+    return list(_made[key])
+
+
 def greetings() -> list[str]:
     profile = get_profile()
     name = profile.get("name", "Shadow")
@@ -130,6 +147,6 @@ def greetings() -> list[str]:
     # meaning anything once people name their own assistants - every name is
     # a custom one now, and a name alone personalizes nothing.
     if facts:
-        options = _generated(name, facts) + GENERIC
+        options = _cached(name, facts) + GENERIC
     random.shuffle(options)
     return options[:6]
