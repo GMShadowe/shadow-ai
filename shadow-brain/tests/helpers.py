@@ -1,4 +1,33 @@
+import os
+
 from providers import Call, Chunk, Msg
+
+
+def redirect_data(data: str, setattr=setattr) -> None:
+    """Point every module-level data path at `data`. Shared by the test
+    fixture and the eval runner, so neither can write into the real folder."""
+    import assistants
+    import auth
+    import custom
+    import feedback
+    import orchestrator
+    import settings
+    import skills
+    import usage
+    from tools import files, shell
+
+    setattr(assistants, "ASSISTANTS_DIR", os.path.join(data, "assistants"))
+    setattr(assistants, "STATE_PATH", os.path.join(data, "active_assistant.txt"))
+    setattr(auth, "TOKEN_PATH", os.path.join(data, "auth_token"))
+    setattr(custom, "PATH", os.path.join(data, "custom_models.json"))
+    setattr(feedback, "PATH", os.path.join(data, "feedback.json"))
+    setattr(orchestrator, "LOG_PATH", os.path.join(data, "turns.jsonl"))
+    setattr(settings, "SETTINGS_PATH", os.path.join(data, "settings.json"))
+    setattr(usage, "PATH", os.path.join(data, "byok_usage.json"))
+    setattr(files, "BACKUP_DIR", os.path.join(data, "backups"))
+    setattr(files, "DATA_DIR", data)
+    setattr(shell, "DATA_DIR", data)
+    setattr(skills, "ADDED_DIR", os.path.join(data, "skills"))
 
 
 def call(name: str, arguments) -> Call:
