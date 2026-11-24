@@ -909,6 +909,29 @@ function DataSection({
             {busy === "all" ? "Deleting…" : "Delete all"}
           </SmallButton>
         </Row>
+        <Row
+          label="Reset"
+          description="Completely resets everything. nothing is saved the app goes back to its origin"
+        >
+          <SmallButton
+            danger
+            disabled={busy === "all"}
+            onClick={() =>
+              run(
+                "all",
+                "Completely resets everything. nothing is saved the app goes back to its origin",
+                async () => {
+                  await clearChats();
+                  await clearMemory();
+                  await clearLog();
+                },
+                "Everything deleted"
+              )
+            }
+          >
+            {busy === "all" ? "Deleting…" : "Nuke"}
+          </SmallButton>
+        </Row>
       </div>
 
       <p className="pt-4 text-[11px] leading-relaxed text-ink-muted">
