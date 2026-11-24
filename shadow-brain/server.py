@@ -43,7 +43,7 @@ from adapters.registry import list_adapters
 from tools import shell
 from tools.registry import TOOLS
 
-from memory import long_term
+from memory import long_term, saver
 
 VERSION = "0.1.0"
 MAX_IMAGES = 4
@@ -66,6 +66,9 @@ async def lifespan(app):
     startup()
     yield
     shell.stop_all()
+    if saver.waiting():
+        print(f"[memory] saving {saver.waiting()} message(s) for auto-memory before stopping")
+        saver.flush()
 
 
 def startup() -> None:

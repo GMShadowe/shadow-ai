@@ -12,7 +12,7 @@ from model import stream_model
 from router.classifier import classify_detailed, display_tools, is_remember
 from adapters.registry import get_adapter
 from memory.short_term import ShortTermMemory
-from memory import long_term, extract
+from memory import long_term, saver
 from tools.registry import call_tool
 from config import load_tier_config, max_steps, EFFORT_STEPS, default_effort, get_workspace
 from assistants import active_id, get_profile
@@ -635,20 +635,10 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     log_turn(user_input, route_label, decision, reply, len(images),
              skill["name"] if skill else None)
 
-    # Save to long-term memory.
-    try:
-        if is_remember(user_input):
-            facts = extract.extract_facts(user_input, tier)
-            if facts:
-                saved = [long_term.add(f, source="asked", aid=aid) for f in facts]
-                print(f"[memory] remember matched, saved {sum(saved)} of {len(facts)} facts")
-            else:
-                print("[memory] remember matched, but no fact could be extracted, so nothing was saved")
-        elif get_profile(aid).get("auto_memory"):
-            for fact in extract.extract_facts(user_input, tier):
-                long_term.add(fact, source="auto", aid=aid)
-    except Exception as e:
-        print(f"[memory] save failed: {e}")
+    if is_remember(user_input):
+        saver.remember(user_input, tier, aid)
+    elif profile.get("auto_memory"):
+        saver.later(user_input, tier, aid)
 
     if spend:
         # One finished turn, so the per-turn average in Settings means something.
@@ -672,6 +662,10 @@ def handle_turn(user_input: str, memory: ShortTermMemory,
             permissions.resolve(event["id"], "unattended")
         elif event["type"] == "done":
             result = event
+    # Nothing is waiting on this call to answer quickly, so a "remember…"
+    # is saved before it returns.
+    if is_remember(user_input):
+        saver.settle()
     return result
 
 
