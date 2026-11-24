@@ -31,6 +31,12 @@ RULES = (
     "Never end a reply by saying you will do something next. Either do it now with a tool, or ask the user if they want it."
 )
 
+BACKGROUND_RULE = (
+    "The user's location, the weather and the things you remember about them are background. "
+    "Use them when the message is about them; otherwise leave them out, including in greetings and small talk. "
+    "If the user says something that contradicts them, like that it's cold, believe the user."
+)
+
 VISION_RULES = (
     "The user attached {count} image(s). Look at them carefully and answer their question about them. "
     "If you recognize something well-known, like a famous place, landmark, product or artwork, "
@@ -200,7 +206,7 @@ def build_system_prompt(adapters, blocked, ask, image_count=0, tier=None, effort
     prompt = (
         f"{compact(tier, effort, allowed, ask, p)}\n\n"
         f"{TONES.get(p['tone'], '')} {LENGTHS.get(p['response_length'], '')}\n\n"
-        f"{RULES}"
+        f"{RULES}\n\n{BACKGROUND_RULE}"
     )
     if image_count:
         prompt += "\n\n" + VISION_RULES.format(count=image_count)
@@ -310,6 +316,17 @@ def carried_adapters(routed: list[dict], sticky: list[dict], tools_used: list[di
     return names
 
 
+ABOUT_THE_USER = {"my", "me", "mine", "i", "i'm", "im", "myself", "about"}
+
+
+def wants_memories(text: str) -> bool:
+    """A greeting like "hi lol" matches whatever is stored at a low score, and
+    the model then talks about it. Short messages get memories only when they
+    are about the user."""
+    words = re.findall(r"[\w']+", (text or "").lower())
+    return len(words) > 3 or bool(ABOUT_THE_USER & set(words))
+
+
 def merge_temperature(adapters: list[dict]) -> float | None:
     temps = [a["temperature"] for a in adapters if "temperature" in a]
     return min(temps) if temps else None
@@ -393,7 +410,7 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
 
     # Pull relevant long-term memories into the prompt.
     try:
-        memories = long_term.search(user_input, aid=aid)
+        memories = long_term.search(user_input, aid=aid) if wants_memories(user_input) else []
         if memories:
             system_prompt += "\n\nThings you remember about the user:\n" + "\n".join(f"- {m}" for m in memories)
     except Exception as e:
