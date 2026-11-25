@@ -21,6 +21,7 @@ def unsure_router(monkeypatch):
     "add up the temp column in data.csv",
     "how many lines does app.py have?",
     "zip notes.md and data.csv into backup.zip",
+    "what kind of file is 'mystery'? it has no extension",
 ])
 def test_file_actions_load_the_file_tools(text):
     assert "files" in classifier.classify_detailed(text)["adapters"]
@@ -49,6 +50,9 @@ def test_remember_still_wins():
     "what's using my cpu",
     "which version of git is installed on this computer",
     "what processes are running",
+    "what's my local ip address?",
+    "how long has this computer been on?",
+    "is anything using port 59999?",
 ])
 def test_questions_about_the_machine_load_the_system_tools(text):
     assert "system" in classifier.classify_detailed(text)["adapters"]

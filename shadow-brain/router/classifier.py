@@ -25,7 +25,9 @@ EXPLICIT = {
                "my ram", "how much ram", "how much memory", "cpu usage", "my cpu", "my battery",
                "on this computer", "on my computer", "on this mac", "on my mac", "on this laptop",
                "on my laptop", "running processes", "what processes", "which processes",
-               "what's running", "whats running", "uptime"],
+               "what's running", "whats running", "uptime", "ip address", "my ip", "mac address",
+               "this computer been on", "my wifi", "which port", "what port", "on port", "using port", "listening on"],
+    "files": ["what kind of file", "what type of file", "type of file is", "file type of"],
 }
 FILE_WORDS = ["file", "folder", "directory"]
 # Naming a file action is as explicit as "search the web". Laya splits its
