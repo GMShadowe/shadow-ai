@@ -147,7 +147,13 @@ def call_tool(name: str, arguments: dict) -> str:
     arguments = {k: v for k, v in arguments.items() if k in params["properties"]}
 
     try:
-        return str(TOOLS[name]["fn"](**arguments))
+        result = TOOLS[name]["fn"](**arguments)
+        if result is None:
+            print(f"[tools] {name} returned nothing")
+            return (f"Internal error in Shadow's {name} tool: it returned nothing, so whether it worked "
+                    "is unknown. This is a bug in Shadow itself. Tell the user plainly that Shadow's tool "
+                    "failed and that they should check by hand.")
+        return str(result)
     except files.PathRefused as e:
         return f"Error: {e}"
     except Exception as e:
