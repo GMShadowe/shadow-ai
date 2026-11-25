@@ -26,7 +26,7 @@
 {"id": "ollama-release", "group": "research", "input": "look up the latest ollama release and what changed", "checks": {"tools_any": ["web_search", "fetch_url"], "no_unbacked_claim": true}}
 {"id": "cook-today", "group": "control", "input": "what should I cook today?", "checks": {"tools_none": ["web_search", "fetch_url"]}}
 {"id": "remember", "group": "control", "input": "remember that I'm vegetarian", "checks": {"tools_none": ["web_search", "fetch_url"], "route_excludes": "research"}}
-{"id": "list-files", "group": "control", "input": "list the files in my workspace", "checks": {"tools_any": ["list_dir"], "contains_any": ["notes.md"]}}
+{"id": "list-files", "group": "control", "input": "list the files in my workspace", "checks": {"tools_any": ["list_dir"], "contains_any": ["stats.py"]}}
 {"id": "read-notes", "group": "control", "input": "read notes.md and tell me what's in it", "checks": {"tools_any": ["read_file"], "contains_any": ["cardamom", "oat milk", "basmati"]}}
 {"id": "reverse-fn", "group": "control", "input": "write a python function that reverses a string", "checks": {"contains_any": ["def "], "no_unbacked_claim": true}}
 {"id": "count-lines", "group": "terminal", "tools_on": ["run_command"], "input": "how many lines does app.py have?", "checks": {"tools_any": ["run_command", "read_file"], "contains_any": ["2 lines", "two lines", "**2**", " 2 "]}}
@@ -34,9 +34,11 @@
 {"id": "python-installed", "group": "terminal", "tools_on": ["run_command"], "input": "which version of python is installed on this computer?", "checks": {"tools_any": ["run_command"], "contains_any": ["3."], "no_unbacked_claim": true}}
 {"id": "zip-files", "group": "terminal", "tools_on": ["run_command"], "input": "zip notes.md and data.csv into backup.zip", "checks": {"tools_any": ["run_command"], "file_exists": ["backup.zip"], "no_unbacked_claim": true}}
 {"id": "csv-to-json", "group": "terminal", "tools_on": ["run_command"], "input": "convert data.csv to a json file called data.json", "checks": {"file_contains": {"data.json": ["pune"]}, "no_unbacked_claim": true}}
-{"id": "biggest-file", "group": "terminal", "tools_on": ["run_command"], "input": "which file in my workspace is the biggest?", "checks": {"tools_any": ["run_command", "list_dir", "find_files"], "contains_any": ["notes.md"]}}
+{"id": "biggest-file", "group": "terminal", "tools_on": ["run_command"], "input": "which file in my workspace is the biggest?", "checks": {"tools_any": ["run_command", "list_dir", "find_files"], "contains_any": ["stats.py"]}}
 {"id": "primes", "group": "coding", "tools_on": ["run_command"], "input": "write a script that prints the first 10 prime numbers and run it", "checks": {"tools_any": ["run_command"], "contains_any": ["29"], "no_unbacked_claim": true}}
 {"id": "fix-average", "group": "coding", "tools_on": ["run_command"], "input": "average() in stats.py gives the wrong answer, fix it", "checks": {"tools_any": ["edit_file", "write_file"], "file_lacks": {"stats.py": ["+ 1"]}, "file_contains": {"stats.py": ["def average"]}, "no_unbacked_claim": true}}
 {"id": "fix-and-test", "group": "coding", "tools_on": ["run_command"], "input": "there's a bug in stats.py. fix it and show me it works on [2, 4, 6]", "checks": {"tools_any": ["run_command"], "file_lacks": {"stats.py": ["+ 1"]}, "contains_any": ["4.0", " 4 ", "is 4", "**4"], "no_unbacked_claim": true}}
 {"id": "add-test", "group": "coding", "tools_on": ["run_command"], "input": "write tests for greet in app.py and run them", "checks": {"tools_any": ["run_command"], "no_unbacked_claim": true}}
 {"id": "no-tool-for-it", "group": "terminal", "tools_on": ["run_command"], "input": "how much free space is left on my disk?", "checks": {"tools_any": ["run_command", "system_info"], "contains_any": ["gb", "gi", "tb"], "no_unbacked_claim": true}}
+{"id": "delete-notes", "group": "files", "tools_on": ["delete_file", "run_command"], "input": "delete notes.md", "checks": {"tools_any": ["delete_file"], "tools_none": ["run_command"], "file_missing": ["notes.md"], "no_unbacked_claim": true}}
+{"id": "rename-csv", "group": "files", "tools_on": ["run_command"], "input": "rename data.csv to temps.csv", "checks": {"tools_any": ["move_file"], "file_exists": ["temps.csv"], "file_missing": ["data.csv"]}}

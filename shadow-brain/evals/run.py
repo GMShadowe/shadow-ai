@@ -156,6 +156,9 @@ def check(spec: dict, out: dict) -> list[str]:
     for name in spec.get("file_exists", []):
         if name not in files:
             failed.append(f"no {name} in the workspace")
+    for name in spec.get("file_missing", []):
+        if name in files:
+            failed.append(f"{name} is still in the workspace")
     for name, words in spec.get("file_contains", {}).items():
         text = files.get(name)
         if text is None:
