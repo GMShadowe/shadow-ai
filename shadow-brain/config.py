@@ -129,6 +129,15 @@ def all_tiers(include_custom: bool = True) -> list[dict]:
     return out
 
 
-def max_steps(effort: str | None = None) -> int:
+# A shell turn that fails once needs a step to read the error and another to
+# try again, so medium effort's six ran out mid-fix.
+SHELL_MIN_STEPS = 8
+
+
+def max_steps(effort: str | None = None, shell: bool = False) -> int:
     import cool
-    return cool.steps(EFFORT_STEPS.get(effort or default_effort(), 6))
+    effort = effort or default_effort()
+    limit = EFFORT_STEPS.get(effort, 6)
+    if shell and effort != "low":
+        limit = max(limit, SHELL_MIN_STEPS)
+    return cool.steps(limit)

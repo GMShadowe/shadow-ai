@@ -483,12 +483,6 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     decision = classify_detailed(user_input, previous, bool(images))
     adapters = [a for a in (get_adapter(n) for n in decision["adapters"]) if a]
     route_label = "+".join(a["name"] for a in adapters) or "chat"
-    steps = max_steps(effort)
-    cooling = cool.on()
-    yield {"type": "route", "route": route_label, "router": decision,
-           "model": tier_cfg["label"], "effort": effort,
-           "skill": skill["name"] if skill else None, "steps": steps, "cool": cooling}
-
     # Tools stay for a few turns after a task uses them. Laya reads one message
     # at a time, so "yes, go ahead" after "shall I code it?" routes as chat and
     # would otherwise arrive with no tools. The tools carry over; the specialty
@@ -503,6 +497,12 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     gated = gate_for_web(allowed, ask)
     if gated:
         print(f"[tools] web content possible this turn, so these ask first: {', '.join(gated)}")
+
+    steps = max_steps(effort, shell="run_command" in allowed)
+    cooling = cool.on()
+    yield {"type": "route", "route": route_label, "router": decision,
+           "model": tier_cfg["label"], "effort": effort,
+           "skill": skill["name"] if skill else None, "steps": steps, "cool": cooling}
 
     # A model the user brought may not do tool calling at all. Sending
     # schemas anyway gets a confusing provider error, so they are dropped
