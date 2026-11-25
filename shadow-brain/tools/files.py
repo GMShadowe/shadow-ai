@@ -207,3 +207,10 @@ def delete_dir(path: str) -> str:
         return "Error: refusing to delete the whole workspace folder."
     if not os.path.isdir(full):
         return f"Error: '{path}' is not a folder that exists."
+    if _inside(os.path.realpath(DATA_DIR), full):
+        return f"Error: '{path}' holds Shadow's own data folder, so it can't be deleted from here."
+    try:
+        shutil.rmtree(full)
+    except OSError as e:
+        return f"Error: couldn't delete '{path}': {e}"
+    return f"Deleted the folder {path} and everything in it."
