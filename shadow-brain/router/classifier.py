@@ -21,6 +21,11 @@ EXPLICIT = {
     "health": ["my steps", "steps today", "heart rate", "resting hr", "my hrv", "my sleep", "slept",
                "how did i sleep", "sleep score", "fitbit", "my band", "spo2", "blood oxygen",
                "calories burned", "zone minutes", "my workout", "my workouts", "breathing rate"],
+    "system": ["disk space", "free space", "storage left", "space left", "my disk", "my drive",
+               "my ram", "how much ram", "how much memory", "cpu usage", "my cpu", "my battery",
+               "on this computer", "on my computer", "on this mac", "on my mac", "on this laptop",
+               "on my laptop", "running processes", "what processes", "which processes",
+               "what's running", "whats running", "uptime"],
 }
 FILE_WORDS = ["file", "folder", "directory"]
 # Naming a file action is as explicit as "search the web". Laya splits its
@@ -30,6 +35,23 @@ FILE_ACTION_RE = re.compile(
     r"\b(?:read|open|list|show|delete|remove|rename|move|copy|edit|create|write|save|find|search)\b"
     r".{0,40}?(?:\b(?:files?|folders?|director(?:y|ies)|workspace)\b|\b[\w\-]+\.(?:md|txt|py|js|ts|tsx|jsx|"
     r"json|csv|html|css|pdf|log|yaml|yml|toml|sh|ipynb|docx?|xlsx?)\b)", re.I)
+# A message that names a file by name ("add up the temp column in data.csv")
+# is about that file whatever the verb. Library names that look like files
+# ("node.js") are not, and neither is anything inside a link.
+NAMED_FILE_RE = re.compile(
+    r"(?<![/\w.:-])[\w\-]+\.(?:md|txt|py|js|ts|tsx|jsx|json|csv|html|css|pdf|log|yaml|yml|toml|sh|"
+    r"ipynb|docx?|xlsx?|zip)\b(?![/.\w])", re.I)
+NOT_A_FILE_RE = re.compile(
+    r"\b(?:node|next|nuxt|vue|three|express|d3|chart|deno|bun|p5|ember|backbone|angular|react|"
+    r"solid|alpine|htmx|moment|socket\.io)\.js\b", re.I)
+
+
+LINK_RE = re.compile(r"\b(?:https?://|www\.)\S+", re.I)
+
+
+def names_a_file(text: str) -> bool:
+    text = NOT_A_FILE_RE.sub("", LINK_RE.sub("", text))
+    return bool(FILE_ACTION_RE.search(text) or NAMED_FILE_RE.search(text))
 
 # Asking about the world, not about the user: "news on my job application"
 # is private and must not reach a search engine (#5).
@@ -149,7 +171,7 @@ def classify_detailed(text: str, previous: str | None = None, has_images: bool =
         result["adapters"] = [a for a in result["adapters"] if a != "research"]
         result["method"] += "+image"
 
-    if FILE_ACTION_RE.search(text) and "files" not in result["adapters"]:
+    if names_a_file(text) and "files" not in result["adapters"]:
         result["adapters"].append("files")
         result["method"] += "+explicit"
 
