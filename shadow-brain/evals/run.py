@@ -9,7 +9,9 @@ model pulled. Writes nothing into the real data folder.
 import argparse
 import json
 import os
+import re
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -83,6 +85,18 @@ def reset_workspace(workspace: str) -> None:
             f.write(text)
 
 
+def run_setup(case: dict, workspace: str) -> None:
+    for command in case.get("setup", []):
+        done = subprocess.run(command, shell=True, cwd=workspace, capture_output=True, text=True)
+        if done.returncode:
+            raise RuntimeError(f"setup {command!r} failed: {done.stderr.strip()}")
+
+
+def shell_check(spec: dict, workspace: str) -> str:
+    done = subprocess.run(spec["cmd"], shell=True, cwd=workspace, capture_output=True, text=True)
+    return (done.stdout + done.stderr).strip()
+
+
 def set_tools(case: dict, aid: str) -> None:
     import assistants
     assistants.update_profile({"tools": {name: "on" for name in case.get("tools_on", [])}}, aid)
@@ -96,6 +110,7 @@ def run_case(case: dict, tier: str, effort: str, aid: str) -> dict:
     reset_memory(aid)
     workspace = get_settings()["workspace"]
     reset_workspace(workspace)
+    run_setup(case, workspace)
     set_tools(case, aid)
     memory = ShortTermMemory()
     for item in case.get("history", []):
@@ -106,8 +121,11 @@ def run_case(case: dict, tier: str, effort: str, aid: str) -> dict:
         "reply": result.get("reply", ""),
         "route": result.get("route", ""),
         "tools": [t["name"] for t in result.get("tools", []) if t.get("name") and "kind" not in t],
+        "trace": [{"name": t.get("name"), "args": t.get("args"), "result": str(t.get("result", ""))[:400]}
+                  for t in result.get("tools", []) if t.get("name")],
         "seconds": round(time.time() - started, 1),
         "files": read_workspace(workspace),
+        "shell": shell_check(case["checks"]["shell_check"], workspace) if "shell_check" in case["checks"] else "",
     }
 
 
@@ -158,6 +176,10 @@ def check(spec: dict, out: dict) -> list[str]:
     for word in spec.get("not_contains", []):
         if word.lower() in reply:
             failed.append(f"mentions {word!r}")
+    if "matches_any" in spec and not any(re.search(p, reply, re.I | re.S) for p in spec["matches_any"]):
+        failed.append(f"matches none of {spec['matches_any']}")
+    if "shell_check" in spec and not re.search(spec["shell_check"]["matches"], out.get("shell", ""), re.I):
+        failed.append(f"{spec['shell_check']['cmd']!r} gave {out.get('shell', '')[:80]!r}")
     if "contains_any" in spec and not any(w.lower() in reply for w in spec["contains_any"]):
         failed.append(f"mentions none of {spec['contains_any']}")
     files = out.get("files", {})
