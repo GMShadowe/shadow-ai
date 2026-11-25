@@ -1,8 +1,19 @@
 {
   "label": "Primal",
-  "description": "Strongest tier. Needs a stronger computer, and reads images.",
+  "description": "Strongest of the three, and reads images.",
   "base_model": "gemma4:12b",
-  "min_ram_gb": 16,
+  "requires": [
+    {
+      "ram": 22
+    },
+    {
+      "ram": 16,
+      "nvidia_vram": 12
+    }
+  ],
+  "needs": "22 GB of memory, or 16 GB with a 12 GB NVIDIA card",
   "vision": true,
-  "adapters": false
+  "adapters": false,
+  "download_gb": 7.6,
+  "download_approx": true
 }

@@ -23,6 +23,18 @@ EXPLICIT = {
                "calories burned", "zone minutes", "my workout", "my workouts", "breathing rate"],
 }
 FILE_WORDS = ["file", "folder", "directory"]
+# Naming a file action is as explicit as "search the web". Laya splits its
+# confidence six ways, so "read notes.md" scored under MIN_CONFIDENCE and
+# arrived as plain chat with no file tools.
+FILE_ACTION_RE = re.compile(
+    r"\b(?:read|open|list|show|delete|remove|rename|move|copy|edit|create|write|save|find|search)\b"
+    r".{0,40}?(?:\b(?:files?|folders?|director(?:y|ies)|workspace)\b|\b[\w\-]+\.(?:md|txt|py|js|ts|tsx|jsx|"
+    r"json|csv|html|css|pdf|log|yaml|yml|toml|sh|ipynb|docx?|xlsx?)\b)", re.I)
+
+# Asking about the world, not about the user: "news on my job application"
+# is private and must not reach a search engine (#5).
+ABOUT_THE_WORLD_RE = re.compile(
+    r"\b(?:news (?:about|on)|latest on|search (?:on|in)|try searching)\s+(?!my\b|our\b|me\b|us\b)", re.I)
 # Anchored to the start: "I don't remember the filename" is not a memory save.
 REMEMBER_RE = re.compile(
     r"^\s*(?:(?:hey|ok|okay|so|and|also|please|pls)[\s,]+)*"
@@ -102,7 +114,7 @@ def _explicit_routes(text: str) -> list[str]:
     lowered = text.lower()
     routes = []
     for route, phrases in EXPLICIT.items():
-        if any(p in lowered for p in phrases):
+        if any(p in lowered for p in phrases) or (route == "research" and ABOUT_THE_WORLD_RE.search(text)):
             if route == "research" and any(w in lowered for w in FILE_WORDS) and "web" not in lowered:
                 continue
             routes.append(route)
@@ -136,6 +148,10 @@ def classify_detailed(text: str, previous: str | None = None, has_images: bool =
             result["adapters"] = []
         result["adapters"] = [a for a in result["adapters"] if a != "research"]
         result["method"] += "+image"
+
+    if FILE_ACTION_RE.search(text) and "files" not in result["adapters"]:
+        result["adapters"].append("files")
+        result["method"] += "+explicit"
 
     # Explicit "search/look up" always wins.
     for route in _explicit_routes(text):

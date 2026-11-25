@@ -17,33 +17,17 @@ def pytest_collection_finish(session):
 
 @pytest.fixture(autouse=True)
 def data_dir(tmp_path, monkeypatch):
-    import assistants
-    import auth
-    import custom
-    import feedback
-    import orchestrator
-    import settings
-    import usage
-    from tools import files
+    from tests.helpers import redirect_data
 
     monkeypatch.setenv("HOME", str(tmp_path.parent))
     data = tmp_path / "data"
     data.mkdir()
-    monkeypatch.setattr(assistants, "ASSISTANTS_DIR", str(data / "assistants"))
-    monkeypatch.setattr(assistants, "STATE_PATH", str(data / "active_assistant.txt"))
-    monkeypatch.setattr(auth, "TOKEN_PATH", str(data / "auth_token"))
-    monkeypatch.setattr(custom, "PATH", str(data / "custom_models.json"))
-    monkeypatch.setattr(feedback, "PATH", str(data / "feedback.json"))
-    monkeypatch.setattr(orchestrator, "LOG_PATH", str(data / "turns.jsonl"))
-    monkeypatch.setattr(settings, "SETTINGS_PATH", str(data / "settings.json"))
-    monkeypatch.setattr(usage, "PATH", str(data / "byok_usage.json"))
-    monkeypatch.setattr(files, "BACKUP_DIR", str(data / "backups"))
-    monkeypatch.setattr(files, "DATA_DIR", str(data))
-    from tools import shell
-    monkeypatch.setattr(shell, "DATA_DIR", str(data))
-    import skills
-    monkeypatch.setattr(skills, "ADDED_DIR", str(data / "skills"))
+    redirect_data(str(data), monkeypatch.setattr)
+    import settings
     settings.update_settings({"router": "keywords"})
+    # Cool mode follows the machine when unset; the tests mustn't.
+    import cool
+    monkeypatch.setattr(cool, "_default", False)
     return data
 
 

@@ -11,8 +11,9 @@ router reads as chat ("yes, go ahead") keeps the tools the task needs."""
 
 
 class ShortTermMemory:
-    def __init__(self, max_turns: int = 10, image_window: int = 4):
+    def __init__(self, max_turns: int = 10, image_window: int = 4, trim_slack: int = 2):
         self.max_turns = max_turns
+        self.trim_slack = trim_slack
         self.image_window = image_window
         self.messages: list[dict] = []
 
@@ -24,9 +25,11 @@ class ShortTermMemory:
         if adapters:
             message["adapters"] = list(adapters)
         self.messages.append(message)
-        limit = self.max_turns * 2
-        if len(self.messages) > limit:
-            self.messages = self.messages[-limit:]
+        # Trimmed a few turns at a time rather than one per turn: dropping the
+        # oldest message changes the start of the conversation, and Qwen 3.5
+        # then reads all of it again instead of only the newest turn.
+        if len(self.messages) > (self.max_turns + self.trim_slack) * 2:
+            self.messages = self.messages[-(self.max_turns - 1) * 2:]
 
     def get(self) -> list[dict]:
         latest_image = max((i for i, m in enumerate(self.messages) if m.get("images")), default=-1)

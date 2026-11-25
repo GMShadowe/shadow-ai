@@ -3,8 +3,6 @@ Used for "remember ..." and, when it is on, auto-memory. Kept deliberately stric
 
 import json
 
-import ollama
-
 import providers
 import usage
 from config import load_tier_config
@@ -37,8 +35,7 @@ def _ask(cfg: dict, prompt: str) -> str:
             if chunk.usage is not None:
                 _record(cfg, chunk.usage)
         return text
-    resp = ollama.chat(model=cfg["base_model"], messages=messages,
-                       think=False, options={"temperature": 0})
+    resp = providers.ollama_chat(cfg["base_model"], messages, temperature=0)
     return resp.message.content or ""
 
 

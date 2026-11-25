@@ -19,6 +19,30 @@ describe("applyEvent", () => {
     expect(done.streaming).toBe(false);
   });
 
+  it("shows a status until the next real event replaces it", () => {
+    const loading = play([{ type: "status", text: "Loading the model" }]);
+    expect(loading.status).toBe("Loading the model");
+    expect(applyEvent(loading, { type: "token", text: "Hi" }).status).toBeNull();
+    expect(applyEvent(loading, { type: "tool_start", name: "about_me" }).status).toBeNull();
+  });
+
+  it("takes the step budget and Cool mode from the route", () => {
+    const m = play([
+      { type: "route", route: "coding", router: { method: "laya" }, effort: "ultra", steps: 12, cool: true },
+    ]);
+    expect(m.steps).toBe(12);
+    expect(m.cool).toBe(true);
+  });
+
+  it("keeps the turn's timing when it finishes", () => {
+    const done = applyEvent(placeholder(), {
+      type: "done",
+      reply: "Hi",
+      timing: { first_token_ms: 2100, total_ms: 4000, steps: 1 },
+    });
+    expect(done.timing?.first_token_ms).toBe(2100);
+  });
+
   it("clears the text written before a tool call", () => {
     const m = play([
       { type: "token", text: "Let me check…" },

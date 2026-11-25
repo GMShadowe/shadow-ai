@@ -3,8 +3,10 @@ tokens of text, tool starts and results, and permission requests."""
 
 import json
 import re
+import time
 
 import context
+import cool
 import permissions
 import providers
 import usage
@@ -13,7 +15,7 @@ import assistants
 from tools.registry import get_schemas, call_tool, preview
 
 MODEL_NAME = load_tier_config()["base_model"]  # default, used by the terminal chat
-NUM_CTX = 16384  # must match the num_ctx sent to Ollama below
+NUM_CTX = providers.NUM_CTX
 
 OUT_OF_STEPS = (
     "You have used all your tool steps for this request. Without calling any tools, "
@@ -27,22 +29,46 @@ EMPTY_NUDGE = (
 # A reply that says it did something, in a turn where no tool ran. Small
 # models write "I've created the file" without calling write_file; the
 # nudge makes them either do it or say they didn't (CLAUDE.md, Honesty).
+_DID = (r"created|wrote|written|saved|made|deleted|removed|moved|renamed|ran|run|executed|opened|"
+        r"installed|updated|edited|fixed|killed|stopped|searched|checked|looked up|fetched|downloaded|"
+        r"sent|emailed|ordered|booked|placed|submitted|posted|started|launched|tested")
 CLAIMED_ACTION = re.compile(
-    r"\bI(?:'ve| have)? (?:just )?(?:created|wrote|written|saved|made|deleted|removed|moved|renamed|"
-    r"ran|run|executed|opened|installed|updated|edited|fixed|killed|stopped)\b"
-    r"|\b(?:has|have) been (?:created|saved|written|deleted|removed|moved|renamed|updated|opened)\b"
-    r"|\bis now open\b",
+    rf"\bI(?:['’]ve| have)? (?:just |already |now )?(?:{_DID})\b"
+    r"|\bI(?:['’]ve| have)? (?:just |already )?found(?! it\b| that\b| this\b)"
+    r"|\b(?:has|have) been (?:created|saved|written|deleted|removed|moved|renamed|updated|opened|"
+    r"sent|placed|booked|ordered|submitted|emailed)\b"
+    r"|\bis now open\b|\bis on (?:its|the) way\b",
     re.I,
 )
+# "Done. Ran the script..." claims the same thing with the "I" left off.
+# Case-sensitive, and only before an object, so "Created by Guido..." isn't one.
+CLAIMED_BARE = re.compile(
+    r"(?:^|[.!?]\s+|\n\s*)(?:Done[.!,:]?\s+)?"
+    r"(?:Ran|Executed|Sent|Saved|Created|Deleted|Opened|Installed|Searched|Ordered|Booked|Emailed|"
+    r"Submitted|Started|Launched|Fetched|Downloaded)\s+(?:the|a|an|your|it|them|that|this|\d)\b"
+)
+
+
+def _tool_ran_after(messages: list[dict], question: dict | None) -> bool:
+    seen = False
+    for m in messages:
+        if m is question:
+            seen = True
+        elif seen and m.get("role") == "tool":
+            return True
+    return False
+
+
+def claims_action(text: str) -> bool:
+    text = text or ""
+    return bool(CLAIMED_ACTION.search(text) or CLAIMED_BARE.search(text))
+
+
 HONESTY_NUDGE = (
     "No tool ran in this reply, but your answer says you did something. If you meant something "
     "from an earlier reply, say that plainly. Otherwise do it now with a tool, or tell the user "
     "honestly that you haven't done it."
 )
-
-
-def claims_action(text: str) -> bool:
-    return bool(CLAIMED_ACTION.search(text or ""))
 
 
 EMPTY_FALLBACK = (
@@ -72,7 +98,7 @@ def _chat_stream(model, messages, schemas, temperature, provider=None):
     """
     if provider and provider.get("kind") == "byok":
         return providers.openai_stream(provider, messages, schemas, temperature)
-    return providers.ollama_stream(model, messages, schemas, temperature, NUM_CTX)
+    return providers.ollama_stream(model, messages, schemas, temperature)
 
 
 def parse_arguments(raw) -> tuple[dict, str | None]:
@@ -91,6 +117,18 @@ def parse_arguments(raw) -> tuple[dict, str | None]:
         raw = parsed
     return {}, (f"Error: the arguments for this tool call must be a JSON object, but got "
                 f"{type(raw).__name__}, so nothing ran. Call the tool again with a JSON object of arguments.")
+
+
+def step_stats(chunk) -> dict:
+    """What Ollama reports on a step's last chunk. The prompt count is the
+    whole prompt even when most of it came from the cache, so the time spent
+    reading it is what shows whether the cache was used."""
+    ms = lambda name: round((getattr(chunk, name, None) or 0) / 1e6)
+    return {"type": "stats", "load_ms": ms("load_duration"),
+            "prompt_tokens": getattr(chunk, "prompt_eval_count", None) or 0,
+            "prompt_ms": ms("prompt_eval_duration"),
+            "output_tokens": getattr(chunk, "eval_count", None) or 0,
+            "output_ms": ms("eval_duration")}
 
 
 def _is_byok(provider: dict | None) -> bool:
@@ -130,10 +168,11 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
     schemas = get_schemas(tool_names) if tool_names else None
     nudged = False
     honesty_checked = False
-    ran_tool = False
     # The user's question for this turn. Pinned so the compressor can never
     # drop it, however many tool results pile up behind it.
     question = question if question is not None else (messages[-1] if messages else None)
+    # A search the orchestrator ran before the model counts: "I searched" is true then.
+    ran_tool = _tool_ran_after(messages, question)
 
     # A BYOK turn is billed to the user, one call per step. Counted as it goes
     # so a cap can stop it part-way instead of reporting the damage after.
@@ -162,6 +201,8 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
                        "today": usage.today_total(provider["tier"]),
                        "endpoint": provider["tier"],
                        "host": provider.get("host", "")}
+            if getattr(chunk, "done", False):
+                yield step_stats(chunk)
 
         if not tool_calls:
             if content.strip() and not ran_tool and not honesty_checked and claims_action(content):
@@ -237,6 +278,13 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
             yield {"type": "tool_end", "name": name, "result": result}
             messages.append({"role": "tool", "tool_name": name, "content": result})
 
+        # Cool mode: a short rest between steps, so a long task doesn't run
+        # the chip flat out from start to finish.
+        rest = cool.pause()
+        if rest:
+            yield {"type": "status", "text": "Resting a moment to stay cool"}
+            time.sleep(rest)
+
         # Checked here rather than at the top of the loop, because what has to
         # be prevented is the *next* call: the tool results just added make the
         # following request bigger than the one that got us here.
@@ -253,6 +301,8 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
         if chunk.message.content:
             content += chunk.message.content
             yield {"type": "token", "text": chunk.message.content}
+        if getattr(chunk, "done", False):
+            yield step_stats(chunk)
         reported = getattr(chunk, "usage", None)
         if byok and reported is not None:
             spent += _record(provider, reported)

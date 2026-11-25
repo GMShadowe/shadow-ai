@@ -1,0 +1,15 @@
+{
+  "label": "Inkling 2 Mini",
+  "description": "For strong Macs. Reads images.",
+  "base_model": "inkling-2-mini",
+  "requires": {
+    "ram": 32,
+    "platform": "apple-silicon"
+  },
+  "needs": "an Apple silicon Mac with 32 GB",
+  "vision": true,
+  "adapters": false,
+  "hidden": true,
+  "download_gb": 20,
+  "download_approx": true
+}

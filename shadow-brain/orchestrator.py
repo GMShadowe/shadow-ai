@@ -4,22 +4,26 @@ search, then streams the model's work as events."""
 import json
 import os
 import re
+import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
 from model import stream_model
 from router.classifier import classify_detailed, display_tools, is_remember
 from adapters.registry import get_adapter
 from memory.short_term import ShortTermMemory
-from memory import long_term, extract
+from memory import long_term, saver
 from tools.registry import call_tool
 from config import load_tier_config, max_steps, EFFORT_STEPS, default_effort, get_workspace
 from assistants import active_id, get_profile
 from tools.state import WEB_TOOLS, offline, tool_state
 from settings import get_settings
 
+import cool
 import permissions
+import providers
 import skills
-from awareness import compact
+from awareness import identity, turn_facts
 
 RULES = (
     "Be honest. If you don't know something, say so instead of guessing. "
@@ -29,6 +33,12 @@ RULES = (
     "ask one short question about what they want first. "
     "Never fill a file with a restatement of the user's request. "
     "Never end a reply by saying you will do something next. Either do it now with a tool, or ask the user if they want it."
+)
+
+BACKGROUND_RULE = (
+    "The user's location, the weather and the things you remember about them are background. "
+    "Use them when the message is about them; otherwise leave them out, including in greetings and small talk. "
+    "If the user says something that contradicts them, like that it's cold, believe the user."
 )
 
 VISION_RULES = (
@@ -88,6 +98,32 @@ def clean_query(text: str) -> str:
     q = q.replace("\x00", "'")
     q = re.sub(r"\s+", " ", q).strip()
     return q or text
+
+
+# Words that ask for a search without saying what to search for.
+SEARCH_ASKS = {"try", "trying", "searching", "search", "online", "web", "internet", "just", "anything",
+               "again", "it", "that", "on", "in", "the", "for", "then", "ok", "okay", "yes", "yeah",
+               "do", "please", "google", "look", "up", "and", "can", "you", "a"}
+
+
+def thin_request(text: str) -> bool:
+    """"try searching on airbnb" carries one word worth searching for; the
+    rest of what to search for is in the conversation."""
+    words = re.findall(r"[\w']+", (text or "").lower())
+    return len([w for w in words if w not in SEARCH_ASKS]) <= 2
+
+
+# Sites whose pages are drawn by scripts or sit behind a login: fetching them returns nothing useful.
+UNREADABLE_HOSTS = ("youtube.com", "youtu.be", "x.com", "twitter.com", "instagram.com", "facebook.com",
+                    "tiktok.com", "linkedin.com", "reddit.com")
+
+
+def first_readable_url(results: str) -> str | None:
+    for match in re.finditer(r"^\s+(https?://\S+)\s*$", results or "", re.M):
+        host = re.sub(r"^https?://(www\.)?", "", match.group(1)).split("/")[0].lower()
+        if not any(host == h or host.endswith("." + h) for h in UNREADABLE_HOSTS):
+            return match.group(1)
+    return None
 
 
 # A web page can carry instructions, so these ask on any turn where web content can arrive.
@@ -194,36 +230,46 @@ def add_skill_tools(allowed: list[str], ask: list[str], blocked: list[str],
             ask.append(name)
 
 
-def build_system_prompt(adapters, blocked, ask, image_count=0, tier=None, effort=None,
-                        allowed=None, skill=None, profile=None):
+def stable_prompt(tier=None, profile=None) -> str:
+    """Everything in the system prompt that stays the same for a whole chat.
+    It comes first, before the conversation, so Ollama can keep the
+    conversation it already read; turn_prompt goes after it."""
     p = profile or get_profile()
     prompt = (
-        f"{compact(tier, effort, allowed, ask, p)}\n\n"
+        f"{identity(tier, p)}\n\n"
         f"{TONES.get(p['tone'], '')} {LENGTHS.get(p['response_length'], '')}\n\n"
-        f"{RULES}"
+        f"{RULES}\n\n{BACKGROUND_RULE}"
     )
-    if image_count:
-        prompt += "\n\n" + VISION_RULES.format(count=image_count)
-    for adapter in adapters:
-        prompt += "\n\n" + adapter["specialty_prompt"]
     # Offline mode needs naming: otherwise the model tells the user to turn a
     # tool back on, when the real switch is Settings - Privacy.
     if offline():
         prompt += ("\n\nOffline mode is on, so the web tools are blocked and nothing can leave this computer. "
                    "If the user asks for something from the internet, say plainly that offline mode is on "
                    "and that they can turn it off in Settings - Privacy. Never guess the answer instead.")
+    if p["custom_instructions"]:
+        prompt += ("\n\nThe user's personal instructions. Follow them unless they conflict "
+                   f"with the honesty rules above:\n{p['custom_instructions']}")
+    return prompt
+
+
+def turn_prompt(adapters, blocked, ask, image_count=0, effort=None, allowed=None,
+                skill=None, profile=None, message=None) -> str:
+    """Instructions for this message only. Sent as a system message just
+    before it and never kept in the history."""
+    p = profile or get_profile()
+    prompt = turn_facts(effort, allowed, ask, p, message)
+    if image_count:
+        prompt += "\n\n" + VISION_RULES.format(count=image_count)
+    for adapter in adapters:
+        prompt += "\n\n" + adapter["specialty_prompt"]
     if blocked:
         prompt += (f"\n\nThese tools are turned off in Settings: {', '.join(blocked)}. "
                    "Don't try to use them. If the task needs one, tell the user they can turn it on in Settings.")
     if ask:
         prompt += (f"\n\nThese tools need the user's approval each time: {', '.join(ask)}. "
                    "You can still use them, the user will be asked first. If they deny, don't try again.")
-    if p["custom_instructions"]:
-        prompt += ("\n\nThe user's personal instructions. Follow them unless they conflict "
-                   f"with the honesty rules above:\n{p['custom_instructions']}")
-    # Last, because it is the most specific thing the user asked for. It lives
-    # in the system prompt, which the compressor never trims, and it is gone
-    # again next turn - nothing here is remembered except the name.
+    # Last, because it is the most specific thing the user asked for. It is
+    # gone again next turn - nothing here is remembered except the name.
     if skill:
         header = ADDED_SKILL_HEADER if skill.get("added") else SKILL_HEADER
         prompt += "\n\n" + header.format(name=skill["name"], source=skill.get("source"),
@@ -234,6 +280,25 @@ def build_system_prompt(adapters, blocked, ask, image_count=0, tier=None, effort
                 files="\n".join(f"- {skill['folder']}/{f}" for f in skill["files"][:30])
                 + ("\n- and more" if len(skill["files"]) > 30 else ""))
     return prompt
+
+
+def build_system_prompt(adapters, blocked, ask, image_count=0, tier=None, effort=None,
+                        allowed=None, skill=None, profile=None, message=None):
+    p = profile or get_profile()
+    return (stable_prompt(tier, p) + "\n\n" +
+            turn_prompt(adapters, blocked, ask, image_count, effort, allowed, skill, p, message))
+
+
+def assemble(stable: str, turn: str, history: list[dict], question: dict,
+             after: list[dict], split: bool) -> list[dict]:
+    """The request, in the order that lets Ollama reuse what it read last
+    turn: the unchanging prompt, the history, then this turn's instructions.
+    A BYOK endpoint gets the old single system prompt, because some providers
+    refuse a system message anywhere but first."""
+    if not split:
+        return [{"role": "system", "content": stable + "\n\n" + turn}, *history, question, *after]
+    return [{"role": "system", "content": stable}, *history,
+            {"role": "system", "content": turn}, question, *after]
 
 
 def skill_request(user_input: str, skill: dict | None) -> str:
@@ -310,15 +375,90 @@ def carried_adapters(routed: list[dict], sticky: list[dict], tools_used: list[di
     return names
 
 
+ABOUT_THE_USER = {"my", "me", "mine", "i", "i'm", "im", "myself", "about"}
+
+
+def wants_memories(text: str) -> bool:
+    """A greeting like "hi lol" matches whatever is stored at a low score, and
+    the model then talks about it. Short messages get memories only when they
+    are about the user."""
+    words = re.findall(r"[\w']+", (text or "").lower())
+    return len(words) > 3 or bool(ABOUT_THE_USER & set(words))
+
+
+def _loaded(model: str) -> bool:
+    try:
+        return providers.is_loaded(model)
+    except Exception as e:
+        print(f"[model] couldn't ask Ollama what is loaded: {e}")
+        return True
+
+
+_BACKGROUND = ThreadPoolExecutor(max_workers=2, thread_name_prefix="turn")
+
+
+def recall(text: str, aid: str) -> list[str]:
+    if not wants_memories(text):
+        return []
+    try:
+        return long_term.search(text, aid=aid)
+    except Exception as e:
+        print(f"[memory] search failed: {e}")
+        return []
+
+
 def merge_temperature(adapters: list[dict]) -> float | None:
     temps = [a["temperature"] for a in adapters if "temperature" in a]
     return min(temps) if temps else None
+
+
+class TurnTiming:
+    def __init__(self, started: float):
+        self.started = started
+        self.first_token_at: float | None = None
+        self.model_started: float | None = None
+        self.ended: float | None = None
+        self.steps: list[dict] = []
+
+    def model_start(self) -> None:
+        self.model_started = time.monotonic()
+
+    def first_token(self) -> None:
+        if self.first_token_at is None:
+            self.first_token_at = time.monotonic()
+
+    def add_step(self, stats: dict) -> None:
+        self.steps.append({k: v for k, v in stats.items() if k != "type"})
+
+    def finish(self) -> None:
+        self.ended = time.monotonic()
+
+    def summary(self) -> dict:
+        ms = lambda t: round((t - self.started) * 1000) if t is not None else None
+        return {
+            "before_model_ms": ms(self.model_started),
+            "first_token_ms": ms(self.first_token_at),
+            "total_ms": ms(self.ended),
+            "steps": len(self.steps),
+            "load_ms": sum(s["load_ms"] for s in self.steps),
+            "prompt_ms": sum(s["prompt_ms"] for s in self.steps),
+            "prompt_tokens": self.steps[0]["prompt_tokens"] if self.steps else 0,
+            "output_tokens": sum(s["output_tokens"] for s in self.steps),
+        }
+
+    def line(self) -> str:
+        s = self.summary()
+        return (f"before model {s['before_model_ms']}ms, first word {s['first_token_ms']}ms, "
+                f"total {s['total_ms']}ms, {s['steps']} step(s), load {s['load_ms']}ms, "
+                f"prompt {s['prompt_tokens']} tokens read in {s['prompt_ms']}ms, "
+                f"{s['output_tokens']} tokens written")
 
 
 def stream_turn(user_input: str, memory: ShortTermMemory,
                 tier: str | None = None, effort: str | None = None,
                 images: list[str] | None = None, skill_name: str | None = None,
                 aid: str | None = None, voice: bool = False):
+    started = time.monotonic()
     images = images or []
     # Resolved once: the user can switch assistants while this turn streams.
     aid = aid or active_id()
@@ -337,12 +477,17 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     history = memory.get()
     previous = next((m["content"] for m in reversed(history) if m["role"] == "user"), None)
 
+    # The memory search waits on an Ollama embedding, routing on Laya; neither
+    # needs the other, so they run side by side.
+    recalled = _BACKGROUND.submit(recall, user_input, aid)
     decision = classify_detailed(user_input, previous, bool(images))
     adapters = [a for a in (get_adapter(n) for n in decision["adapters"]) if a]
     route_label = "+".join(a["name"] for a in adapters) or "chat"
+    steps = max_steps(effort)
+    cooling = cool.on()
     yield {"type": "route", "route": route_label, "router": decision,
            "model": tier_cfg["label"], "effort": effort,
-           "skill": skill["name"] if skill else None}
+           "skill": skill["name"] if skill else None, "steps": steps, "cool": cooling}
 
     # Tools stay for a few turns after a task uses them. Laya reads one message
     # at a time, so "yes, go ahead" after "shall I code it?" routes as chat and
@@ -379,25 +524,22 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
         allowed.append("about_me")
 
     tools_used: list[dict] = []
-    system_prompt = build_system_prompt(adapters, blocked, ask, len(images), tier, effort,
-                                        allowed, skill, profile)
+    stable = stable_prompt(tier, profile)
+    turn_note = turn_prompt(adapters, blocked, ask, len(images), effort,
+                                allowed, skill, profile, user_input)
     if no_tools_reason:
-        system_prompt += "\n\n" + no_tools_reason
+        turn_note += "\n\n" + no_tools_reason
     if any(t in allowed for t in WEB_TOOLS):
-        system_prompt += "\n\n" + UNTRUSTED_NOTE
+        turn_note += "\n\n" + UNTRUSTED_NOTE
     for name in display:
         if name in DISPLAY_NOTES:
-            system_prompt += "\n\n" + DISPLAY_NOTES[name]
+            turn_note += "\n\n" + DISPLAY_NOTES[name]
     if voice:
-        system_prompt += "\n\n" + VOICE_NOTE
+        turn_note += "\n\n" + VOICE_NOTE
 
-    # Pull relevant long-term memories into the prompt.
-    try:
-        memories = long_term.search(user_input, aid=aid)
-        if memories:
-            system_prompt += "\n\nThings you remember about the user:\n" + "\n".join(f"- {m}" for m in memories)
-    except Exception as e:
-        print(f"[memory] search failed: {e}")
+    memories = recalled.result()
+    if memories:
+        turn_note += "\n\nThings you remember about the user:\n" + "\n".join(f"- {m}" for m in memories)
 
     # Research mode: for full questions, search the user's own words first so the
     # model can't bias the query. Skipped when web_search needs approval, and when
@@ -406,7 +548,7 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     # A picture request is its own lookup; searching the text first only adds a wait.
     auto_search = (wants_research and "web_search" not in ask and not images
                    and "show_images" not in display)
-    is_follow_up = previous is not None and len(user_input.split()) < 4
+    is_follow_up = previous is not None and (len(user_input.split()) < 4 or thin_request(user_input))
 
     # Never in the system prompt: web text there would carry the authority of the rules.
     search_messages: list[dict] = []
@@ -422,15 +564,31 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
              "tool_calls": [{"function": {"name": "web_search", "arguments": {"query": query}}}]},
             {"role": "tool", "tool_name": "web_search", "content": results},
         ]
-        system_prompt += (
-            f"\n\nYou already searched the web for the user's own words: \"{query}\". "
-            "The results are in the web_search result after their message. "
-            "Answer from these results. If they show different things with the same name, "
-            "list them briefly by their real names and ask which one the user means. "
-            "Use fetch_url only if you need more detail from one specific result. Don't run the same search again."
+        # Five snippets rarely hold the answer, and the 4B seldom opens a
+        # page on its own, so the top result is read for it.
+        url = first_readable_url(results) if "fetch_url" in allowed and "fetch_url" not in ask else None
+        if url:
+            page_args = {"url": url, "auto": True}
+            yield {"type": "tool_start", "name": "fetch_url", "args": page_args}
+            page = call_tool("fetch_url", {"url": url})
+            yield {"type": "tool_end", "name": "fetch_url", "result": page}
+            tools_used.append({"name": "fetch_url", "args": page_args, "result": page})
+            search_messages += [
+                {"role": "assistant", "content": "",
+                 "tool_calls": [{"function": {"name": "fetch_url", "arguments": {"url": url}}}]},
+                {"role": "tool", "tool_name": "fetch_url", "content": page},
+            ]
+        turn_note += (
+            f"\n\nYou already searched the web for the user's own words: \"{query}\"" +
+            (" and read the top result" if url else "") + ". "
+            "Those results come after their message. Answer from them, and say which page a fact came from. "
+            "If they show different things with the same name, list them briefly by their real names "
+            "and ask which one the user means. If they don't hold the answer, say what you searched "
+            "and what came back, then search again with better words or read another result with fetch_url. "
+            "Don't run the same search again."
         )
     elif wants_research and is_follow_up:
-        system_prompt += (
+        turn_note += (
             "\n\nThe user's message is a short follow-up. Use the conversation to work out "
             "exactly what they mean, then call web_search with a full, specific query "
             "that includes the actual name of the thing (never just the user's short reply)."
@@ -440,19 +598,26 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     if images:
         user_message["images"] = images
 
-    working = [{"role": "system", "content": system_prompt}]
-    working += history
-    working.append(user_message)
-    working += search_messages
+    working = assemble(stable, turn_note, history, user_message, search_messages,
+                       split=tier_cfg.get("kind") != "byok")
 
     reply = ""
     pending: dict | None = None
     spend = None
-    for event in stream_model(working, allowed or None, max_steps(effort),
+    timing = TurnTiming(started)
+    if tier_cfg.get("kind") != "byok" and not _loaded(tier_cfg["base_model"]):
+        yield {"type": "status", "text": "Loading the model"}
+    timing.model_start()
+    for event in stream_model(working, allowed or None, steps,
                               merge_temperature(adapters), tier_cfg["base_model"], ask,
                               tier_cfg if tier_cfg.get("custom") else None, aid,
                               question=user_message):
         kind = event["type"]
+        if kind == "stats":
+            timing.add_step(event)
+            continue
+        if kind == "token":
+            timing.first_token()
         if kind == "final":
             reply = event["text"]
             continue
@@ -477,25 +642,17 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
             pending = None
         yield event
 
+    timing.finish()
+    print(f"[timing] {timing.line()}")
     memory.add("user", user_input, images)
     memory.add("assistant", reply, adapters=carried_adapters(adapters, sticky, tools_used))
     log_turn(user_input, route_label, decision, reply, len(images),
              skill["name"] if skill else None)
 
-    # Save to long-term memory.
-    try:
-        if is_remember(user_input):
-            facts = extract.extract_facts(user_input, tier)
-            if facts:
-                saved = [long_term.add(f, source="asked", aid=aid) for f in facts]
-                print(f"[memory] remember matched, saved {sum(saved)} of {len(facts)} facts")
-            else:
-                print("[memory] remember matched, but no fact could be extracted, so nothing was saved")
-        elif get_profile(aid).get("auto_memory"):
-            for fact in extract.extract_facts(user_input, tier):
-                long_term.add(fact, source="auto", aid=aid)
-    except Exception as e:
-        print(f"[memory] save failed: {e}")
+    if is_remember(user_input):
+        saver.remember(user_input, tier, aid)
+    elif profile.get("auto_memory"):
+        saver.later(user_input, tier, aid)
 
     if spend:
         # One finished turn, so the per-turn average in Settings means something.
@@ -505,7 +662,8 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     yield {"type": "done", "reply": reply, "route": route_label, "tools": tools_used,
            "assistant": aid,
            "router": decision, "model": tier_cfg["label"], "effort": effort,
-           "skill": skill["name"] if skill else None, "usage": spend, "voice": voice}
+           "skill": skill["name"] if skill else None, "usage": spend, "voice": voice,
+           "timing": timing.summary(), "steps": steps, "cool": cooling}
 
 
 def handle_turn(user_input: str, memory: ShortTermMemory,
@@ -518,6 +676,10 @@ def handle_turn(user_input: str, memory: ShortTermMemory,
             permissions.resolve(event["id"], "unattended")
         elif event["type"] == "done":
             result = event
+    # Nothing is waiting on this call to answer quickly, so a "remember…"
+    # is saved before it returns.
+    if is_remember(user_input):
+        saver.settle()
     return result
 
 

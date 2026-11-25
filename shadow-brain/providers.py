@@ -20,6 +20,7 @@ things, so the conversion happens here and nowhere else:
 """
 
 import json
+import threading
 from dataclasses import dataclass, field
 
 import httpx
@@ -60,17 +61,87 @@ class Chunk:
 
 # ---- Ollama -----------------------------------------------------------------
 
-def ollama_stream(model: str, messages: list[dict], schemas, temperature, num_ctx: int):
-    import ollama
+NUM_CTX = 16384
+KEEP_ALIVE = "30m"
+# Long enough for a slow machine to read a full 16K prompt, or for a model
+# to write a whole file into one tool call, both of which send nothing.
+OLLAMA_TIMEOUT = httpx.Timeout(connect=10.0, read=600.0, write=60.0, pool=10.0)
 
-    options = {"num_ctx": num_ctx}
+_ollama_client = None
+
+
+def ollama_client():
+    global _ollama_client
+    if _ollama_client is None:
+        import ollama
+        _ollama_client = ollama.Client(timeout=OLLAMA_TIMEOUT)
+    return _ollama_client
+
+
+def ollama_options(temperature: float | None = None) -> dict:
+    # Every call to a chat model must send the same num_ctx: Ollama reloads
+    # the whole model when it changes, and a greeting or a memory save sent
+    # without it cost two reloads.
+    import cool
+    options = {"num_ctx": NUM_CTX, **cool.ollama_options()}
     if temperature is not None:
         options["temperature"] = temperature
-    kwargs = {"model": model, "messages": messages, "think": False,
-              "stream": True, "options": options}
+    return options
+
+
+def keep_alive() -> str:
+    import cool
+    return cool.keep_alive(KEEP_ALIVE)
+
+
+def ollama_chat(model: str, messages: list[dict], schemas=None, temperature: float | None = None,
+                stream: bool = False):
+    kwargs = {"model": model, "messages": messages, "think": False, "stream": stream,
+              "options": ollama_options(temperature), "keep_alive": keep_alive()}
     if schemas:
         kwargs["tools"] = schemas
-    return ollama.chat(**kwargs)
+    return ollama_client().chat(**kwargs)
+
+
+_preloading: set[str] = set()
+_preload_lock = threading.Lock()
+
+
+def is_loaded(model: str) -> bool:
+    names = {m.model for m in ollama_client().ps().models}
+    return model in names or f"{model}:latest" in names
+
+
+def preload(model: str) -> str:
+    """Loads a chat model with the options a real message will send, so the
+    message doesn't wait for it. Returns at once; the load runs on a thread."""
+    try:
+        if is_loaded(model):
+            return "loaded"
+    except Exception as e:
+        print(f"[model] couldn't ask Ollama what is loaded: {e}")
+        return "unknown"
+    with _preload_lock:
+        if model in _preloading:
+            return "loading"
+        _preloading.add(model)
+    threading.Thread(target=_load, args=(model,), daemon=True).start()
+    return "loading"
+
+
+def _load(model: str) -> None:
+    try:
+        ollama_chat(model, [])
+        print(f"[model] {model} loaded ahead of the message")
+    except Exception as e:
+        print(f"[model] couldn't load {model} ahead of the message: {e}")
+    finally:
+        with _preload_lock:
+            _preloading.discard(model)
+
+
+def ollama_stream(model: str, messages: list[dict], schemas, temperature, num_ctx: int = NUM_CTX):
+    return ollama_chat(model, messages, schemas, temperature, stream=True)
 
 
 # ---- OpenAI-compatible ------------------------------------------------------

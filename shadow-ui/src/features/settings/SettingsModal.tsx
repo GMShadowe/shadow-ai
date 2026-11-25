@@ -1385,15 +1385,35 @@ function BrainSection({ data, save, onChanged }: SectionProps & { onChanged: () 
         <Spec label="Chip" value={hw.machine} />
         <Spec label="CPU cores" value={hw.cpu_cores} />
         <Spec label="Memory" value={hw.ram_total_gb && `${hw.ram_total_gb} GB (${hw.ram_free_gb} GB free now)`} />
+        {hw.gpu && <Spec label="Graphics card" value={`${hw.gpu.name}, ${hw.gpu.vram_gb} GB`} />}
         <Spec label="Disk" value={`${hw.disk_free_gb} GB free of ${hw.disk_total_gb} GB`} />
       </div>
+      {data.cool && (
+        <div className="divide-y divide-line border-t border-line">
+          <Row
+            label="Cool mode"
+            description={
+              (data.cool.frees_cpu
+                ? "Does less at once and leaves some of the processor free, so it runs quieter and cooler. "
+                : "Does less at once, so it runs quieter and cooler. ") +
+              "Answers take a little longer." +
+              (data.cool.default ? " On by default on this computer." : "")
+            }
+          >
+            <Toggle checked={data.cool.on} onChange={(on) => save({ cool_mode: on })} label="Cool mode" />
+          </Row>
+          {data.cool.suggest_low_power && (
+            <Note>Low Power Mode is off. Turning it on in System Settings, Battery, makes Shadow run cooler still.</Note>
+          )}
+        </div>
+      )}
       {recommended && (
         <div className="border-t border-line">
           <Row
             label={`Recommended: ${recommended.label}`}
             description={
               recommended.available
-                ? "Based on your total memory. If your computer feels slow, try one level lower."
+                ? "Based on your memory and graphics card. If your computer runs warm or slow, try one level lower."
                 : recommended.reason
             }
           >

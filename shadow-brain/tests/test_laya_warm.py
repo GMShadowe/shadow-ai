@@ -56,5 +56,7 @@ def test_a_warmup_and_a_real_prediction_take_turns(monkeypatch):
     assert agent.calls == 2 and not agent.overlap
 
 
-def test_the_endpoint_does_nothing_without_laya(client):
-    assert client.post("/router/warm").json() == {"state": "not used"}
+def test_the_endpoint_does_nothing_without_laya(client, monkeypatch):
+    import providers
+    monkeypatch.setattr(providers, "preload", lambda model: "loaded")
+    assert client.post("/router/warm").json() == {"state": "not used", "model": "loaded"}

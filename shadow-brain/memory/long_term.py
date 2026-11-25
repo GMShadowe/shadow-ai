@@ -15,7 +15,7 @@ from assistants import memory_db_path
 
 EMBED_MODEL = "nomic-embed-text"
 TOP_K = 5                # how many memories to pull per query
-MIN_SCORE = 0.35         # ignore weak matches
+MIN_SCORE = 0.42
 
 
 def _now() -> str:
@@ -127,6 +127,6 @@ def clear() -> None:
         conn.execute("DELETE FROM memories")
 
 
-def count() -> int:
-    with _db() as conn:
+def count(aid: str | None = None) -> int:
+    with _db(aid) as conn:
         return conn.execute("SELECT COUNT(*) FROM memories").fetchone()[0]

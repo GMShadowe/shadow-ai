@@ -64,7 +64,11 @@ export function applyEvent(m: Message, event: StreamEvent): Message {
         model: event.model,
         effort: event.effort,
         skill: event.skill ?? m.skill ?? null,
+        steps: event.steps,
+        cool: event.cool,
       };
+    case "status":
+      return { ...m, status: event.text };
     case "permission":
       return {
         ...m,
@@ -84,6 +88,7 @@ export function applyEvent(m: Message, event: StreamEvent): Message {
       return {
         ...m,
         content: "",
+        status: null,
         tools: [...tools, { name: event.name, args: event.args, result: null, startedAt: Date.now() }],
       };
     case "tool_end": {
@@ -95,12 +100,12 @@ export function applyEvent(m: Message, event: StreamEvent): Message {
           break;
         }
       }
-      return { ...m, tools: next };
+      return { ...m, status: null, tools: next };
     }
     case "token":
-      return { ...m, content: m.content + event.text };
+      return { ...m, status: null, content: m.content + event.text };
     case "done":
-      return { ...m, content: event.reply, streaming: false };
+      return { ...m, content: event.reply, streaming: false, status: null, timing: event.timing ?? null };
     default:
       return m;
   }

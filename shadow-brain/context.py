@@ -113,7 +113,7 @@ def _protected(messages: list[dict], pin: dict | None = None) -> set[int]:
     for i, m in enumerate(messages):
         # Images are expensive, but they are also the thing the user is asking
         # about, and short_term already keeps only the most recent one.
-        if m.get("images") or (pin is not None and m is pin):
+        if m.get("images") or m.get("role") == "system" or (pin is not None and m is pin):
             keep.add(i)
     return keep
 

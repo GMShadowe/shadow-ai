@@ -80,7 +80,14 @@ export default function RouteBadge({ message }: { message: Message }) {
       )}
 
       <span className="min-w-0 truncate text-ink-faint">
-        {[message.model, message.effort && `${message.effort}`].filter(Boolean).join(" · ")}
+        {[
+          message.model,
+          message.effort && `${message.effort}`,
+          message.cool && "cool mode",
+          message.timing?.first_token_ms != null && `first word ${(message.timing.first_token_ms / 1000).toFixed(1)}s`,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
       </span>
 
       {mounted && (
