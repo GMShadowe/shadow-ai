@@ -143,6 +143,14 @@ def check(spec: dict, out: dict) -> list[str]:
         failed.append(f"route {out['route']!r} has {spec['route_excludes']!r}")
     if "tools_any" in spec and not set(spec["tools_any"]) & set(real_tools):
         failed.append(f"called none of {spec['tools_any']} (called {real_tools})")
+    if "min_calls" in spec:
+        for name, n in spec["min_calls"].items():
+            if real_tools.count(name) < n:
+                failed.append(f"called {name} {real_tools.count(name)} times, wanted {n}+")
+    if "contains_all" in spec:
+        missing = [w for w in spec["contains_all"] if w.lower() not in reply]
+        if missing:
+            failed.append(f"doesn't mention {missing}")
     if "tools_none" in spec and set(spec["tools_none"]) & set(real_tools):
         failed.append(f"called {sorted(set(spec['tools_none']) & set(real_tools))}")
     if spec.get("no_unbacked_claim") and not real_tools and claims_action(out["reply"]):
