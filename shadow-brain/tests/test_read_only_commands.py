@@ -49,3 +49,39 @@ def test_looking_runs_without_asking(command):
 def test_anything_else_still_asks(command):
     assert not read_only.is_read_only(command)
 
+
+def test_only_run_command_on_a_turn_without_web_tools_skips_asking():
+    from model import looks_only
+    local = {"run_command", "read_file"}
+    assert looks_only("run_command", {"command": "ls"}, local)
+    assert not looks_only("run_command", {"command": "ls"}, local | {"web_search"})
+    assert not looks_only("run_command", {"command": "ls", "background": True}, local)
+    assert not looks_only("run_command", {"command": "ls", "background": "true"}, local)
+    assert not looks_only("run_command", {"command": "rm notes.md"}, local)
+    assert not looks_only("delete_file", {"command": "ls"}, local)
+
+
+def _run(monkeypatch, command, tools):
+    import model
+    from tests.helpers import call, scripted
+    ran, asked = [], []
+    monkeypatch.setattr(model, "call_tool", lambda name, args: ran.append(args["command"]) or "ok\n[exit code 0]")
+    monkeypatch.setattr(model, "_chat_stream", scripted([call("run_command", {"command": command})], "Done."))
+    for event in model.stream_model([{"role": "user", "content": "look"}], tools, ask_tools=["run_command"]):
+        if event["type"] == "permission":
+            asked.append(event["args"]["command"])
+            import permissions
+            permissions.resolve(event["id"], "unattended")
+    return ran, asked
+
+
+def test_a_look_around_runs_with_no_approval_card(monkeypatch):
+    assert _run(monkeypatch, "wc -l notes.md", ["run_command"]) == (["wc -l notes.md"], [])
+
+
+def test_a_change_still_asks(monkeypatch):
+    assert _run(monkeypatch, "rm notes.md", ["run_command"]) == ([], ["rm notes.md"])
+
+
+def test_a_look_around_still_asks_when_the_web_is_in_reach(monkeypatch):
+    assert _run(monkeypatch, "cat notes.md", ["run_command", "fetch_url"]) == ([], ["cat notes.md"])
