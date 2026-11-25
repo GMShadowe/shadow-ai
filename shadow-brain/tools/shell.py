@@ -75,12 +75,24 @@ DENYLIST = [
 ]
 
 
+# What to do instead, so a blocked command is a turn and not a dead end.
+INSTEAD = {
+    "rm -rf": "To delete a folder use the delete_dir tool, and delete_file for a file.",
+    "rm -r /": "To delete a folder use the delete_dir tool, and delete_file for a file.",
+    "sudo": ("Shadow never runs anything as administrator. Give the user the command so they can "
+             "run it themselves if they want to."),
+}
+STDOUT_HEAD = 1500
+STDOUT_TAIL = 2500
+STDERR_TAIL = 2500
+
+
 def run_command(command: str, background=False) -> str:
     command, trailing = _split_background(str(command or ""))
     lowered = command.lower()
     for bad in DENYLIST:
         if bad in lowered:
-            return f"Blocked: command contains '{bad}'."
+            return f"Blocked: command contains '{bad}'. " + INSTEAD.get(bad, "Find another way, or tell the user.")
 
     # Web pages must go through web_search / fetch_url, which return readable
     # text and clear errors. Local addresses are still allowed, for testing apps.
@@ -105,13 +117,46 @@ def run_command(command: str, background=False) -> str:
                 "was stopped. To start something meant to keep running, like a server, run it "
                 "again with background set to true.")
 
-    output = stdout.strip()
+    return format_result(command, stdout, stderr, proc.returncode)
+
+
+def format_result(command: str, stdout: str, stderr: str, code: int) -> str:
+    """Errors come last, so long output keeps its start and its end."""
+    output = _trim(stdout.strip(), STDOUT_HEAD, STDOUT_TAIL)
     if stderr.strip():
-        output += f"\n[stderr]\n{stderr.strip()}"
-    output += f"\n[exit code {proc.returncode}]"
-    if len(output) > 6000:
-        output = output[:6000] + "\n...[truncated]"
-    return output
+        output += f"\n[stderr]\n{_trim(stderr.strip(), 0, STDERR_TAIL)}"
+    output += f"\n[exit code {code}]"
+    hint = failure_hint(command, stderr, code)
+    return output + (f"\n{hint}" if hint else "")
+
+
+def _trim(text: str, head: int, tail: int) -> str:
+    if len(text) <= head + tail:
+        return text
+    cut = len(text) - head - tail
+    return f"{text[:head]}\n...[{cut} characters cut from the middle]...\n{text[-tail:]}"
+
+
+def failure_hint(command: str, stderr: str, code: int) -> str:
+    if code == 0:
+        return ""
+    if code == 127 or "command not found" in stderr:
+        missing = re.search(r"([\w.\-]+): (?:command )?not found", stderr)
+        name = missing.group(1) if missing else "That command"
+        return (f"{name} isn't installed on this computer. Don't ask the user to install it: "
+                f"try another command that does the same job. {platform_note()}")
+    return ("The command failed. Read the error above, then fix the cause and run it again, "
+            "or try a different way. Don't stop at reporting the error if you can fix it.")
+
+
+def platform_note() -> str:
+    system = platform.system()
+    if system == "Darwin":
+        return ("This is macOS with BSD tools: memory is vm_stat or 'top -l 1', addresses are "
+                "'ipconfig getifaddr en0' or ifconfig, ports are 'lsof -i :PORT', there is no free, ip or ss.")
+    if system == "Windows":
+        return "This is Windows: the shell is cmd, so use dir, type, tasklist and where."
+    return "This is Linux: free, ip and ss are the usual tools."
 
 
 def _spawn(command: str, **streams) -> subprocess.Popen:
