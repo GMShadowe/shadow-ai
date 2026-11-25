@@ -32,6 +32,20 @@ def test_looking_runs_without_asking(command):
     assert read_only.is_read_only(command)
 
 
+def test_the_workspace_by_its_full_path_is_still_inside(workspace):
+    ws = str(workspace)
+    assert read_only.is_read_only(f"find {ws} -name '*.py'")
+    assert read_only.is_read_only(f"cat {ws}/notes.md")
+    assert read_only.is_read_only(f"cd {ws} && unzip -l archive.zip")
+    assert read_only.is_read_only(f"cd '{ws}' && ls -la | wc -l")
+    assert not read_only.is_read_only(f"cat {ws}/link.txt")
+    assert not read_only.is_read_only(f"cat {ws}2/notes.md")
+    assert not read_only.is_read_only(f"cd {ws} && rm notes.md")
+    assert not read_only.is_read_only(f"cd {ws} && ls && rm notes.md")
+    assert not read_only.is_read_only("cd /etc && cat passwd")
+    assert not read_only.is_read_only(f"cd {ws}/src && cat ../../outside-secret.txt")
+
+
 @pytest.mark.parametrize("command", [
     "rm notes.md", "touch x", "mkdir y", "cp notes.md b", "mv notes.md b", "python3 script.py",
     "node app.js", "git status", "git log", "sed -i '' s/a/b/ notes.md", "awk '{print}' notes.md",

@@ -94,8 +94,19 @@ SUBCOMMANDS = {
 }
 
 
+CD_WORKSPACE = re.compile(r"""^cd\s+('[^']*'|"[^"]*"|[^\s'"]+)\s*&&\s*(.+)$""", re.S)
+
+
+def _without_cd_to_workspace(command: str) -> str:
+    """Commands already run in the workspace, so "cd <workspace> && ls" is "ls"."""
+    match = CD_WORKSPACE.match(command)
+    if match and os.path.realpath(match.group(1).strip("'\"")) == os.path.realpath(get_workspace()):
+        return match.group(2).strip()
+    return command
+
+
 def is_read_only(command: str) -> bool:
-    command = str(command or "").strip()
+    command = _without_cd_to_workspace(str(command or "").strip())
     if not command or SHELL_SYNTAX.search(command):
         return False
     pieces = command.split("|")
@@ -130,15 +141,17 @@ def _piece_ok(words: list[str]) -> bool:
 
 
 def _stays_inside(arg: str) -> bool:
-    if arg.startswith("/") or ".." in arg.split("/"):
-        return False
-    if re.search(r"(^|/)\.[*?\[]", arg):
+    if ".." in arg.split("/") or re.search(r"(^|/)\.[*?\[]", arg):
         return False
     workspace = os.path.realpath(get_workspace())
+    if arg.startswith("/") and not _under(os.path.normpath(arg), workspace):
+        return False
     matches = glob.glob(os.path.join(workspace, arg)) if re.search(r"[*?\[]", arg) else [os.path.join(workspace, arg)]
     for path in matches:
-        if os.path.lexists(path):
-            real = os.path.realpath(path)
-            if real != workspace and not real.startswith(workspace + os.sep):
-                return False
+        if os.path.lexists(path) and not _under(os.path.realpath(path), workspace):
+            return False
     return True
+
+
+def _under(path: str, folder: str) -> bool:
+    return path == folder or path.startswith(folder + os.sep)
