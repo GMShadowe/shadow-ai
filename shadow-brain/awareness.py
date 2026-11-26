@@ -29,6 +29,7 @@ NO_TOOLS = (
 
 WEATHER_TTL = 3600
 WEATHER_RETRY = 300
+WEATHER_WAIT = 3
 
 _weather_cache: dict[str, dict] = {}
 _weather_lock = threading.Lock()
@@ -48,6 +49,18 @@ def _weather(location: str) -> str | None:
             _weather_fetching.add(location)
             threading.Thread(target=_fetch_weather, args=(location,), daemon=True).start()
     return entry["text"] if entry else None
+
+
+def _weather_now(location: str) -> str | None:
+    """For a message that asks about the weather: the cache is empty after a
+    restart, and answering "no data" while the lookup lands a second later is
+    worse than a short wait."""
+    deadline = time.time() + WEATHER_WAIT
+    weather = _weather(location)
+    while weather is None and location in _weather_fetching and time.time() < deadline:
+        time.sleep(0.05)
+        weather = _weather(location)
+    return weather
 
 
 def _fetch_weather(location: str) -> None:
@@ -73,6 +86,9 @@ def _fetch_weather(location: str) -> None:
 WEATHER_RE = re.compile(
     r"\b(weather|temperature|forecast|rain\w*|sunny|hot|cold|humid\w*|wind\w*|snow\w*|degrees?|"
     r"umbrella|jacket|outside|outdoors?|walk|run|commute)\b", re.I)
+ASKS_WEATHER_RE = re.compile(r"\b(weather|forecast|temperature|rain(ing|y)?)\b", re.I)
+NO_LOCATION = ("The user hasn't set a location, so you don't know their weather. Ask which city "
+               "they're in, and say they can set it in Settings to get the weather straight away.")
 
 
 PLACE_RE = re.compile(
@@ -109,14 +125,23 @@ def turn_facts(effort: str | None = None, allowed: list[str] | None = None,
     # settings. Empty means the user shared nothing: no line, and no weather
     # lookup, so nothing leaves the machine.
     location = (profile.get("location") or "").strip()
+    asks_weather = message is not None and bool(ASKS_WEATHER_RE.search(message))
     if location:
         # Fetched every turn so the cache is warm; the location and the weather
         # are shown only when the message is about them. In every prompt, the 4B
         # brought both into greetings and argued with a user who said it was cold.
-        weather = _weather(location)
+        weather = _weather_now(location) if asks_weather else _weather(location)
         about_weather = message is None or bool(WEATHER_RE.search(message))
         if about_weather or PLACE_RE.search(message):
-            lines.append(f"The user is in {location}." + (f" Weather: {weather}." if weather and about_weather else ""))
+            line = f"The user is in {location}."
+            if weather and about_weather:
+                line += f" Weather: {weather}."
+            elif asks_weather:
+                line += (" The weather lookup is blocked by offline mode." if offline()
+                         else " The weather lookup didn't answer, so say you couldn't get it right now.")
+            lines.append(line)
+    elif asks_weather:
+        lines.append(NO_LOCATION)
 
     if allowed is not None:
         on = [t for t in allowed if t not in (ask or [])]
