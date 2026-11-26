@@ -89,6 +89,28 @@ WEATHER_RE = re.compile(
     r"\b(weather|temperature|forecast|rain\w*|sunny|hot|cold|humid\w*|wind\w*|snow\w*|degrees?|"
     r"umbrella|jacket|outside|outdoors?|walk|run|commute)\b", re.I)
 ASKS_WEATHER_RE = re.compile(r"\b(weather|forecast|temperature|rain(ing|y)?)\b", re.I)
+PLACE_NAMED_RE = re.compile(
+    r"\b(?:weather|forecast|temperature|rain(?:ing|y)?)\b.*?\b(?:in|at|for)\s+([a-z][a-z .'-]{1,40})", re.I)
+WHEN_WORDS_RE = re.compile(r"\s*\b(today|tonight|tomorrow|now|right now|this week|this weekend|like)\b.*$", re.I)
+NOT_A_PLACE = {"yes", "yeah", "yep", "no", "nope", "ok", "okay", "sure", "do", "do it", "go", "thanks",
+               "thank you", "search", "please", "pls", "here", "there", "me", "my city", "home"}
+
+
+def weather_place(message: str | None, previous: str | None = None) -> str | None:
+    """A place the user named for the weather: "weather in Pune", or "pune" in
+    answer to being asked which city. The profile's location was the only
+    place ever looked up, so "ahmedabad" after "which city?" got nothing."""
+    text = (message or "").strip().rstrip("?!. ")
+    named = PLACE_NAMED_RE.search(text)
+    if named:
+        place = WHEN_WORDS_RE.sub("", named.group(1)).strip(" .'-")
+        return place or None
+    if previous and ASKS_WEATHER_RE.search(previous) and re.fullmatch(r"[a-z][a-z .'-]{1,30}", text, re.I):
+        if len(text.split()) <= 3 and text.lower() not in NOT_A_PLACE:
+            return text
+    return None
+
+
 NO_LOCATION = ("The user hasn't set a location, so you don't know their weather. Ask which city "
                "they're in, and say they can set it in Settings to get the weather straight away.")
 
@@ -132,7 +154,7 @@ def shell_facts() -> str:
 
 def turn_facts(effort: str | None = None, allowed: list[str] | None = None,
                ask: list[str] | None = None, profile: dict | None = None,
-               message: str | None = None) -> str:
+               message: str | None = None, previous: str | None = None) -> str:
     """What is true for this message only: the time, the tools loaded for it,
     the location and weather when the message is about them."""
     profile = profile or get_profile()
@@ -143,10 +165,17 @@ def turn_facts(effort: str | None = None, allowed: list[str] | None = None,
     # lookup, so nothing leaves the machine.
     location = (profile.get("location") or "").strip()
     asks_weather = message is not None and bool(ASKS_WEATHER_RE.search(message))
-    if location:
+    place = weather_place(message, previous)
+    if place and place.lower() != location.lower():
+        weather = _weather_now(place)
+        lines.append(f"Weather in {place}: {weather}." if weather else
+                     "The weather lookup is blocked by offline mode." if offline() else
+                     f"The weather lookup for {place} didn't answer, so say you couldn't get it right now.")
+    elif location:
         # Fetched every turn so the cache is warm; the location and the weather
         # are shown only when the message is about them. In every prompt, the 4B
         # brought both into greetings and argued with a user who said it was cold.
+        asks_weather = asks_weather or bool(place)
         weather = _weather_now(location) if asks_weather else _weather(location)
         about_weather = message is None or bool(WEATHER_RE.search(message))
         if about_weather or PLACE_RE.search(message):

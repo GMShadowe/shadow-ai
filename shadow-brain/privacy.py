@@ -71,9 +71,10 @@ def outbound(log_path: str) -> list[dict]:
     if off:
         weather_active, weather_reason = False, "Offline mode is on"
     elif not location:
-        weather_active, weather_reason = False, "No location set"
+        weather_active, weather_reason = True, "Only when you ask the weather in a place you name"
     else:
-        weather_active, weather_reason = True, f"Sends only '{location}', once an hour"
+        weather_active, weather_reason = True, (f"Sends '{location}' once an hour, and any place "
+                                                "you ask the weather in")
     import stt
     if not stt.available():
         stt_active, stt_reason = False, "Speech to text isn't installed"
@@ -149,7 +150,7 @@ def outbound(log_path: str) -> list[dict]:
 
     rows.append({
         "id": "weather", "label": "weather", "host": "wttr.in",
-        "what": "Looks up the weather for the location in your profile.",
+        "what": "Looks up the weather for the location in your profile, or a place you ask about.",
         "active": weather_active, "reason": weather_reason, "state": None,
     })
 

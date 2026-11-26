@@ -253,11 +253,11 @@ def stable_prompt(tier=None, profile=None) -> str:
 
 
 def turn_prompt(adapters, blocked, ask, image_count=0, effort=None, allowed=None,
-                skill=None, profile=None, message=None) -> str:
+                skill=None, profile=None, message=None, previous=None) -> str:
     """Instructions for this message only. Sent as a system message just
     before it and never kept in the history."""
     p = profile or get_profile()
-    prompt = turn_facts(effort, allowed, ask, p, message)
+    prompt = turn_facts(effort, allowed, ask, p, message, previous)
     if image_count:
         prompt += "\n\n" + VISION_RULES.format(count=image_count)
     for adapter in adapters:
@@ -526,7 +526,7 @@ def stream_turn(user_input: str, memory: ShortTermMemory,
     tools_used: list[dict] = []
     stable = stable_prompt(tier, profile)
     turn_note = turn_prompt(adapters, blocked, ask, len(images), effort,
-                                allowed, skill, profile, user_input)
+                            allowed, skill, profile, user_input, previous)
     if no_tools_reason:
         turn_note += "\n\n" + no_tools_reason
     if any(t in allowed for t in WEB_TOOLS):
