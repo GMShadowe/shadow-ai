@@ -3,6 +3,7 @@ A compact version goes into every prompt; the full version is a tool."""
 
 import platform
 import re
+import shutil
 import threading
 import time
 from datetime import datetime
@@ -11,7 +12,8 @@ from assistants import get_profile
 from config import load_tier_config, EFFORT_STEPS, get_workspace, max_steps
 from settings import get_settings
 from memory import long_term
-from tools.state import offline, tool_state
+from tools.state import WEB_TOOLS, offline, tool_state
+from tools.shell import platform_note
 
 STALE_KNOWLEDGE = (
     "What you know comes from training that ended long before today, so it is out of date. "
@@ -97,6 +99,21 @@ def identity(tier: str | None = None, profile: dict | None = None) -> str:
     ])
 
 
+ASK_HOW = ("Call them like any other tool: Shadow shows the user an approval card and waits for "
+           "their answer. Never ask for permission in your reply instead of calling the tool.")
+LOOKING_IS_FREE = ("Commands that only look, like ls, cat, wc, du, df, ps, uptime or lsof, run straight "
+                   "away without approval.")
+COMMON_TOOLS = ("python3", "node", "npm", "git", "pip3", "brew", "zip", "tree")
+_installed: list[str] | None = None
+
+
+def shell_facts() -> str:
+    global _installed
+    if _installed is None:
+        _installed = [name for name in COMMON_TOOLS if shutil.which(name)]
+    return platform_note() + " Installed here: " + (", ".join(_installed) or "none of the usual tools") + "."
+
+
 def turn_facts(effort: str | None = None, allowed: list[str] | None = None,
                ask: list[str] | None = None, profile: dict | None = None,
                message: str | None = None) -> str:
@@ -127,7 +144,12 @@ def turn_facts(effort: str | None = None, allowed: list[str] | None = None,
         if on:
             lines.append("Tools you can call right now: " + ", ".join(on) + ".")
         if ask:
-            lines.append("Also callable now, but each use needs the user's approval: " + ", ".join(ask) + ".")
+            lines.append("Also callable now, but each use needs the user's approval: " + ", ".join(ask) + ". "
+                         + ASK_HOW)
+            if "run_command" in ask and not set(allowed) & set(WEB_TOOLS):
+                lines.append(LOOKING_IS_FREE)
+        if "run_command" in allowed:
+            lines.append(shell_facts())
         # A plain-chat message gets no tools at all. Say so, or the model
         # either claims it ran something or argues with its own about_me.
         if not [t for t in on + list(ask or []) if t != "about_me"]:
@@ -141,7 +163,8 @@ def turn_facts(effort: str | None = None, allowed: list[str] | None = None,
         print(f"[memory] couldn't count memories: {e}")
 
     if effort:
-        lines.append(f"Effort is set to {effort}: you can take up to {max_steps(effort)} tool steps this turn.")
+        steps = max_steps(effort, shell="run_command" in (allowed or []))
+        lines.append(f"Effort is set to {effort}: you can take up to {steps} tool steps this turn.")
     return "\n".join(lines)
 
 

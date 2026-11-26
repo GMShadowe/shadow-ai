@@ -12,7 +12,9 @@ import providers
 import usage
 from config import load_tier_config
 import assistants
+from tools.read_only import is_read_only
 from tools.registry import get_schemas, call_tool, preview
+from tools.state import WEB_TOOLS
 
 MODEL_NAME = load_tier_config()["base_model"]  # default, used by the terminal chat
 NUM_CTX = providers.NUM_CTX
@@ -87,6 +89,17 @@ TIMED_OUT = (
     "The user didn't answer the permission request for {name}, so it was skipped. "
     "Tell the user what you were going to do."
 )
+
+
+def looks_only(name: str, args: dict, allowed: set[str]) -> bool:
+    """A read-only command runs without asking, except on a turn where web
+    content can arrive: a page could ask for a file to be read and sent on."""
+    if name != "run_command" or allowed & set(WEB_TOOLS):
+        return False
+    background = args.get("background")
+    if background is True or str(background).strip().lower() in {"true", "yes", "1"}:
+        return False
+    return is_read_only(args.get("command", ""))
 
 
 def _chat_stream(model, messages, schemas, temperature, provider=None):
@@ -252,7 +265,7 @@ def stream_model(messages: list[dict], tool_names: list[str] | None = None,
                 messages.append({"role": "tool", "tool_name": name, "content": bad_args})
                 continue
 
-            if name in ask:
+            if name in ask and not looks_only(name, args, allowed):
                 pid = permissions.create()
                 event = {"type": "permission", "id": pid, "name": name, "args": args}
                 affects = preview(name, args)

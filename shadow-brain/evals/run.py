@@ -9,7 +9,9 @@ model pulled. Writes nothing into the real data folder.
 import argparse
 import json
 import os
+import re
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -32,6 +34,7 @@ WORKSPACE_FILES = {
     "notes.md": "# Groceries\n- oat milk\n- cardamom\n- basmati rice\n",
     "app.py": "def greet(name):\n    return f'hello {name}'\n",
     "data.csv": "city,temp\npune,31\nlondon,7\n",
+    "stats.py": "def average(xs):\n    return sum(xs) / len(xs) + 1\n",
 }
 WEATHER = "Sunny +31°C"
 NOT_REAL_TOOLS = {"honesty_check"}
@@ -73,11 +76,42 @@ def reset_memory(aid: str) -> None:
             raise RuntimeError(f"Couldn't store {fact!r}: is nomic-embed-text pulled?")
 
 
+def reset_workspace(workspace: str) -> None:
+    for name in os.listdir(workspace):
+        path = os.path.join(workspace, name)
+        shutil.rmtree(path) if os.path.isdir(path) else os.remove(path)
+    for name, text in WORKSPACE_FILES.items():
+        with open(os.path.join(workspace, name), "w") as f:
+            f.write(text)
+
+
+def run_setup(case: dict, workspace: str) -> None:
+    for command in case.get("setup", []):
+        done = subprocess.run(command, shell=True, cwd=workspace, capture_output=True, text=True)
+        if done.returncode:
+            raise RuntimeError(f"setup {command!r} failed: {done.stderr.strip()}")
+
+
+def shell_check(spec: dict, workspace: str) -> str:
+    done = subprocess.run(spec["cmd"], shell=True, cwd=workspace, capture_output=True, text=True)
+    return (done.stdout + done.stderr).strip()
+
+
+def set_tools(case: dict, aid: str) -> None:
+    import assistants
+    assistants.update_profile({"tools": {name: "on" for name in case.get("tools_on", [])}}, aid)
+
+
 def run_case(case: dict, tier: str, effort: str, aid: str) -> dict:
     from memory.short_term import ShortTermMemory
     from orchestrator import handle_turn
+    from settings import get_settings
 
     reset_memory(aid)
+    workspace = get_settings()["workspace"]
+    reset_workspace(workspace)
+    run_setup(case, workspace)
+    set_tools(case, aid)
     memory = ShortTermMemory()
     for item in case.get("history", []):
         memory.add(item["role"], item["content"], adapters=item.get("adapters"))
@@ -87,8 +121,27 @@ def run_case(case: dict, tier: str, effort: str, aid: str) -> dict:
         "reply": result.get("reply", ""),
         "route": result.get("route", ""),
         "tools": [t["name"] for t in result.get("tools", []) if t.get("name") and "kind" not in t],
+        "trace": [{"name": t.get("name"), "args": t.get("args"), "result": str(t.get("result", ""))[:400]}
+                  for t in result.get("tools", []) if t.get("name")],
         "seconds": round(time.time() - started, 1),
+        "files": read_workspace(workspace),
+        "shell": shell_check(case["checks"]["shell_check"], workspace) if "shell_check" in case["checks"] else "",
     }
+
+
+def read_workspace(workspace: str) -> dict:
+    found = {}
+    for name in os.listdir(workspace):
+        path = os.path.join(workspace, name)
+        if os.path.isfile(path):
+            try:
+                with open(path, errors="replace") as f:
+                    found[name] = f.read(20000)
+            except OSError as e:
+                found[name] = f"<unreadable: {e}>"
+        else:
+            found[name + "/"] = ""
+    return found
 
 
 def check(spec: dict, out: dict) -> list[str]:
@@ -108,6 +161,14 @@ def check(spec: dict, out: dict) -> list[str]:
         failed.append(f"route {out['route']!r} has {spec['route_excludes']!r}")
     if "tools_any" in spec and not set(spec["tools_any"]) & set(real_tools):
         failed.append(f"called none of {spec['tools_any']} (called {real_tools})")
+    if "min_calls" in spec:
+        for name, n in spec["min_calls"].items():
+            if real_tools.count(name) < n:
+                failed.append(f"called {name} {real_tools.count(name)} times, wanted {n}+")
+    if "contains_all" in spec:
+        missing = [w for w in spec["contains_all"] if w.lower() not in reply]
+        if missing:
+            failed.append(f"doesn't mention {missing}")
     if "tools_none" in spec and set(spec["tools_none"]) & set(real_tools):
         failed.append(f"called {sorted(set(spec['tools_none']) & set(real_tools))}")
     if spec.get("no_unbacked_claim") and not real_tools and claims_action(out["reply"]):
@@ -115,8 +176,29 @@ def check(spec: dict, out: dict) -> list[str]:
     for word in spec.get("not_contains", []):
         if word.lower() in reply:
             failed.append(f"mentions {word!r}")
+    if "matches_any" in spec and not any(re.search(p, reply, re.I | re.S) for p in spec["matches_any"]):
+        failed.append(f"matches none of {spec['matches_any']}")
+    if "shell_check" in spec and not re.search(spec["shell_check"]["matches"], out.get("shell", ""), re.I):
+        failed.append(f"{spec['shell_check']['cmd']!r} gave {out.get('shell', '')[:80]!r}")
     if "contains_any" in spec and not any(w.lower() in reply for w in spec["contains_any"]):
         failed.append(f"mentions none of {spec['contains_any']}")
+    files = out.get("files", {})
+    for name in spec.get("file_exists", []):
+        if name not in files:
+            failed.append(f"no {name} in the workspace")
+    for name in spec.get("file_missing", []):
+        if name in files:
+            failed.append(f"{name} is still in the workspace")
+    for name, words in spec.get("file_contains", {}).items():
+        text = files.get(name)
+        if text is None:
+            failed.append(f"no {name} in the workspace")
+        elif not any(w in text for w in words):
+            failed.append(f"{name} has none of {words}")
+    for name, words in spec.get("file_lacks", {}).items():
+        for w in words:
+            if w in files.get(name, ""):
+                failed.append(f"{name} still has {w!r}")
     return failed
 
 
@@ -156,7 +238,7 @@ def evaluate(cases: list[dict], args, root: str) -> int:
                 out = run_case(case, args.tier, args.effort, aid)
                 out["failed"] = check(case["checks"], out)
             except Exception as e:
-                out = {"reply": "", "route": "", "tools": [], "seconds": 0,
+                out = {"reply": "", "route": "", "tools": [], "seconds": 0, "files": {},
                        "failed": [f"crashed: {type(e).__name__}: {e}"]}
             runs.append(out)
         passed = sum(not r["failed"] for r in runs)
@@ -164,7 +246,7 @@ def evaluate(cases: list[dict], args, root: str) -> int:
         print(f"{passed}/{len(runs)}  {case['id']:<22} {case.get('group', '')}")
         for r in runs:
             if r["failed"]:
-                print(f"      x {'; '.join(r['failed'])}  [{r['route']}] {r['reply'][:110]!r}")
+                print(f"      x {'; '.join(r['failed'])}  [{r['route']}] {r['tools']} {r['reply'][:110]!r}")
         report.append({"id": case["id"], "group": case.get("group"), "passed": passed, "runs": runs})
 
     total = len(cases) * args.runs

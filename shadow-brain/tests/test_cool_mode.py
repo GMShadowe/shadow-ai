@@ -64,3 +64,11 @@ def test_cool_mode_rests_between_tool_steps(monkeypatch):
     quiet_turn(monkeypatch, [call("about_me", {})], "Here you go.")
     handle_turn("tell me about yourself", ShortTermMemory())
     assert rests == [cool.STEP_PAUSE_SECONDS]
+
+
+def test_a_shell_turn_gets_room_to_try_again(monkeypatch):
+    monkeypatch.setattr(cool, "on", lambda: False)
+    assert max_steps("medium") == 6
+    assert max_steps("medium", shell=True) == 8
+    assert max_steps("low", shell=True) == 3
+    assert max_steps("high", shell=True) == 12
