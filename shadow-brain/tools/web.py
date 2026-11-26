@@ -1,6 +1,7 @@
 """Web tools: search the web, and read a page as plain text."""
 
 import re
+import time
 from html.parser import HTMLParser
 
 import netguard
@@ -31,6 +32,30 @@ def _news(query: str) -> list[dict]:
     return out
 
 
+SEARCH_TRIES = 3
+SEARCH_PAUSE = 1.0
+NOTHING_BACK = ("Error: the web search got nothing back. The search engines are probably limiting requests "
+                "from this computer, so this says nothing about whether the answer exists online. Tell the "
+                "user search isn't answering right now and to try again in a minute. Don't guess the answer.")
+
+
+def _text_search(ddgs, query: str) -> list[dict]:
+    """ddgs reports a rate-limited search (DuckDuckGo answers 202) as "No
+    results found", and it often clears within a second or two."""
+    for attempt in range(1, SEARCH_TRIES + 1):
+        try:
+            results = ddgs().text(query, max_results=5)
+        except Exception as e:
+            if attempt == SEARCH_TRIES or "no results" not in str(e).lower():
+                raise
+            print(f"[web] search for {query!r} came back empty, trying again ({attempt}/{SEARCH_TRIES})")
+            time.sleep(SEARCH_PAUSE)
+            continue
+        if results or attempt == SEARCH_TRIES:
+            return results
+    return []
+
+
 def web_search(query: str) -> str:
     if offline():
         return OFFLINE
@@ -41,8 +66,10 @@ def web_search(query: str) -> str:
     results = _news(query) if NEWS_RE.search(query or "") else []
     if not results:
         try:
-            results = DDGS().text(query, max_results=5)
+            results = _text_search(DDGS, query)
         except Exception as e:
+            if "no results" in str(e).lower():
+                return NOTHING_BACK
             return f"Error searching the web: {e}"
     if not results:
         return f"No results for '{query}'."
