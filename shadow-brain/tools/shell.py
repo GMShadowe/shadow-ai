@@ -87,6 +87,19 @@ STDOUT_TAIL = 2500
 STDERR_TAIL = 2500
 
 
+FETCHER_RE = re.compile(r"\b(curl|wget)\b")
+LOCAL_RE = re.compile(r"\b(localhost|127\.0\.0\.1|0\.0\.0\.0)\b|\[::1\]")
+JUST_ASKING_RE = re.compile(r"^\s*(curl|wget)\s+(--version|-V|--help|-h)\s*$")
+
+
+def fetches_the_web(command: str) -> bool:
+    """curl or wget aimed anywhere but this computer. A bare host counts:
+    "curl wttr.in/Ahmedabad" has no scheme and went straight through."""
+    if not FETCHER_RE.search(command) or JUST_ASKING_RE.match(command):
+        return False
+    return not LOCAL_RE.search(command)
+
+
 def run_command(command: str, background=False) -> str:
     command, trailing = _split_background(str(command or ""))
     lowered = command.lower()
@@ -96,10 +109,9 @@ def run_command(command: str, background=False) -> str:
 
     # Web pages must go through web_search / fetch_url, which return readable
     # text and clear errors. Local addresses are still allowed, for testing apps.
-    if re.search(r"\b(curl|wget)\b", lowered) and re.search(r"https?://", lowered):
-        if not re.search(r"https?://(localhost|127\.0\.0\.1)", lowered):
-            return ("Blocked: don't fetch websites with curl or wget. "
-                    "Ask the user to let you look it up, which uses proper web tools.")
+    if fetches_the_web(lowered):
+        return ("Blocked: don't fetch websites with curl or wget. "
+                "Ask the user to let you look it up, which uses proper web tools.")
 
     if _offline() and not _can_sandbox():
         return OFFLINE_BLOCKED
