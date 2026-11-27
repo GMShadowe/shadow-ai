@@ -326,7 +326,7 @@ export default function App() {
                     />
                   </div>
 
-                  <div className={`dock relative shrink-0 ${isEmpty ? "pb-[30vh]" : "pb-3"}`}>
+                  <div data-docked={!isEmpty} className={`dock group/dock relative shrink-0 ${isEmpty ? "pb-[30vh]" : "pb-6"}`}>
                     <Composer
                       ref={composerRef}
                       onSend={(text, images, skill) => runner.send(text, images, skill)}

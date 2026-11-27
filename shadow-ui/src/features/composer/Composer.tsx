@@ -219,7 +219,7 @@ export default function Composer({
 
   return (
     <div className="px-4 pb-2">
-      <div className="mx-auto max-w-[48rem]">
+      <div className="mx-auto max-w-[48rem] md:group-data-[docked=true]/dock:px-6">
         <div
           onDragOver={(e) => {
             if ([...e.dataTransfer.types].includes("Files")) {
