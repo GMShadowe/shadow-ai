@@ -7,8 +7,6 @@ RULES = {
                  "news", "latest", "who is", "what is the price"],
     "system": ["run ", "command", "terminal", "install", "open ", "launch", "app",
                "ram", "cpu", "disk", "system info", "my computer", "my mac"],
-    "health": ["steps", "heart rate", "sleep", "fitbit", "hrv", "spo2", "calories", "workout",
-               "resting hr", "zone minutes"],
     "files": ["file", "folder", "directory", "rename", "move ", "organize", "read ",
               "find ", "where is", "contains"],
 }
