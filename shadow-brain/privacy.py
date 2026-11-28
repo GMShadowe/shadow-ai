@@ -41,6 +41,22 @@ def _lines(path: str) -> int:
         return 0
 
 
+def _health_row(off: bool, profile: dict) -> dict:
+    from tools import health
+    states = {tool_state(n, profile) for n in health.TOOL_NAMES}
+    if not health.available():
+        active, reason = False, "The health project isn't installed"
+    elif off:
+        active, reason = False, "Offline mode is on"
+    elif states == {"off"}:
+        active, reason = False, "Turned off in Tools"
+    else:
+        active, reason = True, "When you ask about your steps, sleep or heart rate"
+    return {"id": "health", "label": "health tools", "host": health.HOSTS,
+            "what": "Reads your Fitbit data from Google with your Google sign-in. Sends only the dates asked for.",
+            "active": active, "reason": reason, "state": None}
+
+
 def outbound(log_path: str) -> list[dict]:
     """Every call that can reach the internet, and whether it can happen now."""
     profile = get_profile()
@@ -75,6 +91,8 @@ def outbound(log_path: str) -> list[dict]:
     else:
         weather_active, weather_reason = True, (f"Sends '{location}' once an hour, and any place "
                                                 "you ask the weather in")
+    rows.append(_health_row(off, profile))
+
     import stt
     if not stt.available():
         stt_active, stt_reason = False, "Speech to text isn't installed"

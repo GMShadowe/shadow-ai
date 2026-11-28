@@ -22,6 +22,10 @@ ADAPTERS = _load_all()
 
 
 def get_adapter(name: str) -> dict | None:
+    if name == "health":
+        from tools import health
+        if not health.available():
+            return None
     return ADAPTERS.get(name)
 
 

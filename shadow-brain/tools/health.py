@@ -20,11 +20,21 @@ OFFLINE = ("Blocked: offline mode is on, and health data comes from Google's ser
 _fh = None
 
 
+TOOL_NAMES = ("health_today", "health_days", "health_hourly", "health_sleep", "health_workouts")
+HOSTS = "health.googleapis.com, with sign-in at accounts.google.com"
+
+
+def available() -> bool:
+    """Whether the health project is installed here. It is a separate,
+    personal project, so on most computers these tools would only fail."""
+    return os.path.isfile(os.path.join(HEALTH_DIR, "fitbit_health.py"))
+
+
 def _lib():
     """Import fitbit_health from the health project, once."""
     global _fh
     if _fh is None:
-        if not os.path.isfile(os.path.join(HEALTH_DIR, "fitbit_health.py")):
+        if not available():
             raise FileNotFoundError(f"fitbit_health.py not found in {HEALTH_DIR}. Set SHADOW_HEALTH_DIR.")
         if HEALTH_DIR not in sys.path:
             sys.path.append(HEALTH_DIR)

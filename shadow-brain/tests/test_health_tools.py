@@ -1,12 +1,19 @@
 import json
 import types
 
+import pytest
+
 import settings
 from adapters.registry import get_adapter
 from router.classifier import _explicit_routes
 from router.keywords import classify_keywords
 from tools import health
 from tools.registry import TOOLS, call_tool
+
+
+@pytest.fixture(autouse=True)
+def installed(monkeypatch):
+    monkeypatch.setattr(health, "available", lambda: True)
 
 
 def make_lib(monkeypatch):
