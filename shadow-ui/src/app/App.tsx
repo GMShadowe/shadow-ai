@@ -268,9 +268,9 @@ export default function App() {
           onExport={chats.exportOne}
         />
 
-        {/* The workspace: an inset panel with a hairline and one rounded
-            corner, set into the rail and sidebar around it. */}
-        <main ref={workspaceRef} className="relative mt-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-tl-2xl border-l border-t border-line bg-bg">
+        {/* The workspace: a panel with a hairline, floating clear of the
+            window's edges, beside the rail and sidebar. */}
+        <main ref={workspaceRef} className="relative my-2 mr-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-line bg-bg">
           {voiceOpen ? (
             <Suspense fallback={null}>
               <VoiceScreen
