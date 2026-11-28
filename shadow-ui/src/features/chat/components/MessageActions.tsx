@@ -32,7 +32,7 @@ function Action({ label, onClick, disabled, active, danger, children }: ActionPr
           aria-label={label}
           {...describe}
           aria-pressed={active === undefined ? undefined : active}
-          className={`grid h-8 w-8 place-items-center rounded-lg transition-[background-color,color] duration-100 disabled:cursor-not-allowed disabled:opacity-40 ${
+          className={`grid h-8 w-8 place-items-center rounded-lg transition-[background-color,color,scale] duration-150 ease-smooth enabled:active:scale-[0.92] disabled:cursor-not-allowed disabled:opacity-40 ${
             active ? (danger ? "text-danger" : "text-ink") : "text-ink-muted enabled:hover:bg-ink/[0.07] enabled:hover:text-ink"
           }`}
         >
@@ -71,7 +71,7 @@ function ReasonPanel({
     <div className="animate-rise mt-2 max-w-md rounded-xl border border-line bg-panel p-3 shadow-[0_16px_48px_-20px_var(--shadow-color)]">
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs leading-normal text-ink">What was wrong with it? Optional — the dislike is already saved.</p>
-        <button type="button" onClick={onClose} aria-label="Close" className="shrink-0 rounded p-0.5 text-ink-muted transition-colors hover:text-ink">
+        <button type="button" onClick={onClose} aria-label="Close" className="-mr-1 -mt-1 grid h-6 w-6 shrink-0 place-items-center rounded-md text-ink-muted transition-[background-color,color,scale] duration-150 ease-smooth hover:bg-ink/[0.07] hover:text-ink enabled:active:scale-[0.92]">
           <CloseIcon width={11} height={11} />
         </button>
       </div>
@@ -83,7 +83,7 @@ function ReasonPanel({
             type="button"
             onClick={() => setCode(code === r.code ? null : r.code)}
             aria-pressed={code === r.code}
-            className={`rounded-md border px-2 py-1 text-[12px] transition-[background-color,border-color,color,scale] duration-150 active:scale-[0.96] ${
+            className={`rounded-md border px-2 py-1 text-[12px] transition-[background-color,border-color,color,scale] duration-150 enabled:active:scale-[0.96] ${
               code === r.code ? "border-signal/60 bg-signal/10 text-ink" : "border-line text-ink-muted hover:bg-ink/[0.05] hover:text-ink"
             }`}
           >
@@ -114,7 +114,7 @@ function ReasonPanel({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md px-2 py-1 text-[12px] text-ink-muted transition-[background-color,color,scale] duration-150 hover:bg-ink/[0.06] hover:text-ink active:scale-[0.96]"
+            className="rounded-md px-2 py-1 text-[12px] text-ink-muted transition-[background-color,color,scale] duration-150 hover:bg-ink/[0.06] hover:text-ink enabled:active:scale-[0.96]"
           >
             Skip
           </button>
@@ -220,16 +220,16 @@ export default function MessageActions({ message, reasons, canRegenerate, busy, 
 
         {canRegenerate && (
           <Action label="Try again" onClick={onRegenerate} disabled={busy}>
-            <RefreshIcon width={18} height={18} />
+            <RefreshIcon width={18} height={18} className="nudge-turn" />
           </Action>
         )}
 
         <Action label="Good reply" onClick={() => rate("up")} active={rating === "up"}>
-          <ThumbUpIcon width={18} height={18} />
+          <ThumbUpIcon width={18} height={18} className="nudge-tip-up" />
         </Action>
 
         <Action label="Bad reply" onClick={() => rate("down")} active={rating === "down"} danger>
-          <ThumbDownIcon width={18} height={18} />
+          <ThumbDownIcon width={18} height={18} className="nudge-tip-down" />
         </Action>
 
         {rating === "down" && !asking && (reason.code || reason.text) && (

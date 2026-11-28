@@ -97,6 +97,13 @@ controls are 10px; blocks are rounded-2xl; the prompt bar is 20px. Pills
   UI motion stays under 300ms; the headline swap (520ms) and the dock slide
   (420ms) are the deliberate exceptions.
 - Press: scale 0.96, `enabled:active:` so a disabled control never moves.
+  Small icon buttons press to 0.92. Full-width rows (menus, the sidebar) don't
+  shrink; they darken (`active:bg-ink/[0.11]`).
+- Icon nudges (`.nudge-*` in `effects.css`): under a real pointer an enabled
+  button's icon hints at what it does - send lifts 2px, try again turns, the
+  thumbs tip, the globe turns, the mic swells. Only where reduced motion is
+  off, and the rules exist only inside that media query, because a reset
+  rule outside it loses to the hover selector's specificity.
 - Name transitioned properties (`transition-[background-color,scale]`), never
   `transition-all`. Animate transform and opacity; bars scale, not resize.
 - Anything opened from the keyboard appears without animation (⌘K History).
