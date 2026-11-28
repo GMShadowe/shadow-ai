@@ -107,7 +107,7 @@ export default function Inspector({ messages, model, effort, offline, sources, o
             type="button"
             onClick={onToggleOffline}
             aria-pressed={!offline}
-            className={`mt-3.5 flex w-full items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-[13px] transition-[background-color,border-color,scale] duration-150 ease-smooth active:scale-[0.98] ${
+            className={`mt-3.5 flex w-full items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-[13px] transition-[background-color,border-color,scale] duration-150 ease-smooth enabled:active:scale-[0.98] ${
               offline ? "border-danger/30 bg-danger/[0.06] text-danger" : "border-line text-ink hover:bg-ink/[0.04]"
             }`}
           >

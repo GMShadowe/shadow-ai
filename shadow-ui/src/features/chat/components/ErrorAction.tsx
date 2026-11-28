@@ -12,7 +12,7 @@ function Button({ icon: Icon, children, onClick }: { icon: ComponentType<IconPro
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-1.5 rounded-md border border-line bg-panel px-2.5 py-1 text-xs text-ink transition-[border-color,scale] duration-150 hover:border-ink-muted active:scale-[0.96]"
+      className="flex items-center gap-1.5 rounded-md border border-line bg-panel px-2.5 py-1 text-xs text-ink transition-[border-color,scale] duration-150 hover:border-ink-muted enabled:active:scale-[0.96]"
     >
       <Icon width={13} height={13} />
       {children}

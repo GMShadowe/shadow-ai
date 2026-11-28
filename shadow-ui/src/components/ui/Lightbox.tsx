@@ -33,7 +33,7 @@ export default function Lightbox({ src, alt = "", onClose }: LightboxProps) {
         onClick={onClose}
         aria-label="Close image"
         data-autofocus
-        className="glass absolute right-4 top-4 rounded-lg p-2 text-ink-muted transition-[color,scale] duration-150 ease-smooth hover:text-ink active:scale-[0.96]"
+        className="glass absolute right-4 top-4 rounded-lg p-2 text-ink-muted transition-[color,scale] duration-150 ease-smooth hover:text-ink enabled:active:scale-[0.96]"
       >
         <CloseIcon width={16} height={16} />
       </button>

@@ -37,7 +37,7 @@ function Popover({ open, label, children, className = "" }: { open: boolean; lab
 }
 
 const ITEM =
-  "flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-left text-[13.5px] transition-colors duration-100 hover:bg-ink/[0.07]";
+  "flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-left text-[13.5px] transition-[background-color,color] duration-150 ease-smooth hover:bg-ink/[0.07] active:bg-ink/[0.11]";
 
 interface TopBarProps {
   title: string;

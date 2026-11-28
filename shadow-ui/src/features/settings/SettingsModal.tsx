@@ -490,7 +490,7 @@ function AddSkill({ offline, onAdded }: { offline: boolean; onAdded: (result: Js
             type="button"
             disabled={!ready || busy}
             onClick={() => submit(false)}
-            className="rounded-md bg-phosphor px-3.5 py-1.5 text-xs font-medium text-bg transition-[opacity,transform] duration-150 ease-smooth active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-35"
+            className="rounded-md bg-phosphor px-3.5 py-1.5 text-xs font-medium text-bg transition-[opacity,transform] duration-150 ease-smooth enabled:active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-35"
           >
             {busy ? (mode === "link" ? "Downloading…" : "Adding…") : "Add skill"}
           </button>
@@ -979,7 +979,7 @@ function AppearanceSection({ appearance, onChange }: { appearance: Appearance; o
               title={a.label}
               aria-label={a.label}
               onClick={() => set({ accent: id as AccentId })}
-              className={`h-6 w-6 rounded-full transition-transform active:scale-[0.96] ${
+              className={`h-6 w-6 rounded-full transition-transform enabled:active:scale-[0.96] ${
                 appearance.accent === id ? "ring-2 ring-ink ring-offset-2 ring-offset-panel" : ""
               }`}
               style={{ background: a.main }}
@@ -1670,7 +1670,7 @@ export default function SettingsModal({ open, initialSection, onClose, onSaved, 
                   data-autofocus={active ? "" : undefined}
                   aria-current={active ? "page" : undefined}
                   onClick={() => setSection(s.id)}
-                  className={`relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-[background-color,color,transform] duration-150 ease-smooth focus-visible:outline-offset-[-2px] active:scale-[0.99] ${
+                  className={`relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-[background-color,color,transform] duration-150 ease-smooth focus-visible:outline-offset-[-2px] enabled:active:scale-[0.99] ${
                     active ? "bg-panel-alt text-ink" : "text-ink/70 hover:bg-panel-alt/60 hover:text-ink"
                   }`}
                 >
@@ -1707,7 +1707,7 @@ export default function SettingsModal({ open, initialSection, onClose, onSaved, 
               type="button"
               onClick={onClose}
               aria-label="Close settings"
-              className="-mr-1.5 shrink-0 rounded-lg p-1.5 text-ink-muted transition-colors hover:bg-panel-alt hover:text-ink active:scale-[0.96]"
+              className="-mr-1.5 shrink-0 rounded-lg p-1.5 text-ink-muted transition-[background-color,color,scale] duration-150 ease-smooth hover:bg-panel-alt hover:text-ink enabled:active:scale-[0.96]"
             >
               <CloseIcon width={15} height={15} />
             </button>

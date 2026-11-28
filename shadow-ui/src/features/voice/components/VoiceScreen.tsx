@@ -97,7 +97,7 @@ function Welcome({ onPick }: { onPick: (text: string) => void }) {
             key={s}
             type="button"
             onClick={() => onPick(s)}
-            className="glass animate-rise rounded-xl px-4 py-2.5 text-[13.5px] text-ink/80 transition-[color,border-color,scale] duration-150 ease-smooth hover:border-ink/20 hover:text-ink active:scale-[0.96]"
+            className="glass animate-rise rounded-xl px-4 py-2.5 text-[13.5px] text-ink/80 transition-[color,border-color,scale] duration-150 ease-smooth hover:border-ink/20 hover:text-ink enabled:active:scale-[0.96]"
             style={{ animationDelay: `${120 + i * 60}ms` }}
           >
             “{s}”
@@ -293,7 +293,7 @@ export default function VoiceScreen({ messages, streaming, onSend, onStop, onExi
         <button
           type="button"
           onClick={onExit}
-          className="flex items-center gap-1.5 rounded-[10px] px-2.5 py-1.5 text-[13px] text-ink-muted transition-[background-color,color,scale] duration-150 hover:bg-ink/[0.06] hover:text-ink active:scale-[0.96]"
+          className="flex items-center gap-1.5 rounded-[10px] px-2.5 py-1.5 text-[13px] text-ink-muted transition-[background-color,color,scale] duration-150 hover:bg-ink/[0.06] hover:text-ink enabled:active:scale-[0.96]"
         >
           <ArrowLeftIcon width={15} height={15} />
           Back to chat
@@ -308,7 +308,7 @@ export default function VoiceScreen({ messages, streaming, onSend, onStop, onExi
           title={voiceHint ?? (speakOn ? "Replies are spoken. Click to mute." : "Replies are muted. Click to speak them.")}
           aria-label={speakOn ? "Mute spoken replies" : "Speak replies out loud"}
           aria-pressed={speakOn}
-          className="rounded-[10px] p-2 text-ink-muted transition-[background-color,color,scale] duration-150 hover:bg-ink/[0.06] hover:text-ink active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-[10px] p-2 text-ink-muted transition-[background-color,color,scale] duration-150 hover:bg-ink/[0.06] hover:text-ink enabled:active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {canSpeak ? <SpeakerIcon width={16} height={16} /> : <SpeakerOffIcon width={16} height={16} />}
         </button>
@@ -318,7 +318,7 @@ export default function VoiceScreen({ messages, streaming, onSend, onStop, onExi
           title="History"
           aria-label="Show conversation history"
           aria-expanded={historyOpen}
-          className={`rounded-[10px] p-2 transition-[background-color,color,scale] duration-150 hover:bg-ink/[0.06] active:scale-[0.96] ${
+          className={`rounded-[10px] p-2 transition-[background-color,color,scale] duration-150 hover:bg-ink/[0.06] enabled:active:scale-[0.96] ${
             historyOpen ? "bg-ink/[0.08] text-ink" : "text-ink-muted hover:text-ink"
           }`}
         >
