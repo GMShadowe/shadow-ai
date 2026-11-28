@@ -457,11 +457,11 @@ export default function Composer({
                   aria-pressed={!offline}
                   aria-label={offline ? "Allow web tools" : "Block web tools (offline mode)"}
                   {...describe}
-                  className={`flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13.5px] transition-[background-color,color,scale] duration-150 ease-smooth active:scale-[0.96] ${
+                  className={`flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13.5px] transition-[background-color,color,scale] duration-150 ease-smooth enabled:active:scale-[0.96] ${
                     offline ? "bg-danger/10 text-danger hover:bg-danger/15" : "text-ink-muted hover:bg-ink/[0.07] hover:text-ink"
                   }`}
                 >
-                  {offline ? <GlobeOffIcon width={16} height={16} /> : <GlobeIcon width={16} height={16} />}
+                  {offline ? <GlobeOffIcon width={16} height={16} /> : <GlobeIcon width={16} height={16} className="nudge-globe" />}
                   {offline ? "Offline" : "Web"}
                 </button>
               )}
@@ -493,7 +493,7 @@ export default function Composer({
                 <span className="animate-fade mr-1 font-mono text-[11px] tabular-nums text-ink-faint">{value.length.toLocaleString()}</span>
               )}
               <IconButton label="Voice mode" size="sm" onClick={onOpenVoice}>
-                <MicIcon width={17} height={17} />
+                <MicIcon width={17} height={17} className="nudge-grow" />
               </IconButton>
               <Tooltip label={jobLabel} keys={job === "send" ? "↵" : undefined}>
                 {(describe) => (
@@ -507,7 +507,7 @@ export default function Composer({
                       job === "stop" ? "bg-ink text-bg enabled:hover:opacity-85" : "bg-signal text-bg enabled:hover:opacity-90 disabled:bg-ink/15 disabled:text-ink-faint"
                     }`}
                   >
-                    <ArrowUpIcon width={18} height={18} strokeWidth={2.25} className="swap-icon absolute" data-on={job === "send"} />
+                    <ArrowUpIcon width={18} height={18} strokeWidth={2.25} className="swap-icon nudge-up absolute" data-on={job === "send"} />
                     <StopIcon width={12} height={12} className="swap-icon absolute" data-on={job === "stop"} />
                   </button>
                 )}

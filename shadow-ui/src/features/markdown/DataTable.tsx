@@ -40,7 +40,7 @@ export default function DataTable({ children }: { children?: ReactNode }) {
         onClick={copy}
         title="Copy as CSV"
         aria-label="Copy this table as CSV"
-        className="absolute -top-1 right-0 z-20 flex items-center gap-1.5 rounded-md border border-line bg-panel px-2 py-1 text-[11px] text-ink-muted opacity-0 transition-[opacity,background-color,color,scale] duration-150 ease-smooth hover:bg-panel-alt hover:text-ink active:scale-[0.96] focus-visible:opacity-100 group-hover/table:opacity-100"
+        className="absolute -top-1 right-0 z-20 flex items-center gap-1.5 rounded-md border border-line bg-panel px-2 py-1 text-[11px] text-ink-muted opacity-0 transition-[opacity,background-color,color,scale] duration-150 ease-smooth hover:bg-panel-alt hover:text-ink enabled:active:scale-[0.96] focus-visible:opacity-100 group-hover/table:opacity-100"
       >
         {copied ? <CheckIcon width={11} height={11} className="text-phosphor" /> : <CopyIcon width={11} height={11} />}
         {copied ? "Copied" : "CSV"}

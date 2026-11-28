@@ -117,7 +117,7 @@ export default function SkillReview({ name, onApproved, onCancel }: SkillReviewP
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-full border border-line px-4 py-1.5 text-xs text-ink/85 transition-[border-color,color,scale] duration-150 ease-smooth hover:text-ink active:scale-[0.96]"
+            className="rounded-full border border-line px-4 py-1.5 text-xs text-ink/85 transition-[border-color,color,scale] duration-150 ease-smooth hover:text-ink enabled:active:scale-[0.96]"
           >
             Cancel
           </button>

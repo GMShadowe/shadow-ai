@@ -43,7 +43,7 @@ function CopyMine({ text }: { text: string }) {
       onClick={copy}
       title={copied ? "Copied" : "Copy"}
       aria-label={copied ? "Copied" : "Copy your message"}
-      className="grid h-7 w-7 place-items-center rounded-md text-ink-muted opacity-0 transition-[opacity,background-color,color,scale] duration-150 ease-smooth hover:bg-ink/[0.06] hover:text-ink active:scale-[0.96] group-hover:opacity-100 focus-visible:opacity-100"
+      className="grid h-7 w-7 place-items-center rounded-md text-ink-muted opacity-0 transition-[opacity,background-color,color,scale] duration-150 ease-smooth hover:bg-ink/[0.06] hover:text-ink enabled:active:scale-[0.96] group-hover:opacity-100 focus-visible:opacity-100"
     >
       <span className="relative grid h-3.5 w-3.5 place-items-center">
         <CopyIcon width={14} height={14} className="swap-icon absolute" data-on={!copied} />
@@ -92,7 +92,7 @@ function UserEditor({ message, onSave, onCancel }: { message: MessageT; onSave: 
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-md px-2 py-1 text-ink-muted transition-[background-color,color,scale] duration-150 hover:bg-ink/[0.06] hover:text-ink active:scale-[0.96]"
+          className="rounded-md px-2 py-1 text-ink-muted transition-[background-color,color,scale] duration-150 hover:bg-ink/[0.06] hover:text-ink enabled:active:scale-[0.96]"
         >
           Cancel
         </button>

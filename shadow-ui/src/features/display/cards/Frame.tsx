@@ -37,7 +37,7 @@ export default function Frame({ icon: Icon, title, meta, copyText, children }: F
             onClick={copy}
             title={copied ? "Copied" : "Copy as text"}
             aria-label="Copy as text"
-            className={`${meta ? "" : "ml-auto"} shrink-0 rounded-md p-1 text-ink-muted transition-[color,scale] duration-150 ease-smooth hover:text-ink active:scale-[0.96]`}
+            className={`${meta ? "" : "ml-auto"} shrink-0 rounded-md p-1 text-ink-muted transition-[color,scale] duration-150 ease-smooth hover:text-ink enabled:active:scale-[0.96]`}
           >
             {copied ? <CheckIcon width={13} height={13} className="text-phosphor" /> : <CopyIcon width={13} height={13} />}
           </button>

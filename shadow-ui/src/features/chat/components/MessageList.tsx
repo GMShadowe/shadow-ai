@@ -310,7 +310,7 @@ export default function MessageList({
         <button
           type="button"
           onClick={toBottom}
-          className={`animate-rise absolute bottom-2 left-1/2 z-10 flex h-8 -translate-x-1/2 items-center gap-1.5 rounded-full border pl-2.5 pr-3 text-[12.5px] font-medium transition-[background-color,border-color,scale] duration-150 ease-smooth active:scale-[0.96] ${
+          className={`animate-rise absolute bottom-2 left-1/2 z-10 flex h-8 -translate-x-1/2 items-center gap-1.5 rounded-full border pl-2.5 pr-3 text-[12.5px] font-medium transition-[background-color,border-color,scale] duration-150 ease-smooth enabled:active:scale-[0.96] ${
             unseen ? "border-transparent bg-signal text-bubble-ink hover:opacity-90" : "border-line bg-menu text-ink hover:bg-panel"
           }`}
         >

@@ -86,7 +86,7 @@ function ChatMenu({
   const ref = useRef<HTMLDivElement>(null);
   useDismiss(ref, true, onClose);
   const item =
-    "flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[14px] transition-colors duration-100 hover:bg-ink/[0.07]";
+    "flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[14px] transition-[background-color,color] duration-150 ease-smooth hover:bg-ink/[0.07] active:bg-ink/[0.11]";
   return (
     <div
       ref={ref}
@@ -235,7 +235,7 @@ function ProfileMenu({
   onAssistants: () => void;
 }) {
   const item =
-    "flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-left text-[13.5px] text-ink transition-colors duration-100 hover:bg-ink/[0.07]";
+    "flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-left text-[13.5px] text-ink transition-[background-color,color] duration-150 ease-smooth hover:bg-ink/[0.07] active:bg-ink/[0.11]";
   const pick = (fn: () => void) => () => {
     onClose();
     fn();

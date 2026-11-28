@@ -35,7 +35,7 @@ export default function CodeBlock({ children }: { children?: ReactNode }) {
   }
 
   const tool =
-    "grid h-7 w-7 place-items-center rounded-md text-ink-muted transition-[background-color,color,scale] duration-100 hover:bg-ink/[0.07] hover:text-ink active:scale-[0.96]";
+    "grid h-7 w-7 place-items-center rounded-md text-ink-muted transition-[background-color,color,scale] duration-100 hover:bg-ink/[0.07] hover:text-ink enabled:active:scale-[0.96]";
   const name = language ? language.charAt(0).toUpperCase() + language.slice(1) : "Text";
 
   return (

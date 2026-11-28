@@ -32,7 +32,7 @@ export default function HistoryPanel({ open, turns, onClose }: { open: boolean; 
           onClick={onClose}
           aria-label="Close history"
           tabIndex={open ? 0 : -1}
-          className="rounded-md p-1 text-ink-muted transition-colors duration-150 hover:bg-panel-alt hover:text-ink active:scale-[0.96]"
+          className="rounded-md p-1 text-ink-muted transition-[background-color,color,scale] duration-150 ease-smooth hover:bg-panel-alt hover:text-ink enabled:active:scale-[0.96]"
         >
           <CloseIcon width={15} height={15} />
         </button>

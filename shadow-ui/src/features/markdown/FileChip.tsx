@@ -34,7 +34,7 @@ export default function FileChip({ path, name }: { path: string; name: string })
       type="button"
       onClick={open}
       title={failed ? state : (note ?? `Open ${path}`)}
-      className={`inline-flex max-w-full items-baseline gap-1.5 rounded-md border px-1.5 py-px align-baseline font-mono text-[0.85em] transition-[background-color,border-color,scale] duration-150 active:scale-[0.96] ${
+      className={`inline-flex max-w-full items-baseline gap-1.5 rounded-md border px-1.5 py-px align-baseline font-mono text-[0.85em] transition-[background-color,border-color,scale] duration-150 enabled:active:scale-[0.96] ${
         failed ? "border-danger/40 bg-danger/5 text-danger" : "border-line bg-ink/[0.04] text-ink hover:border-signal/50"
       }`}
     >

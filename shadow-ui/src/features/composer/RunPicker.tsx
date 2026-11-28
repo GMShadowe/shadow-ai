@@ -184,7 +184,7 @@ export default function RunPicker({ models, model, onModelChange, effort, onEffo
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-haspopup="dialog"
-        className={`flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13.5px] transition-[background-color,color,scale] duration-150 ease-smooth active:scale-[0.96] ${
+        className={`flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13.5px] transition-[background-color,color,scale] duration-150 ease-smooth enabled:active:scale-[0.96] ${
           open ? "bg-ink/[0.08] text-ink" : "text-ink hover:bg-ink/[0.06]"
         }`}
       >

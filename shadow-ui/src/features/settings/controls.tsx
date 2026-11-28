@@ -104,7 +104,7 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
       aria-checked={checked}
       aria-label={label}
       onClick={() => onChange(!checked)}
-      className={`relative h-5 w-9 rounded-full transition-[background-color,scale] duration-200 active:scale-[0.96] ${
+      className={`relative h-5 w-9 rounded-full transition-[background-color,scale] duration-200 enabled:active:scale-[0.96] ${
         checked ? "bg-phosphor-dim" : "bg-line hover:bg-line/80"
       }`}
     >

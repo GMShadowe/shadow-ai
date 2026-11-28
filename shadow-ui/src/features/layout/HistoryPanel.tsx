@@ -106,7 +106,7 @@ function ConversationItem({ conv, active, onSelect, onRename, onDelete, onExport
 
   // Row hovers are high-frequency, so they change colour only, instantly.
   const actionBtn =
-    "rounded-md p-1 text-ink-muted transition-[color,scale] duration-150 ease-smooth hover:text-ink active:scale-[0.96]";
+    "rounded-md p-1 text-ink-muted transition-[color,scale] duration-150 ease-smooth hover:text-ink enabled:active:scale-[0.96]";
 
   return (
     <div
@@ -336,7 +336,7 @@ export default function HistoryPanel({
               }}
               title="New chat"
               aria-label="New chat"
-              className="grid h-8 w-8 place-items-center rounded-lg text-ink-muted transition-[background-color,color,scale] duration-150 ease-smooth hover:bg-ink/[0.06] hover:text-ink active:scale-[0.96]"
+              className="grid h-8 w-8 place-items-center rounded-lg text-ink-muted transition-[background-color,color,scale] duration-150 ease-smooth hover:bg-ink/[0.06] hover:text-ink enabled:active:scale-[0.96]"
             >
               <PlusIcon width={16} height={16} />
             </button>
@@ -345,7 +345,7 @@ export default function HistoryPanel({
               onClick={onClose}
               title="Close"
               aria-label="Close history"
-              className="grid h-8 w-8 place-items-center rounded-lg text-ink-muted transition-[background-color,color,scale] duration-150 ease-smooth hover:bg-ink/[0.06] hover:text-ink active:scale-[0.96]"
+              className="grid h-8 w-8 place-items-center rounded-lg text-ink-muted transition-[background-color,color,scale] duration-150 ease-smooth hover:bg-ink/[0.06] hover:text-ink enabled:active:scale-[0.96]"
             >
               <CloseIcon width={15} height={15} />
             </button>
